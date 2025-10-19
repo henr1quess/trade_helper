@@ -6,9 +6,11 @@ import os
 from datetime import datetime, timezone
 from io import StringIO
 from pathlib import Path
+from typing import Optional
 import pandas as pd
 import streamlit as st
 import streamlit.components.v1 as components
+import textwrap
 
 st.set_page_config(page_title="New World Helper", page_icon="🪙", layout="wide")
 
@@ -173,6 +175,43 @@ def save_to_all(cfg, paths):
         except Exception:
             pass
     return saved
+
+def copy_to_clipboard(text: str, key: str = "default", toast_message: Optional[str] = "Copiado!"):
+    """Client-side copy utility using a hidden textarea + execCommand fallback."""
+    counter_key = f"_copy_counter_{key}"
+    st.session_state[counter_key] = st.session_state.get(counter_key, 0) + 1
+    payload = json.dumps(text)
+    components.html(
+        f"""
+        <script>
+        (function() {{
+            const text = {payload};
+            const ta = document.createElement('textarea');
+            ta.value = text;
+            ta.setAttribute('readonly', '');
+            ta.style.position = 'fixed';
+            ta.style.opacity = '0';
+            document.body.appendChild(ta);
+            ta.focus();
+            ta.select();
+            let copied = false;
+            try {{
+                copied = document.execCommand('copy');
+            }} catch (err) {{
+                copied = false;
+            }}
+            if (!copied && navigator.clipboard) {{
+                navigator.clipboard.writeText(text).catch(() => {{}});
+            }}
+            document.body.removeChild(ta);
+        }})();
+        </script>
+        """,
+        height=0,
+        key=f"copy_component_{{key}}_{{st.session_state[counter_key]}}",
+    )
+    if toast_message:
+        st.toast(toast_message, icon="✅")
 
 def now_iso():
     return datetime.now(timezone.utc).isoformat()
@@ -923,7 +962,8 @@ with tab_cad:
     st.markdown("## Cadastro")
     st.caption(f"Arquivo: `{ITEMS_PATH.resolve()}`")
 
-    IA_PROMPT = r"""
+    PROMPT_CADASTRO = textwrap.dedent(
+        r"""
 Você é uma IA que recebe **imagens** contendo **nomes de vários itens** do jogo *New World*.
 Para cada item, você deve **consultar o NWDB** (https://nwdb.info) e produzir um **JSON** de cadastro com os campos abaixo.
 
@@ -950,31 +990,56 @@ Para cada item, você deve **consultar o NWDB** (https://nwdb.info) e produzir u
 
 Retorne **apenas** o JSON (sem comentários).
 """
-    components.html(
-        f"""
-        <div>
-          <button id="copyCadPrompt" style="padding:8px 12px; border:1px solid #ccc; border-radius:6px; background:#f3f4f6; cursor:pointer;">
-            📋 Copiar prompt p/ IA (Cadastro)
-          </button>
-          <textarea id="cadPromptPayload" style="position:absolute; left:-10000px; top:-10000px;">{IA_PROMPT}</textarea>
-        </div>
-        <script>
-          const btn = document.getElementById('copyCadPrompt');
-          btn.addEventListener('click', async () => {{
-            const txt = document.getElementById('cadPromptPayload').value;
-            try {{ await navigator.clipboard.writeText(txt); btn.innerText = '✅ Copiado!'; }}
-            catch(e) {{
-              const ta = document.getElementById('cadPromptPayload');
-              ta.focus(); ta.select(); document.execCommand('copy'); btn.innerText = '✅ Copiado!';
-            }}
-            setTimeout(()=>btn.innerText='📋 Copiar prompt p/ IA (Cadastro)', 1500);
-          }});
-        </script>
-        """,
-        height=60
-    )
-    with st.expander("Ver prompt (opcional)"):
-        st.code(IA_PROMPT, language="markdown")
+    ).strip()
+    PROMPT_SLUGS = textwrap.dedent(
+        r"""
+Você é uma IA que recebe uma lista de itens do jogo *New World* e precisa descobrir o **slug usado pelo NWMarketPrices (NWMP)** para cada um deles.
+
+### Saída (um único array JSON):
+[
+  {"item":"Runic Leather","slug_nwmp":"runicleather"},
+  {"item":"Quicksilver","slug_nwmp":"quicksilver"}
+]
+
+### Regras
+1) Para cada item, use a busca do site https://nwmarketprices.com/ (ou API equivalente) e localize a página oficial do item.
+2) O slug é a parte final da URL (ex.: `/items/runicleather` → slug `runicleather`).
+3) Sempre utilize o slug **exato** retornado pelo NWMP (minúsculas, sem espaços; hífens apenas quando presentes no site).
+4) Se existirem múltiplos resultados, escolha o que corresponde ao item listado e ignore os demais.
+5) Caso não encontre o item com confiança, omita-o da resposta.
+6) Retorne **apenas** o JSON final, sem comentários ou texto adicional.
+"""
+    ).strip()
+
+    col1, col2 = st.columns(2)
+    with col1:
+        st.text_area(
+            "Prompt IA (cadastro de itens)",
+            value=PROMPT_CADASTRO,
+            height=220,
+            disabled=True,
+            key="prompt_cadastro_txt",
+        )
+        if st.button("Copiar", key="copy_cadastro"):
+            copy_to_clipboard(
+                PROMPT_CADASTRO,
+                key="prompt_cadastro",
+                toast_message="Prompt de cadastro copiado!",
+            )
+    with col2:
+        st.text_area(
+            "Prompt IA (gerar slugs NWMP)",
+            value=PROMPT_SLUGS,
+            height=220,
+            disabled=True,
+            key="prompt_slugs_txt",
+        )
+        if st.button("Copiar", key="copy_slugs"):
+            copy_to_clipboard(
+                PROMPT_SLUGS,
+                key="prompt_slugs",
+                toast_message="Prompt de slugs copiado!",
+            )
 
     st.subheader("Importar cadastro (JSON/CSV)")
     st.caption(
