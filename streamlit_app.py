@@ -66,11 +66,12 @@ def stringify_tags(x):
     return ", ".join(lst)
 
 def load_items():
-    return load_json_records(ITEMS_PATH, ["item","categoria","peso","stack_max","tags"])
+    # now supports optional 'tier'
+    return load_json_records(ITEMS_PATH, ["item","categoria","peso","stack_max","tags","tier"])
 
 def save_items(df: pd.DataFrame):
     ITEMS_PATH.parent.mkdir(parents=True, exist_ok=True)
-    keep = ["item","categoria","peso","stack_max","tags"]
+    keep = ["item","categoria","peso","stack_max","tags","tier"]
     for c in keep:
         if c not in df.columns:
             df[c] = None
@@ -395,6 +396,8 @@ with tab_best:
             enriched["tags"] = [[] for _ in range(len(enriched))]
         else:
             enriched["tags"] = enriched["tags"].apply(ensure_list_tags)
+        if "tier" not in enriched.columns:
+            enriched["tier"] = None
 
         # lucro/peso & lucro/100peso
         enriched["lucro_por_peso"] = None
@@ -448,6 +451,7 @@ with tab_best:
             colcfg = {
                 "item": st.column_config.TextColumn("item"),
                 "categoria": st.column_config.TextColumn("categoria"),
+                "tier": st.column_config.TextColumn("tier"),
                 "tags": st.column_config.ListColumn("tags"),
                 "peso": st.column_config.NumberColumn("peso", format="%.3f"),
                 "timestamp": st.column_config.DatetimeColumn("timestamp", format="YYYY-MM-DD HH:mm:ss"),
@@ -466,6 +470,7 @@ with tab_best:
             colcfg = {
                 "item": st.column_config.TextColumn("item"),
                 "categoria": st.column_config.TextColumn("categoria"),
+                "tier": st.column_config.TextColumn("tier"),
                 "tags": st.column_config.TextColumn("tags"),
                 "peso": st.column_config.NumberColumn("peso", format="%.3f"),
                 "timestamp": st.column_config.DatetimeColumn("timestamp", format="YYYY-MM-DD HH:mm:ss"),
@@ -481,7 +486,7 @@ with tab_best:
             }
 
         st.data_editor(
-            view[["item","categoria","tags","peso","timestamp","buy_price","sell_price",
+            view[["item","categoria","tier","tags","peso","timestamp","buy_price","sell_price",
                   "profit_per_unit","roi_pct","lucro_por_peso","lucro_100_peso","qty_por_ordem",
                   "lucro_por_slot","liquidez"]],
             column_config=colcfg,
@@ -640,7 +645,14 @@ Retorne **apenas** o JSON, sem comentários.
         # Cadastro rápido inline
         if missing_items:
             st.markdown("### Cadastro rápido (itens não cadastrados)")
-            stub = pd.DataFrame({"item": missing_items, "categoria": "", "peso": 0.0, "stack_max": pd.Series([None]*len(missing_items), dtype="Int64"), "tags": [[] for _ in missing_items]})
+            stub = pd.DataFrame({
+                "item": missing_items,
+                "categoria": "",
+                "peso": 0.0,
+                "stack_max": pd.Series([None]*len(missing_items), dtype="Int64"),
+                "tags": [[] for _ in missing_items],
+                "tier": ""
+            })
             if not LIST_COL_AVAILABLE:
                 stub["tags"] = [""]*len(stub)
             colcfg = {
@@ -653,6 +665,7 @@ Retorne **apenas** o JSON, sem comentários.
                 colcfg["tags"] = st.column_config.ListColumn("tags", help="Tags livres", default=[])
             else:
                 colcfg["tags"] = st.column_config.TextColumn("tags", help="Separadas por vírgula")
+            colcfg["tier"] = st.column_config.TextColumn("tier", help="Opcional (ex.: T1–T5)")
 
             quick = st.data_editor(stub, num_rows="dynamic", column_config=colcfg, hide_index=True, use_container_width=True)
             if st.button("💾 Salvar cadastro rápido"):
@@ -788,6 +801,8 @@ Retorne **apenas** o JSON (sem comentários).
                 df_items_in["tags"] = df_items_in["tags"].apply(ensure_list_tags)
             else:
                 df_items_in["tags"] = [[] for _ in range(len(df_items_in))]
+            if "tier" not in df_items_in.columns:
+                df_items_in["tier"] = None
 
             prev = df_items_in.copy()
             if LIST_COL_AVAILABLE:
@@ -796,7 +811,8 @@ Retorne **apenas** o JSON (sem comentários).
                     "categoria": st.column_config.TextColumn("categoria"),
                     "peso": st.column_config.NumberColumn("peso", format="%.3f"),
                     **({"stack_max": st.column_config.NumberColumn("stack_max", min_value=1, step=1)} if "stack_max" in prev.columns else {}),
-                    "tags": st.column_config.ListColumn("tags")
+                    "tags": st.column_config.ListColumn("tags"),
+                    "tier": st.column_config.TextColumn("tier", help="Opcional (ex.: T1–T5)")
                 }
             else:
                 prev["tags"] = prev["tags"].apply(stringify_tags)
@@ -805,12 +821,18 @@ Retorne **apenas** o JSON (sem comentários).
                     "categoria": st.column_config.TextColumn("categoria"),
                     "peso": st.column_config.NumberColumn("peso", format="%.3f"),
                     **({"stack_max": st.column_config.NumberColumn("stack_max", min_value=1, step=1)} if "stack_max" in prev.columns else {}),
-                    "tags": st.column_config.TextColumn("tags")
+                    "tags": st.column_config.TextColumn("tags"),
+                    "tier": st.column_config.TextColumn("tier", help="Opcional (ex.: T1–T5)")
                 }
+
+            cols_prev = ["item","categoria","peso"]
+            if "stack_max" in prev.columns:
+                cols_prev.append("stack_max")
+            cols_prev += ["tags", "tier"]
 
             st.subheader("Prévia do cadastro")
             st.data_editor(
-                prev[["item","categoria","peso"] + (["stack_max"] if "stack_max" in prev.columns else []) + ["tags"]],
+                prev[cols_prev],
                 column_config=colcfg_prev,
                 hide_index=True, use_container_width=True, disabled=True
             )
@@ -847,6 +869,8 @@ Retorne **apenas** o JSON (sem comentários).
         items_df["tags"] = [[] for _ in range(len(items_df))]
     else:
         items_df["tags"] = items_df["tags"].apply(ensure_list_tags)
+    if "tier" not in items_df.columns:
+        items_df["tier"] = None
 
     if LIST_COL_AVAILABLE:
         colcfg_edit = {
@@ -855,6 +879,7 @@ Retorne **apenas** o JSON (sem comentários).
             "peso": st.column_config.NumberColumn("peso", format="%.3f", help="Peso por unidade", required=True),
             "stack_max": st.column_config.NumberColumn("stack_max", help="Opcional", min_value=1, step=1),
             "tags": st.column_config.ListColumn("tags", help="Tags livres", default=[]),
+            "tier": st.column_config.TextColumn("tier", help="Opcional (ex.: T1–T5)"),
         }
     else:
         items_df = items_df.copy()
@@ -865,10 +890,11 @@ Retorne **apenas** o JSON (sem comentários).
             "peso": st.column_config.NumberColumn("peso", format="%.3f", help="Peso por unidade"),
             "stack_max": st.column_config.NumberColumn("stack_max", help="Opcional", min_value=1, step=1),
             "tags": st.column_config.TextColumn("tags", help="Separadas por vírgula"),
+            "tier": st.column_config.TextColumn("tier", help="Opcional (ex.: T1–T5)"),
         }
 
     edited = st.data_editor(
-        items_df if not items_df.empty else pd.DataFrame(columns=["item","categoria","peso","stack_max","tags"]),
+        items_df if not items_df.empty else pd.DataFrame(columns=["item","categoria","peso","stack_max","tags","tier"]),
         num_rows="dynamic",
         column_config=colcfg_edit,
         hide_index=True, use_container_width=True
