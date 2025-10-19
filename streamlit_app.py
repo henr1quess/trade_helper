@@ -1417,7 +1417,7 @@ with tab_coletar:
                 )
             else:
                 try:
-                    with st.spinner("Reconstruindo CSV a partir de raw/snapshots/..."):
+                    with st.spinner("Reconstruindo CSV a partir de raw/buy.json + raw/sell.json..."):
                         nwmp_sync.run_rebuild(
                             raw_root=DEFAULT_NWMP_RAW_ROOT,
                             csv_path=DEFAULT_NWMP_CSV,
