@@ -41,10 +41,13 @@ def load_json_records(path: Path, cols=None):
         return pd.DataFrame(columns=cols or [])
 
 def load_history():
+    # agora inclui colunas para liquidez (timestamps de fill)
+    base_cols = ["timestamp","item","buy_price","sell_price","buy_duration","sell_duration",
+                 "buy_placed_ts","buy_filled_ts","sell_filled_ts"]
     for p in HISTORY_READ_CANDIDATES:
         if p.exists():
-            return load_json_records(p, ["timestamp","item","buy_price","sell_price","buy_duration","sell_duration"]), p
-    return pd.DataFrame(columns=["timestamp","item","buy_price","sell_price","buy_duration","sell_duration"]), None
+            return load_json_records(p, base_cols), p
+    return pd.DataFrame(columns=base_cols), None
 
 def save_history(df: pd.DataFrame):
     HISTORY_PATH.parent.mkdir(parents=True, exist_ok=True)
@@ -52,21 +55,17 @@ def save_history(df: pd.DataFrame):
 
 # Tags helpers
 def ensure_list_tags(x):
-    """Converte qualquer entrada em lista de strings (sem vazios, aparados)."""
     if isinstance(x, list):
         return [str(t).strip() for t in x if str(t).strip()]
     if x is None or (isinstance(x, float) and pd.isna(x)):
         return []
-    # aceita "tag1, tag2"
     return [s.strip() for s in str(x).split(",") if s.strip()]
 
 def stringify_tags(x):
-    """Para exibição em texto: lista -> 'a, b, c'."""
     lst = ensure_list_tags(x)
     return ", ".join(lst)
 
 def load_items():
-    # agora inclui 'tags'
     return load_json_records(ITEMS_PATH, ["item","categoria","peso","stack_max","tags"])
 
 def save_items(df: pd.DataFrame):
@@ -75,7 +74,6 @@ def save_items(df: pd.DataFrame):
     for c in keep:
         if c not in df.columns:
             df[c] = None
-    # normaliza tipos
     df["tags"] = df["tags"].apply(ensure_list_tags)
     df.to_json(ITEMS_PATH, orient="records", indent=2, force_ascii=False)
 
@@ -102,6 +100,19 @@ def save_to_all(cfg, paths):
 
 def now_iso():
     return datetime.now(timezone.utc).isoformat()
+
+def to_utc_iso(dt=None):
+    if dt is None:
+        dt = datetime.now(timezone.utc)
+    if dt.tzinfo is None:
+        dt = dt.replace(tzinfo=timezone.utc)
+    return dt.isoformat()
+
+def parse_iso(s):
+    try:
+        return pd.to_datetime(s, utc=True, errors="coerce")
+    except Exception:
+        return pd.NaT
 
 # --------------------------------------------------------------------------------------
 # Config (calibração + taxa)
@@ -135,6 +146,7 @@ if "tax_pct" not in st.session_state:
 # Core helpers
 # --------------------------------------------------------------------------------------
 DURATIONS = [1,3,7,14]
+LIST_COL_AVAILABLE = hasattr(st.column_config, "ListColumn")
 
 def auto_fee(total_value, rate_dict, duration):
     r = None
@@ -146,7 +158,7 @@ def compute_metrics(buy_price, sell_price, buy_duration=3, sell_duration=3, tax_
     rtax = tax_pct/100.0
     Fb = auto_fee(buy_price,  st.session_state.buy_rates,  int(buy_duration))  # Q=1
     Fs = auto_fee(sell_price, st.session_state.sell_rates, int(sell_duration))
-    profit_per_unit = sell_price*(1-rtax) - buy_price - Fb - Fs
+    profit_per_unit = sell_price*(1-rtax) - buy_price - (Fb) - (Fs)
     cost_basis = buy_price + Fb
     roi = (profit_per_unit / cost_basis) if cost_basis>0 else float("nan")
     return profit_per_unit, roi, Fb, Fs
@@ -155,8 +167,20 @@ def fmt(x, p=4):
     try: return f"{x:,.{p}f}"
     except: return str(x)
 
-# Detect support for ListColumn (tags como lista) — fallback para texto se não existir
-LIST_COL_AVAILABLE = hasattr(st.column_config, "ListColumn")
+def median_timedelta_hours(series):
+    if series.empty: return None
+    s_sorted = series.sort_values()
+    mid = len(s_sorted)//2
+    if len(s_sorted)%2==1:
+        return s_sorted.iloc[mid].total_seconds()/3600.0
+    else:
+        return (s_sorted.iloc[mid-1] + s_sorted.iloc[mid]).total_seconds()/7200.0
+
+def liquidity_label(hours):
+    if hours is None: return "—"
+    if hours <= 24: return "⚡⚡⚡"
+    if hours <= 72: return "⚡⚡"
+    return "⚡"
 
 # --------------------------------------------------------------------------------------
 # Sidebar Config (colapsada)
@@ -210,6 +234,11 @@ with tab_hist:
     st.caption(f"Lendo de: `{(src_path or HISTORY_PATH).resolve()}` (salva em `{HISTORY_PATH.resolve()}`)")
 
     if not hist_df.empty:
+        # Conversões de tempo
+        for col in ["timestamp","buy_placed_ts","buy_filled_ts","sell_filled_ts"]:
+            if col in hist_df.columns:
+                hist_df[col] = pd.to_datetime(hist_df[col], utc=True, errors="coerce")
+
         rows = []
         for idx, r in hist_df.reset_index().iterrows():
             pp, roi, Fb, Fs = compute_metrics(r["buy_price"], r["sell_price"], r["buy_duration"], r["sell_duration"], st.session_state.tax_pct)
@@ -222,11 +251,12 @@ with tab_hist:
                 "buy_duration": int(r["buy_duration"]),
                 "sell_duration": int(r["sell_duration"]),
                 "profit_per_unit": pp,
-                "roi_pct": (roi*100.0) if pd.notna(roi) else None
+                "roi_pct": (roi*100.0) if pd.notna(roi) else None,
+                "buy_placed_ts": r.get("buy_placed_ts", pd.NaT),
+                "buy_filled_ts": r.get("buy_filled_ts", pd.NaT),
+                "sell_filled_ts": r.get("sell_filled_ts", pd.NaT)
             })
         table = pd.DataFrame(rows).sort_values("timestamp", ascending=False)
-        if "timestamp" in table.columns:
-            table["timestamp"] = pd.to_datetime(table["timestamp"], errors="coerce")
 
         st.caption("Dica: segure Ctrl/Cmd para seleção múltipla")
         df_key = "hist_tbl"
@@ -252,9 +282,9 @@ with tab_hist:
             st.dataframe(table.set_index("row_id"), use_container_width=True)
             sel_row_ids = []
 
-        c1, c2, c3 = st.columns(3)
+        c1, c2, c3, c4, c5 = st.columns(5)
         with c1:
-            st.download_button("Baixar histórico (JSON)", data=table.to_json(orient="records", indent=2), file_name="history_with_roi.json", mime="application/json")
+            st.download_button("Baixar histórico (JSON)", data=table.to_json(orient="records", indent=2, date_format="iso"), file_name="history_with_roi.json", mime="application/json")
         with c2:
             disabled = len(sel_row_ids) == 0
             if st.button(f"🗑️ Apagar selecionados ({len(sel_row_ids)})", disabled=disabled):
@@ -283,6 +313,36 @@ with tab_hist:
                     if st.button("Cancelar"):
                         st.session_state.confirm_clear = False
                         st.info("Cancelado. Nada foi apagado.")
+        with c4:
+            disabled = len(sel_row_ids) == 0
+            if st.button("✔️ Marcar BUY filled (selecionados)", disabled=disabled):
+                if sel_row_ids:
+                    new_df = hist_df.copy()
+                    ts_now = to_utc_iso()
+                    for rid in sel_row_ids:
+                        if rid in new_df.index:
+                            if pd.isna(new_df.at[rid, "buy_placed_ts"]):
+                                new_df.at[rid, "buy_placed_ts"] = new_df.at[rid, "timestamp"]
+                            new_df.at[rid, "buy_filled_ts"] = ts_now
+                    save_history(new_df)
+                    st.success(f"BUY filled marcado em {len(sel_row_ids)} registro(s).")
+                    st.rerun()
+        with c5:
+            disabled = len(sel_row_ids) == 0
+            if st.button("✔️ Marcar SELL filled (selecionados)", disabled=disabled):
+                if sel_row_ids:
+                    new_df = hist_df.copy()
+                    ts_now = to_utc_iso()
+                    for rid in sel_row_ids:
+                        if rid in new_df.index:
+                            # se não tinha buy_placed, considere timestamp como placed
+                            if pd.isna(new_df.at[rid, "buy_placed_ts"]):
+                                new_df.at[rid, "buy_placed_ts"] = new_df.at[rid, "timestamp"]
+                            # se não tinha buy_filled, permite ainda assim registrar sell_filled
+                            new_df.at[rid, "sell_filled_ts"] = ts_now
+                    save_history(new_df)
+                    st.success(f"SELL filled marcado em {len(sel_row_ids)} registro(s).")
+                    st.rerun()
     else:
         st.info("Seu histórico está vazio. Vá na aba **Importar preços** para adicionar itens.")
 
@@ -291,26 +351,28 @@ with tab_hist:
 # --------------------------------------------------------------------------------------
 with tab_best:
     st.markdown("## Oportunidades")
+
+    # Controles novos (sem allocator/banca)
+    c0, c1, c2 = st.columns([1,1,2])
+    slots_por_ordem = c0.selectbox("Slots/ordem", [2,1], index=0, help="2 = buy+sell; 1 = apenas sell (estoque).")
+    tamanho_pref = c1.number_input("Tamanho preferido (cap por ordem)", min_value=0, value=0, step=1,
+                                   help="0 = usar stack_max; se >0, limita a este máximo por ordem")
+    min_roi = c2.slider("ROI mínimo", 0.0, 0.5, 0.15, 0.01)
+
     hist_df, _ = load_history()
     items_df = load_items()
 
     if hist_df.empty:
         st.info("Ainda não há histórico suficiente. Importe alguns itens primeiro.")
     else:
+        # últimos preços por item
         tmp = hist_df.copy()
-        tmp["ts"] = pd.to_datetime(tmp["timestamp"], errors="coerce")
+        tmp["ts"] = pd.to_datetime(tmp["timestamp"], utc=True, errors="coerce")
         tmp = tmp.sort_values("ts").groupby("item", as_index=False).tail(1)
 
         rows = []
         for _, r in tmp.iterrows():
             pp, roi, Fb, Fs = compute_metrics(r["buy_price"], r["sell_price"], r["buy_duration"], r["sell_duration"], st.session_state.tax_pct)
-            emoji, label = ("", "")
-            if pd.notna(roi):
-                if roi >= 0.30: emoji, label = "🟢", "🔥 Excelente"
-                elif roi >= 0.20: emoji, label = "🟢", "Ótimo"
-                elif roi >= 0.15: emoji, label = "🟢", "Bom"
-                elif roi >= 0.10: emoji, label = "🟡", "Morno"
-                else: emoji, label = "🔴", "Baixo"
             rows.append({
                 "item": r["item"],
                 "timestamp": r["timestamp"],
@@ -320,8 +382,7 @@ with tab_best:
                 "sell_duration": int(r["sell_duration"]),
                 "profit_per_unit": pp,
                 "roi": roi,
-                "roi_pct": (roi*100.0) if pd.notna(roi) else None,
-                "tier": f"{emoji} {label}"
+                "roi_pct": (roi*100.0) if pd.notna(roi) else None
             })
         best = pd.DataFrame(rows).sort_values("roi", ascending=False)
 
@@ -335,66 +396,94 @@ with tab_best:
         else:
             enriched["tags"] = enriched["tags"].apply(ensure_list_tags)
 
-        # lucro/peso
+        # lucro/peso & lucro/100peso
         enriched["lucro_por_peso"] = None
         mask = enriched["peso"].apply(lambda x: isinstance(x, (int, float))) & (enriched["peso"]>0)
         enriched.loc[mask, "lucro_por_peso"] = enriched.loc[mask, "profit_per_unit"] / enriched.loc[mask, "peso"]
+        enriched["lucro_100_peso"] = enriched["lucro_por_peso"] * 100.0
 
-        # Universo de tags
-        all_tags = sorted({t for ts in enriched["tags"] for t in (ts or [])})
+        # qty_por_ordem (sem allocator): usa stack_max ou tamanho_pref se >0
+        def qty_for_row(row):
+            sm = row.get("stack_max", None)
+            if pd.isna(sm) or sm is None or sm <= 0:
+                sm = 1000  # fallback razoável
+            if tamanho_pref and tamanho_pref > 0:
+                sm = min(int(sm), int(tamanho_pref))
+            return int(sm)
 
-        # Controles
-        c1, c2, c3, c4 = st.columns([1,1,1,2])
-        min_roi = c1.slider("ROI mínimo", 0.0, 0.5, 0.15, 0.01)
-        top_n   = c2.number_input("Top N", min_value=1, value=min(20, len(enriched)), step=1)
-        cat = ["(todas)"] + sorted([c for c in enriched["categoria"].dropna().unique()])
-        cat_sel = c3.selectbox("Categoria", cat, index=0)
-        tags_sel = c4.multiselect("Tags", options=all_tags, default=[])
+        enriched["qty_por_ordem"] = enriched.apply(qty_for_row, axis=1)
 
-        # Filtros
+        # lucro por slot
+        def lucro_slot(row):
+            if pd.isna(row["profit_per_unit"]) or row["qty_por_ordem"]<=0 or slots_por_ordem<=0:
+                return None
+            return (row["profit_per_unit"] * row["qty_por_ordem"]) / slots_por_ordem
+        enriched["lucro_por_slot"] = enriched.apply(lucro_slot, axis=1)
+
+        # Liquidez (dos seus fills)
+        full_hist, _ = load_history()
+        for col in ["buy_placed_ts","buy_filled_ts","sell_filled_ts"]:
+            if col in full_hist.columns:
+                full_hist[col] = pd.to_datetime(full_hist[col], utc=True, errors="coerce")
+        # Por item: mediana do tempo de round-trip quando tivermos buy_placed e sell_filled
+        liq = []
+        for it, g in full_hist.groupby("item"):
+            g = g.copy()
+            mask_rt = g["buy_placed_ts"].notna() & g["sell_filled_ts"].notna()
+            rt = (g.loc[mask_rt, "sell_filled_ts"] - g.loc[mask_rt, "buy_placed_ts"]).dropna()
+            med_h = median_timedelta_hours(rt) if not rt.empty else None
+            liq.append({"item": it, "median_hours": med_h, "liquidez": liquidity_label(med_h)})
+        liq_df = pd.DataFrame(liq)
+        enriched = enriched.merge(liq_df, on="item", how="left")
+
+        # Filtros e view
         filt = (enriched["roi"] >= min_roi) & enriched["roi"].notna()
-        if cat_sel != "(todas)":
-            filt &= (enriched["categoria"] == cat_sel)
-        if tags_sel:
-            filt &= enriched["tags"].apply(lambda ts: any(t in (ts or []) for t in tags_sel))
+        view = enriched.loc[filt].copy().sort_values(["lucro_por_slot","roi"], ascending=[False, False])
 
-        view = enriched.loc[filt].copy().head(int(top_n))
+        # Exibição
         if "timestamp" in view.columns:
-            view["timestamp"] = pd.to_datetime(view["timestamp"], errors="coerce")
+            view["timestamp"] = pd.to_datetime(view["timestamp"], utc=True, errors="coerce")
 
-        # Exibição com tags
         if LIST_COL_AVAILABLE:
             colcfg = {
                 "item": st.column_config.TextColumn("item"),
                 "categoria": st.column_config.TextColumn("categoria"),
-                "peso": st.column_config.NumberColumn("peso", format="%.3f"),
                 "tags": st.column_config.ListColumn("tags"),
+                "peso": st.column_config.NumberColumn("peso", format="%.3f"),
                 "timestamp": st.column_config.DatetimeColumn("timestamp", format="YYYY-MM-DD HH:mm:ss"),
                 "buy_price": st.column_config.NumberColumn("buy", format="%.2f"),
                 "sell_price": st.column_config.NumberColumn("sell", format="%.2f"),
                 "profit_per_unit": st.column_config.NumberColumn("lucro/u", format="%.4f"),
                 "roi_pct": st.column_config.ProgressColumn("ROI", format="%.2f%%", min_value=0, max_value=100),
                 "lucro_por_peso": st.column_config.NumberColumn("lucro/peso", format="%.4f"),
-                "tier": st.column_config.TextColumn("status")
+                "lucro_100_peso": st.column_config.NumberColumn("lucro/100 peso", format="%.2f"),
+                "qty_por_ordem": st.column_config.NumberColumn("qty/ordem"),
+                "lucro_por_slot": st.column_config.NumberColumn("lucro/slot", format="%.2f"),
+                "liquidez": st.column_config.TextColumn("⚡ liquidez")
             }
         else:
             view["tags"] = view["tags"].apply(stringify_tags)
             colcfg = {
                 "item": st.column_config.TextColumn("item"),
                 "categoria": st.column_config.TextColumn("categoria"),
-                "peso": st.column_config.NumberColumn("peso", format="%.3f"),
                 "tags": st.column_config.TextColumn("tags"),
+                "peso": st.column_config.NumberColumn("peso", format="%.3f"),
                 "timestamp": st.column_config.DatetimeColumn("timestamp", format="YYYY-MM-DD HH:mm:ss"),
                 "buy_price": st.column_config.NumberColumn("buy", format="%.2f"),
                 "sell_price": st.column_config.NumberColumn("sell", format="%.2f"),
                 "profit_per_unit": st.column_config.NumberColumn("lucro/u", format="%.4f"),
                 "roi_pct": st.column_config.ProgressColumn("ROI", format="%.2f%%", min_value=0, max_value=100),
                 "lucro_por_peso": st.column_config.NumberColumn("lucro/peso", format="%.4f"),
-                "tier": st.column_config.TextColumn("status")
+                "lucro_100_peso": st.column_config.NumberColumn("lucro/100 peso", format="%.2f"),
+                "qty_por_ordem": st.column_config.NumberColumn("qty/ordem"),
+                "lucro_por_slot": st.column_config.NumberColumn("lucro/slot", format="%.2f"),
+                "liquidez": st.column_config.TextColumn("⚡ liquidez")
             }
 
         st.data_editor(
-            view[["item","categoria","peso","tags","timestamp","buy_price","sell_price","profit_per_unit","roi_pct","lucro_por_peso","tier"]],
+            view[["item","categoria","tags","peso","timestamp","buy_price","sell_price",
+                  "profit_per_unit","roi_pct","lucro_por_peso","lucro_100_peso","qty_por_ordem",
+                  "lucro_por_slot","liquidez"]],
             column_config=colcfg,
             hide_index=True, use_container_width=True, disabled=True,
             height=min(560, 90 + 38*max(1, len(view)))
@@ -481,38 +570,61 @@ Retorne **apenas** o JSON, sem comentários.
 
     def add_to_history(preview_df: pd.DataFrame):
         cur, _ = load_history()
-        new_rows = preview_df[["timestamp","item","buy_price","sell_price","buy_duration","sell_duration"]].copy()
-        new_rows["timestamp"] = pd.to_datetime(new_rows["timestamp"], errors="coerce").dt.tz_localize("UTC").dt.strftime("%Y-%m-%dT%H:%M:%SZ")
+        new_rows = preview_df[["timestamp","item","buy_price","sell_price","buy_duration","sell_duration","buy_placed_ts"]].copy()
+        # Normaliza timestamps para UTC ISO
+        for col in ["timestamp","buy_placed_ts"]:
+            new_rows[col] = pd.to_datetime(new_rows[col], utc=True, errors="coerce").dt.strftime("%Y-%m-%dT%H:%M:%SZ")
         cur = pd.concat([cur, new_rows], ignore_index=True)
         save_history(cur)
 
     df_in = parse_rows(raw) if raw else pd.DataFrame()
+    items_df = load_items().drop_duplicates(subset=["item"])
+
     if not df_in.empty:
         for c in ["buy_duration","sell_duration"]:
             if c not in df_in.columns: df_in[c] = 3
-        if "timestamp" not in df_in.columns: df_in["timestamp"] = now_iso()
+        # timestamp: se não vier, usar agora
+        if "timestamp" not in df_in.columns:
+            df_in["timestamp"] = now_iso()
         df_in["timestamp"] = df_in["timestamp"].fillna(now_iso())
+        # buy_placed_ts = timestamp da coleta (pode editar depois)
+        df_in["buy_placed_ts"] = df_in["timestamp"]
 
+        # preços efetivos
         df_in["buy_price"]  = (df_in["top_buy"] + 0.01).round(2)
         df_in["sell_price"] = (df_in["low_sell"] - 0.01).round(2)
 
+        # Prévia com ROI
         rows = []
         for _, r in df_in.iterrows():
             pp, roi, Fb, Fs = compute_metrics(r["buy_price"], r["sell_price"], r["buy_duration"], r["sell_duration"], st.session_state.tax_pct)
             rows.append({
-                "timestamp": r["timestamp"], "item": r["item"],
+                "timestamp": r["timestamp"],
+                "buy_placed_ts": r["buy_placed_ts"],
+                "item": r["item"],
                 "buy_price": r["buy_price"], "sell_price": r["sell_price"],
                 "buy_duration": int(r["buy_duration"]), "sell_duration": int(r["sell_duration"]),
                 "profit_per_unit": pp, "roi": roi, "roi_pct": roi*100.0
             })
         preview = pd.DataFrame(rows).sort_values("roi", ascending=False)
-        if "timestamp" in preview.columns:
-            preview["timestamp"] = pd.to_datetime(preview["timestamp"], errors="coerce")
+        for col in ["timestamp","buy_placed_ts"]:
+            preview[col] = pd.to_datetime(preview[col], utc=True, errors="coerce")
 
+        # Itens não cadastrados
+        missing_mask = ~preview["item"].isin(items_df["item"])
+        missing_items = preview.loc[missing_mask, "item"].unique().tolist()
+        hide_missing = st.toggle("Ocultar não cadastrados", value=False)
+        if missing_items:
+            st.warning(f"Há {len(missing_items)} item(ns) **não cadastrados**: " + ", ".join(missing_items))
+        # Badge na prévia
+        preview["status"] = preview["item"].apply(lambda x: "🚩 não cadastrado" if x in missing_items else "—")
+
+        # Exibição
         st.subheader("Prévia (ordenada por ROI)")
         st.data_editor(
-            preview[["timestamp","item","buy_price","sell_price","buy_duration","sell_duration","profit_per_unit","roi_pct"]],
+            preview.loc[~(hide_missing & missing_mask), ["status","timestamp","item","buy_price","sell_price","buy_duration","sell_duration","profit_per_unit","roi_pct"]],
             column_config={
+                "status": st.column_config.TextColumn("status"),
                 "timestamp": st.column_config.DatetimeColumn("timestamp", format="YYYY-MM-DD HH:mm:ss"),
                 "item": st.column_config.TextColumn("item"),
                 "buy_price": st.column_config.NumberColumn("buy", format="%.2f"),
@@ -525,14 +637,53 @@ Retorne **apenas** o JSON, sem comentários.
             hide_index=True, use_container_width=True, disabled=True
         )
 
+        # Cadastro rápido inline
+        if missing_items:
+            st.markdown("### Cadastro rápido (itens não cadastrados)")
+            stub = pd.DataFrame({"item": missing_items, "categoria": "", "peso": 0.0, "stack_max": pd.Series([None]*len(missing_items), dtype="Int64"), "tags": [[] for _ in missing_items]})
+            if not LIST_COL_AVAILABLE:
+                stub["tags"] = [""]*len(stub)
+            colcfg = {
+                "item": st.column_config.TextColumn("item", help="Nome do item", required=True),
+                "categoria": st.column_config.TextColumn("categoria", help="Ex.: Wood, Ore, Hide..."),
+                "peso": st.column_config.NumberColumn("peso", format="%.3f", help="Peso por unidade", required=True),
+                "stack_max": st.column_config.NumberColumn("stack_max", help="Opcional", min_value=1, step=1)
+            }
+            if LIST_COL_AVAILABLE:
+                colcfg["tags"] = st.column_config.ListColumn("tags", help="Tags livres", default=[])
+            else:
+                colcfg["tags"] = st.column_config.TextColumn("tags", help="Separadas por vírgula")
+
+            quick = st.data_editor(stub, num_rows="dynamic", column_config=colcfg, hide_index=True, use_container_width=True)
+            if st.button("💾 Salvar cadastro rápido"):
+                quick = quick.dropna(subset=["item"]).copy()
+                if not LIST_COL_AVAILABLE:
+                    quick["tags"] = quick["tags"].apply(ensure_list_tags)
+                try:
+                    quick["peso"] = pd.to_numeric(quick["peso"], errors="coerce")
+                    if "stack_max" in quick.columns:
+                        quick["stack_max"] = pd.to_numeric(quick["stack_max"], errors="coerce").astype("Int64")
+                except Exception:
+                    pass
+                base = load_items()
+                mask_new = ~base["item"].isin(quick["item"])
+                merged = pd.concat([base[mask_new], quick], ignore_index=True)
+                save_items(merged)
+                st.success(f"{len(quick)} item(ns) cadastrados. Recarregando prévia…")
+                st.rerun()
+
         c1, c2 = st.columns(2)
         with c1:
             if st.button("Adicionar ao histórico (append)"):
-                add_to_history(preview)
+                # adiciona também buy_placed_ts
+                df_to_add = preview.copy()
+                add_to_history(df_to_add)
                 st.success(f"{len(preview)} registro(s) adicionados ao histórico.")
                 st.rerun()
         with c2:
-            st.download_button("Baixar processado (JSON)", data=preview.to_json(orient="records", indent=2), file_name="import_preview.json", mime="application/json")
+            st.download_button("Baixar processado (JSON)",
+                               data=preview.to_json(orient="records", indent=2, date_format="iso"),
+                               file_name="import_preview.json", mime="application/json")
     else:
         st.info("Cole ou envie um arquivo para ver a prévia e adicionar ao histórico.")
 
@@ -597,7 +748,7 @@ Retorne **apenas** o JSON (sem comentários).
         st.code(IA_PROMPT, language="markdown")
 
     st.subheader("Importar cadastro (JSON/CSV)")
-    st.caption("Campos esperados: `item` (obrig.), `categoria` (obrig.), `peso` (obrig., decimal com ponto), `stack_max` (opcional, inteiro). Opcional: `tags` (lista ou string separada por vírgulas).")
+    st.caption("Campos: `item` (obrig.), `categoria` (obrig.), `peso` (obrig.), `stack_max` (opcional), `tags` (opcional).")
     pasted_items = st.text_area("Colar JSON/CSV do cadastro", height=140, placeholder='[\n  {"item":"Dark Hide","categoria":"Raw Hide","peso":0.100,"stack_max":1000,"tags":["leve","pvp"]}\n]')
     upload_items = st.file_uploader("...ou enviar arquivo", type=["json","csv"], key="items_upload")
 
@@ -622,7 +773,7 @@ Retorne **apenas** o JSON (sem comentários).
         need = ["item","categoria","peso"]
         missing = [c for c in need if c not in df_items_in.columns]
         if missing:
-            st.error(f"Campos obrigatórios ausentes no payload: {', '.join(missing)}")
+            st.error(f"Campos obrigatórios ausentes: {', '.join(missing)}")
         else:
             try:
                 df_items_in["peso"] = pd.to_numeric(df_items_in["peso"], errors="coerce")
@@ -633,22 +784,19 @@ Retorne **apenas** o JSON (sem comentários).
                     df_items_in["stack_max"] = pd.to_numeric(df_items_in["stack_max"], errors="coerce").astype('Int64')
                 except Exception:
                     pass
-            # normaliza tags
             if "tags" in df_items_in.columns:
                 df_items_in["tags"] = df_items_in["tags"].apply(ensure_list_tags)
             else:
                 df_items_in["tags"] = [[] for _ in range(len(df_items_in))]
 
-            st.subheader("Prévia do cadastro")
             prev = df_items_in.copy()
-            # Exibição de tags: ListColumn ou texto
             if LIST_COL_AVAILABLE:
                 colcfg_prev = {
                     "item": st.column_config.TextColumn("item"),
                     "categoria": st.column_config.TextColumn("categoria"),
                     "peso": st.column_config.NumberColumn("peso", format="%.3f"),
                     **({"stack_max": st.column_config.NumberColumn("stack_max", min_value=1, step=1)} if "stack_max" in prev.columns else {}),
-                    "tags": st.column_config.ListColumn("tags", help="tags livres (strings)")
+                    "tags": st.column_config.ListColumn("tags")
                 }
             else:
                 prev["tags"] = prev["tags"].apply(stringify_tags)
@@ -660,6 +808,7 @@ Retorne **apenas** o JSON (sem comentários).
                     "tags": st.column_config.TextColumn("tags")
                 }
 
+            st.subheader("Prévia do cadastro")
             st.data_editor(
                 prev[["item","categoria","peso"] + (["stack_max"] if "stack_max" in prev.columns else []) + ["tags"]],
                 column_config=colcfg_prev,
@@ -673,7 +822,7 @@ Retorne **apenas** o JSON (sem comentários).
                     mask = ~base["item"].isin(df_items_in["item"])
                     merged = pd.concat([base[mask], df_items_in], ignore_index=True)
                     save_items(merged)
-                    st.success(f"{len(df_items_in)} item(ns) adicionados/atualizados no cadastro.")
+                    st.success(f"{len(df_items_in)} item(ns) adicionados/atualizados.")
                     st.rerun()
             with c2:
                 st.download_button(
@@ -694,29 +843,26 @@ Retorne **apenas** o JSON (sem comentários).
             items_df["stack_max"] = pd.to_numeric(items_df["stack_max"], errors="coerce").astype('Int64')
         except Exception:
             pass
-    # Garante coluna tags
     if "tags" not in items_df.columns:
         items_df["tags"] = [[] for _ in range(len(items_df))]
     else:
         items_df["tags"] = items_df["tags"].apply(ensure_list_tags)
 
-    st.info("Edite os itens abaixo. Regras: **item** e **peso > 0** obrigatórios. `tags`: lista de strings (ou 'a, b, c').")
     if LIST_COL_AVAILABLE:
         colcfg_edit = {
-            "item": st.column_config.TextColumn("item", help="Nome canônico do item", required=True),
+            "item": st.column_config.TextColumn("item", help="Nome do item", required=True),
             "categoria": st.column_config.TextColumn("categoria", help="Ex.: Wood, Ore, Hide, Gem, Consumable..."),
             "peso": st.column_config.NumberColumn("peso", format="%.3f", help="Peso por unidade", required=True),
             "stack_max": st.column_config.NumberColumn("stack_max", help="Opcional", min_value=1, step=1),
-            "tags": st.column_config.ListColumn("tags", help="Tags livres (ex.: 'pvp', 'leve', 'bulk')", default=[]),
+            "tags": st.column_config.ListColumn("tags", help="Tags livres", default=[]),
         }
     else:
-        # fallback: tratar tags como texto
         items_df = items_df.copy()
         items_df["tags"] = items_df["tags"].apply(stringify_tags)
         colcfg_edit = {
-            "item": st.column_config.TextColumn("item", help="Nome canônico do item", required=True),
-            "categoria": st.column_config.TextColumn("categoria", help="Ex.: Wood, Ore, Hide, Gem, Consumable..."),
-            "peso": st.column_config.NumberColumn("peso", format="%.3f", help="Peso por unidade", required=True),
+            "item": st.column_config.TextColumn("item", required=True),
+            "categoria": st.column_config.TextColumn("categoria"),
+            "peso": st.column_config.NumberColumn("peso", format="%.3f", help="Peso por unidade"),
             "stack_max": st.column_config.NumberColumn("stack_max", help="Opcional", min_value=1, step=1),
             "tags": st.column_config.TextColumn("tags", help="Separadas por vírgula"),
         }
@@ -735,7 +881,6 @@ Retorne **apenas** o JSON (sem comentários).
                 st.error("Campos obrigatórios ausentes (item, peso).")
             else:
                 edited = edited.dropna(subset=["item"]).copy()
-                # normaliza tags (caso fallback em texto)
                 edited["tags"] = edited["tags"].apply(ensure_list_tags)
                 if (edited["peso"].fillna(0) <= 0).any():
                     st.error("Há linhas com peso ≤ 0. Corrija e salve novamente.")
@@ -764,7 +909,6 @@ Retorne **apenas** o JSON (sem comentários).
             if dfu.empty or any(c not in dfu.columns for c in needed):
                 st.error("Arquivo inválido. É preciso ao menos: item, categoria, peso.")
             else:
-                # normaliza tags
                 if "tags" in dfu.columns:
                     dfu["tags"] = dfu["tags"].apply(ensure_list_tags)
                 else:

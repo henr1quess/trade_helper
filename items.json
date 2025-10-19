@@ -12,7 +12,124 @@
     "item":"Powerful Oakflesh Balm",
     "categoria":"Consumables",
     "peso":0.5,
-    "stack_max":100,
+    "stack_max":100.0,
+    "tags":[
+
+    ]
+  },
+  {
+    "item":"Tostones",
+    "categoria":"Attribute Bonus Foods",
+    "peso":0.3,
+    "stack_max":100.0,
+    "tags":[
+
+    ]
+  },
+  {
+    "item":"Blackened Lava Barb with Corn Succotash",
+    "categoria":"Attribute Bonus Foods",
+    "peso":0.3,
+    "stack_max":100.0,
+    "tags":[
+
+    ]
+  },
+  {
+    "item":"Desert Sunrise",
+    "categoria":"Attribute Bonus Foods",
+    "peso":0.3,
+    "stack_max":100.0,
+    "tags":[
+
+    ]
+  },
+  {
+    "item":"Roasted Prismatic Filet",
+    "categoria":"Attribute Bonus Foods",
+    "peso":0.3,
+    "stack_max":100.0,
+    "tags":[
+
+    ]
+  },
+  {
+    "item":"Banana Bread",
+    "categoria":"Attribute Bonus Foods",
+    "peso":0.3,
+    "stack_max":100.0,
+    "tags":[
+
+    ]
+  },
+  {
+    "item":"Roasted Gnufish",
+    "categoria":"Attribute Bonus Foods",
+    "peso":0.3,
+    "stack_max":100.0,
+    "tags":[
+
+    ]
+  },
+  {
+    "item":"Banana Pudding",
+    "categoria":"Attribute Bonus Foods",
+    "peso":0.3,
+    "stack_max":100.0,
+    "tags":[
+
+    ]
+  },
+  {
+    "item":"Fried Albenaja",
+    "categoria":"Attribute Bonus Foods",
+    "peso":0.3,
+    "stack_max":100.0,
+    "tags":[
+
+    ]
+  },
+  {
+    "item":"Chili con Armadillo",
+    "categoria":"Attribute Bonus Foods",
+    "peso":0.3,
+    "stack_max":100.0,
+    "tags":[
+
+    ]
+  },
+  {
+    "item":"Fruit Salad",
+    "categoria":"Attribute Bonus Foods",
+    "peso":0.3,
+    "stack_max":100.0,
+    "tags":[
+
+    ]
+  },
+  {
+    "item":"Steamed Abaia Serpe",
+    "categoria":"Attribute Bonus Foods",
+    "peso":0.3,
+    "stack_max":100.0,
+    "tags":[
+
+    ]
+  },
+  {
+    "item":"Banana Parfait",
+    "categoria":"Attribute Bonus Foods",
+    "peso":0.3,
+    "stack_max":100.0,
+    "tags":[
+
+    ]
+  },
+  {
+    "item":"Roasted Rabbit with Seasoned Vegetables",
+    "categoria":"Attribute Bonus Foods",
+    "peso":0.3,
+    "stack_max":100.0,
     "tags":[
 
     ]
