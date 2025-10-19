@@ -3,7 +3,7 @@
     "item":"Runewood",
     "categoria":"Wood",
     "peso":0.2,
-    "stack_max":null,
+    "stack_max":10000,
     "tags":[
 
     ],
