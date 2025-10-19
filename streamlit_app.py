@@ -267,9 +267,9 @@ with st.sidebar.expander("⚙️ Config (calibração & taxa) — clique para ex
 # --------------------------------------------------------------------------------------
 # Tabs
 # --------------------------------------------------------------------------------------
-tab_hist, tab_best, tab_import, tab_cad, tab_calc, tab_coletar = st.tabs([
-    "Histórico",
+tab_best, tab_hist, tab_import, tab_cad, tab_calc, tab_coletar = st.tabs([
     "Oportunidades",
+    "Histórico",
     "Importar preços",
     "Cadastro",
     "Calculadora",
