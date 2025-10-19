@@ -1078,14 +1078,6 @@ Retorne **apenas** o JSON (sem comentários).
 
     items_edit_df = items_df.copy()
 
-    # Pandas extension dtypes (like Int64) combined with list-valued columns
-    # make Streamlit's data_editor unhappy when adding new rows dynamically.
-    # Cast to ``object`` so the widget can freely mix scalars, missing values
-    # and lists without triggering NumPy's "inhomogeneous shape" error.
-    for col in ("stack_max", "tier"):
-        if col in items_edit_df.columns:
-            items_edit_df[col] = items_edit_df[col].astype(object)
-
     if LIST_COL_AVAILABLE:
         colcfg_edit = {
             "item": st.column_config.TextColumn("item", help="Nome do item", required=True),
