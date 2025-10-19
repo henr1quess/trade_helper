@@ -1076,6 +1076,16 @@ Retorne **apenas** o JSON (sem comentários).
         items_df["slug_nwmp"] = items_df["slug_nwmp"].fillna("").astype(str)
     # --- fim normalização ---
 
+    items_edit_df = items_df.copy()
+
+    # Pandas extension dtypes (like Int64) combined with list-valued columns
+    # make Streamlit's data_editor unhappy when adding new rows dynamically.
+    # Cast to ``object`` so the widget can freely mix scalars, missing values
+    # and lists without triggering NumPy's "inhomogeneous shape" error.
+    for col in ("stack_max", "tier"):
+        if col in items_edit_df.columns:
+            items_edit_df[col] = items_edit_df[col].astype(object)
+
     if LIST_COL_AVAILABLE:
         colcfg_edit = {
             "item": st.column_config.TextColumn("item", help="Nome do item", required=True),
@@ -1090,8 +1100,7 @@ Retorne **apenas** o JSON (sem comentários).
             ),
         }
     else:
-        items_df = items_df.copy()
-        items_df["tags"] = items_df["tags"].apply(stringify_tags)
+        items_edit_df["tags"] = items_edit_df["tags"].apply(stringify_tags)
         colcfg_edit = {
             "item": st.column_config.TextColumn("item", required=True),
             "categoria": st.column_config.TextColumn("categoria"),
@@ -1106,8 +1115,8 @@ Retorne **apenas** o JSON (sem comentários).
         }
 
     edited = st.data_editor(
-        items_df
-        if not items_df.empty
+        items_edit_df
+        if not items_edit_df.empty
         else pd.DataFrame(columns=["item","categoria","peso","stack_max","tags","tier","slug_nwmp"]),
         num_rows="dynamic",
         column_config=colcfg_edit,
