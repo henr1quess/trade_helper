@@ -182,6 +182,8 @@ with tab_hist:
                 "roi_pct": roi*100.0
             })
         table = pd.DataFrame(rows).sort_values("timestamp", ascending=False)
+        if "timestamp" in table.columns:
+            table["timestamp"] = pd.to_datetime(table["timestamp"], errors="coerce")
         st.data_editor(
             table,
             column_config={
@@ -247,6 +249,8 @@ with tab_best:
         top_n   = c2.number_input("Top N", min_value=1, value=min(20, len(best)), step=1)
 
         best_f = best[(best["roi"] >= min_roi) & best["roi"].notna()].head(int(top_n))
+        if "timestamp" in best_f.columns:
+            best_f["timestamp"] = pd.to_datetime(best_f["timestamp"], errors="coerce")
 
         st.data_editor(
             best_f[["item","timestamp","buy_price","sell_price","buy_duration","sell_duration","profit_per_unit","roi_pct","tier"]],
@@ -365,6 +369,8 @@ Retorne **apenas** o JSON, sem comentários.
                 "profit_per_unit": pp, "roi": roi, "roi_pct": roi*100.0
             })
         preview = pd.DataFrame(rows).sort_values("roi", ascending=False)
+        if "timestamp" in preview.columns:
+            preview["timestamp"] = pd.to_datetime(preview["timestamp"], errors="coerce")
 
         st.subheader("Prévia (ordenada por ROI)")
         st.data_editor(
