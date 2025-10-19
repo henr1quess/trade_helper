@@ -363,6 +363,12 @@ with tab_best:
     hist_df, _ = load_history()
     items_df = load_items()
 
+    if not items_df.empty:
+        if "peso" in items_df.columns:
+            items_df["peso"] = pd.to_numeric(items_df["peso"], errors="coerce")
+        if "stack_max" in items_df.columns:
+            items_df["stack_max"] = pd.to_numeric(items_df["stack_max"], errors="coerce").astype("Int64")
+
     if hist_df.empty:
         st.info("Ainda não há histórico suficiente. Importe alguns itens primeiro.")
     else:
@@ -389,15 +395,20 @@ with tab_best:
                 if pd.notna(raw):
                     sell_market_val = float(raw) + 0.01
 
-            flip_buy = (float(buy_market_val) + 0.01) if buy_market_val is not None and pd.notna(buy_market_val) else None
-            flip_sell = (float(sell_market_val) - 0.01) if sell_market_val is not None and pd.notna(sell_market_val) else None
-            if flip_buy is not None and flip_sell is not None:
-                pp, roi, Fb, Fs = compute_metrics(flip_buy, flip_sell, assumed_buy, assumed_sell, st.session_state.tax_pct)
+            flip_buy_val = None
+            if buy_market_val is not None and pd.notna(buy_market_val):
+                flip_buy_val = max(float(buy_market_val) + 0.01, 0.0)
+            flip_sell_val = None
+            if sell_market_val is not None and pd.notna(sell_market_val):
+                flip_sell_val = max(float(sell_market_val) - 0.01, 0.0)
+
+            if flip_buy_val is not None and flip_sell_val is not None:
+                pp, roi, Fb, Fs = compute_metrics(flip_buy_val, flip_sell_val, assumed_buy, assumed_sell, st.session_state.tax_pct)
                 rows.append({
                     "item": r["item"],
                     "timestamp": r["timestamp"],
-                    "flip_buy": round(flip_buy, 2),
-                    "flip_sell": round(flip_sell, 2),
+                    "flip_buy": round(flip_buy_val, 2),
+                    "flip_sell": round(flip_sell_val, 2),
                     "profit_per_unit": pp,
                     "roi": roi,
                     "roi_pct": (roi * 100.0) if pd.notna(roi) else None,
@@ -663,15 +674,29 @@ Retorne **apenas** o JSON, sem comentários.
         if "timestamp" not in df_in.columns:
             df_in["timestamp"] = now_iso()
         df_in["timestamp"] = df_in["timestamp"].fillna(now_iso())
+
+        # garantir numérico antes de arredondar
+        df_in["top_buy"] = pd.to_numeric(df_in.get("top_buy"), errors="coerce")
+        df_in["low_sell"] = pd.to_numeric(df_in.get("low_sell"), errors="coerce")
+
         # preços de MERCADO (sem ajustes)
         df_in["buy_market"] = df_in["top_buy"].round(2)
         df_in["sell_market"] = df_in["low_sell"].round(2)
 
+        # descartar entradas inválidas
+        df_in = df_in.dropna(subset=["buy_market", "sell_market", "item"])
+
+        if df_in.empty:
+            st.warning("Nenhum registro válido após processar os preços.")
+            st.stop()
+
         # Prévia com ROI
         rows = []
         for _, r in df_in.iterrows():
-            flip_buy = (r["buy_market"] + 0.01).round(2)
-            flip_sell = (r["sell_market"] - 0.01).round(2)
+            buy_market_val = float(r["buy_market"])
+            sell_market_val = float(r["sell_market"])
+            flip_buy = max(round(buy_market_val + 0.01, 2), 0.0)
+            flip_sell = max(round(sell_market_val - 0.01, 2), 0.0)
             pp, roi, Fb, Fs = compute_metrics(flip_buy, flip_sell, 3, 3, st.session_state.tax_pct)
             rows.append({
                 "timestamp": r["timestamp"],
