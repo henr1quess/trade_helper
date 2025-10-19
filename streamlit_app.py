@@ -32,11 +32,11 @@ ITEMS_PATH = SCRIPT_DIR / "items.json"  # master data of items (cadastro)
 DEFAULT_NWMP_SERVER = os.getenv("NWMP_SERVER", "devaloka")
 DEFAULT_NWMP_BUY_SRC = os.getenv(
     "NWMP_BUY_SRC",
-    "https://storage.googleapis.com/nwmp-history/devaloka-buy-orders.json.gz",
+    "https://nwmpdata.gaming.tools/buy-orders2/devaloka.json",
 )
 DEFAULT_NWMP_SELL_SRC = os.getenv(
     "NWMP_SELL_SRC",
-    "https://storage.googleapis.com/nwmp-history/devaloka-auctions.json.gz",
+    "https://nwmpdata.gaming.tools/auctions2/devaloka.json",
 )
 DEFAULT_NWMP_RAW_ROOT = os.getenv("NWMP_RAW_ROOT", "raw")
 DEFAULT_NWMP_CSV = os.getenv("NWMP_CSV_PATH", "data/history_devaloka.csv")
@@ -1417,7 +1417,7 @@ with tab_coletar:
                 )
             else:
                 try:
-                    with st.spinner("Reconstruindo CSV a partir de raw/snapshots/..."):
+                    with st.spinner("Reconstruindo CSV a partir de raw/buy.json + raw/sell.json..."):
                         nwmp_sync.run_rebuild(
                             raw_root=DEFAULT_NWMP_RAW_ROOT,
                             csv_path=DEFAULT_NWMP_CSV,

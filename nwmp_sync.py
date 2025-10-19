@@ -1,10 +1,10 @@
 # nwmp_sync.py
 from __future__ import annotations
 # Requisitos: pandas (obrigatório), requests (apenas para URLs)
-import json, gzip, os
-from io import BytesIO, TextIOWrapper
+import gzip
+import json
 from pathlib import Path
-from typing import Any, Dict, Iterable, Iterator, List, Optional, Tuple
+from typing import Any, Dict, Iterable, List, Optional, Tuple
 from datetime import datetime, timezone
 import pandas as pd
 
@@ -78,10 +78,6 @@ def _detect_snapshot_ts(entries: List[Dict[str, Any]]) -> str:
     base = min(tss).astimezone(timezone.utc) if tss else datetime.now(timezone.utc)
     return _ts_iso_z(base)
 
-def _ts_for_filename(ts_iso_z: str) -> str:
-    # 2025-10-19T15:21:10Z -> 20251019T152110Z
-    return ts_iso_z.replace("-", "").replace(":", "")
-
 # ------------------ Load snapshot arrays ------------------
 
 def load_snapshot_array(path_or_url: str, timeout: int = 60) -> List[Dict[str, Any]]:
@@ -94,18 +90,46 @@ def load_snapshot_array(path_or_url: str, timeout: int = 60) -> List[Dict[str, A
 
 # ------------------ RAW save ------------------
 
-def _dump_json_gz(path: Path, obj: Any) -> None:
-    _ensure_dir(path.parent)
-    raw = json.dumps(obj, ensure_ascii=False, separators=(",", ":")).encode("utf-8")
-    with gzip.open(path, "wb") as f:
-        f.write(raw)
+def _load_json_list(path: Path) -> List[Dict[str, Any]]:
+    if not path.exists():
+        return []
+    try:
+        data = json.loads(path.read_text(encoding="utf-8"))
+    except Exception:
+        return []
+    if isinstance(data, list):
+        return [x for x in data if isinstance(x, dict)]
+    return []
 
-def _append_ndjson(path: Path, rows: Iterable[Dict[str, Any]]) -> None:
+def _write_json_list(path: Path, entries: List[Dict[str, Any]]) -> None:
     _ensure_dir(path.parent)
-    with open(path, "a", encoding="utf-8", newline="\n") as f:
-        for r in rows:
-            f.write(json.dumps(r, ensure_ascii=False, separators=(",", ":")))
-            f.write("\n")
+    with open(path, "w", encoding="utf-8") as f:
+        json.dump(entries, f, ensure_ascii=False, indent=2)
+
+def _merge_history_entries(
+    existing: List[Dict[str, Any]], new_entries: Iterable[Dict[str, Any]]
+) -> List[Dict[str, Any]]:
+    seen = set()
+    merged: List[Dict[str, Any]] = []
+
+    def _key(entry: Dict[str, Any]) -> str:
+        return json.dumps(entry, sort_keys=True, ensure_ascii=False, separators=(",", ":"))
+
+    for e in existing:
+        k = _key(e)
+        if k in seen:
+            continue
+        seen.add(k)
+        merged.append(e)
+
+    for e in new_entries:
+        k = _key(e)
+        if k in seen:
+            continue
+        seen.add(k)
+        merged.append(e)
+
+    return merged
 
 def save_raw_snapshot_array(
     path_or_url: str, out_root_raw: str, label: str, timeout: int = 60
@@ -114,21 +138,23 @@ def save_raw_snapshot_array(
     snapshot_ts = _detect_snapshot_ts(entries)
     dt = _normalise_timestamp(snapshot_ts)
     assert dt is not None
-    y, m, d = dt.year, dt.month, dt.day
-    out_dir = Path(out_root_raw) / "snapshots" / f"{y:04d}" / f"{m:02d}" / f"{d:02d}"
-    fname = f"{_ts_for_filename(snapshot_ts)}_{label}.json.gz"
-    out_path = out_dir / fname
-    _dump_json_gz(out_path, entries)
+    history_path = Path(out_root_raw) / f"{label}.json"
+    existing_entries = _load_json_list(history_path)
+    merged_entries = _merge_history_entries(existing_entries, entries)
+    _write_json_list(history_path, merged_entries)
 
-    ndjson_rows = []
+    combined_path = Path(out_root_raw) / "combined.json"
+    combined_existing = _load_json_list(combined_path)
+    combined_new = []
+    side_value = "buy" if label == "buy" else "sell"
     for e in entries:
-        r = dict(e)
-        r["side"] = "buy" if label == "buy" else "sell"
-        r["snapshot_ts"] = snapshot_ts
-        ndjson_rows.append(r)
-    _append_ndjson(Path(out_root_raw) / "combined.ndjson", ndjson_rows)
+        item = dict(e)
+        item["side"] = side_value
+        combined_new.append(item)
+    combined_merged = _merge_history_entries(combined_existing, combined_new)
+    _write_json_list(combined_path, combined_merged)
 
-    return entries, snapshot_ts, out_path
+    return entries, snapshot_ts, history_path
 
 # ------------------ Transform to historical rows ------------------
 
@@ -309,35 +335,17 @@ def sync_sources_save_raw_and_update_csv(
     append_history_json_from_records(records, history_json_path)
 
 def rebuild_csv_from_raw(raw_root: str, csv_path: str, server: str = "devaloka") -> None:
-    root = Path(raw_root) / "snapshots"
-    if not root.exists():
-        raise FileNotFoundError(f"Nada em {root}")
-    buy_files = sorted(root.rglob("*_buy.json.gz"))
-    sell_files = sorted(root.rglob("*_sell.json.gz"))
+    buy_path = Path(raw_root) / "buy.json"
+    sell_path = Path(raw_root) / "sell.json"
 
-    def _key(p: Path) -> Optional[str]:
-        n = p.name
-        if n.endswith("_buy.json.gz"): return n.replace("_buy.json.gz","")
-        if n.endswith("_sell.json.gz"): return n.replace("_sell.json.gz","")
-        return None
+    if not buy_path.exists() and not sell_path.exists():
+        raise FileNotFoundError(f"Nada em {buy_path.parent}")
 
-    buy_map = { _key(p): p for p in buy_files }
-    sell_map = { _key(p): p for p in sell_files }
-    keys = sorted(set(k for k in buy_map.keys() if k) | set(k for k in sell_map.keys() if k))
-    all_rows: List[Dict[str, Any]] = []
-    for k in keys:
-        be = []
-        se = []
-        if k in buy_map:
-            with gzip.open(buy_map[k], "rb") as f:
-                be = _read_json_bytes(f.read())
-        if k in sell_map:
-            with gzip.open(sell_map[k], "rb") as f:
-                se = _read_json_bytes(f.read())
-        rows = extract_records_from_snapshots(be or [], se or [], server=server)
-        if rows:
-            all_rows.extend(rows)
-    update_csv(all_rows, csv_path)
+    buy_entries = _load_json_list(buy_path)
+    sell_entries = _load_json_list(sell_path)
+
+    records = extract_records_from_snapshots(buy_entries, sell_entries, server=server)
+    update_csv(records, csv_path)
 
 # Conveniências simples para o app
 def run_sync(buy_url_or_path: str, sell_url_or_path: str, raw_root: str="raw",
