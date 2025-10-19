@@ -64,9 +64,40 @@ def stringify_tags(x):
     lst = ensure_list_tags(x)
     return ", ".join(lst)
 
+
+def _to_tier_int(x):
+    if pd.isna(x):
+        return pd.NA
+    s = str(x).strip()
+    if not s:
+        return pd.NA
+    if s.lower().startswith("t") and s[1:].isdigit():
+        return int(s[1:])
+    try:
+        return int(float(s))
+    except Exception:
+        return pd.NA
+
 def load_items():
     # now supports optional 'tier' e 'slug_nwmp'
-    return load_json_records(ITEMS_PATH, ["item","categoria","peso","stack_max","tags","tier","slug_nwmp"])
+    df = load_json_records(ITEMS_PATH, ["item","categoria","peso","stack_max","tags","tier","slug_nwmp"])
+    if "peso" in df.columns:
+        df["peso"] = pd.to_numeric(df["peso"], errors="coerce")
+    if "stack_max" in df.columns:
+        df["stack_max"] = pd.to_numeric(df["stack_max"], errors="coerce").astype("Int64")
+    if "tags" not in df.columns:
+        df["tags"] = [[] for _ in range(len(df))]
+    else:
+        df["tags"] = df["tags"].apply(ensure_list_tags)
+    if "tier" in df.columns:
+        df["tier"] = df["tier"].apply(_to_tier_int).astype("Int64")
+    else:
+        df["tier"] = pd.Series([pd.NA] * len(df), dtype="Int64")
+    if "slug_nwmp" not in df.columns:
+        df["slug_nwmp"] = ""
+    else:
+        df["slug_nwmp"] = df["slug_nwmp"].fillna("").astype(str)
+    return df
 
 def save_items(df: pd.DataFrame):
     ITEMS_PATH.parent.mkdir(parents=True, exist_ok=True)
@@ -75,14 +106,19 @@ def save_items(df: pd.DataFrame):
         if c not in df.columns:
             df[c] = None
     df["tags"] = df["tags"].apply(ensure_list_tags)
-    if "slug_nwmp" in df.columns:
-        def _clean_slug(val):
-            if val is None or (isinstance(val, float) and pd.isna(val)):
-                return ""
-            s = str(val).strip()
-            return s if s.lower() != "nan" else ""
+    df["peso"] = pd.to_numeric(df["peso"], errors="coerce")
+    if "stack_max" in df.columns:
+        df["stack_max"] = pd.to_numeric(df["stack_max"], errors="coerce").astype("Int64")
+    if "tier" in df.columns:
+        df["tier"] = df["tier"].apply(_to_tier_int).astype("Int64")
 
-        df["slug_nwmp"] = df["slug_nwmp"].apply(_clean_slug)
+    def _clean_slug(val):
+        if val is None or (isinstance(val, float) and pd.isna(val)):
+            return ""
+        s = str(val).strip()
+        return "" if s.lower() == "nan" else s
+
+    df["slug_nwmp"] = df["slug_nwmp"].apply(_clean_slug)
     df.to_json(ITEMS_PATH, orient="records", indent=2, force_ascii=False)
 
 def load_first_existing(paths):
@@ -794,7 +830,7 @@ Retorne **apenas** o JSON, sem comentários.
                 "peso": 0.0,
                 "stack_max": pd.Series([None]*len(missing_items), dtype="Int64"),
                 "tags": [[] for _ in missing_items],
-                "tier": "",
+                "tier": pd.Series([pd.NA]*len(missing_items), dtype="Int64"),
                 "slug_nwmp": "",
             })
             if not LIST_COL_AVAILABLE:
@@ -809,7 +845,7 @@ Retorne **apenas** o JSON, sem comentários.
                 colcfg["tags"] = st.column_config.ListColumn("tags", help="Tags livres", default=[])
             else:
                 colcfg["tags"] = st.column_config.TextColumn("tags", help="Separadas por vírgula")
-            colcfg["tier"] = st.column_config.TextColumn("tier", help="Opcional (ex.: T1–T5)")
+            colcfg["tier"] = st.column_config.NumberColumn("tier", help="Opcional (ex.: 1–5)", min_value=1, step=1)
             colcfg["slug_nwmp"] = st.column_config.TextColumn(
                 "slug_nwmp",
                 help="Slug usado no NWMP (ex.: runewood). Opcional, mas necessário para coletar preços.",
@@ -824,6 +860,8 @@ Retorne **apenas** o JSON, sem comentários.
                     quick["peso"] = pd.to_numeric(quick["peso"], errors="coerce")
                     if "stack_max" in quick.columns:
                         quick["stack_max"] = pd.to_numeric(quick["stack_max"], errors="coerce").astype("Int64")
+                    if "tier" in quick.columns:
+                        quick["tier"] = quick["tier"].apply(_to_tier_int).astype("Int64")
                 except Exception:
                     pass
                 base = load_items()
@@ -950,9 +988,13 @@ Retorne **apenas** o JSON (sem comentários).
             else:
                 df_items_in["tags"] = [[] for _ in range(len(df_items_in))]
             if "tier" not in df_items_in.columns:
-                df_items_in["tier"] = None
+                df_items_in["tier"] = pd.Series([pd.NA] * len(df_items_in), dtype="Int64")
+            else:
+                df_items_in["tier"] = df_items_in["tier"].apply(_to_tier_int).astype("Int64")
             if "slug_nwmp" not in df_items_in.columns:
-                df_items_in["slug_nwmp"] = None
+                df_items_in["slug_nwmp"] = ""
+            else:
+                df_items_in["slug_nwmp"] = df_items_in["slug_nwmp"].fillna("").astype(str)
 
             prev = df_items_in.copy()
             if LIST_COL_AVAILABLE:
@@ -962,7 +1004,7 @@ Retorne **apenas** o JSON (sem comentários).
                     "peso": st.column_config.NumberColumn("peso", format="%.3f"),
                     **({"stack_max": st.column_config.NumberColumn("stack_max", min_value=1, step=1)} if "stack_max" in prev.columns else {}),
                     "tags": st.column_config.ListColumn("tags"),
-                    "tier": st.column_config.TextColumn("tier", help="Opcional (ex.: T1–T5)"),
+                    "tier": st.column_config.NumberColumn("tier", help="Opcional (ex.: 1–5)", min_value=1, step=1),
                     "slug_nwmp": st.column_config.TextColumn(
                         "slug_nwmp", help="Slug usado no NWMP (opcional)"
                     ),
@@ -975,7 +1017,7 @@ Retorne **apenas** o JSON (sem comentários).
                     "peso": st.column_config.NumberColumn("peso", format="%.3f"),
                     **({"stack_max": st.column_config.NumberColumn("stack_max", min_value=1, step=1)} if "stack_max" in prev.columns else {}),
                     "tags": st.column_config.TextColumn("tags"),
-                    "tier": st.column_config.TextColumn("tier", help="Opcional (ex.: T1–T5)"),
+                    "tier": st.column_config.NumberColumn("tier", help="Opcional (ex.: 1–5)", min_value=1, step=1),
                     "slug_nwmp": st.column_config.TextColumn(
                         "slug_nwmp", help="Slug usado no NWMP (opcional)"
                     ),
@@ -1011,24 +1053,28 @@ Retorne **apenas** o JSON (sem comentários).
                 )
 
     st.markdown("### Editar cadastro existente")
+    # --- normalização de tipos do cadastro ---
     if "peso" in items_df.columns:
-        try:
-            items_df["peso"] = pd.to_numeric(items_df["peso"], errors="coerce")
-        except Exception:
-            pass
+        items_df["peso"] = pd.to_numeric(items_df["peso"], errors="coerce")
+
     if "stack_max" in items_df.columns:
-        try:
-            items_df["stack_max"] = pd.to_numeric(items_df["stack_max"], errors="coerce").astype('Int64')
-        except Exception:
-            pass
+        items_df["stack_max"] = pd.to_numeric(items_df["stack_max"], errors="coerce").astype("Int64")
+
     if "tags" not in items_df.columns:
         items_df["tags"] = [[] for _ in range(len(items_df))]
     else:
         items_df["tags"] = items_df["tags"].apply(ensure_list_tags)
-    if "tier" not in items_df.columns:
-        items_df["tier"] = None
+
+    if "tier" in items_df.columns:
+        items_df["tier"] = items_df["tier"].apply(_to_tier_int).astype("Int64")
+    else:
+        items_df["tier"] = pd.Series([pd.NA] * len(items_df), dtype="Int64")
+
     if "slug_nwmp" not in items_df.columns:
         items_df["slug_nwmp"] = ""
+    else:
+        items_df["slug_nwmp"] = items_df["slug_nwmp"].fillna("").astype(str)
+    # --- fim normalização ---
 
     if LIST_COL_AVAILABLE:
         colcfg_edit = {
@@ -1037,7 +1083,7 @@ Retorne **apenas** o JSON (sem comentários).
             "peso": st.column_config.NumberColumn("peso", format="%.3f", help="Peso por unidade", required=True),
             "stack_max": st.column_config.NumberColumn("stack_max", help="Opcional", min_value=1, step=1),
             "tags": st.column_config.ListColumn("tags", help="Tags livres", default=[]),
-            "tier": st.column_config.TextColumn("tier", help="Opcional (ex.: T1–T5)"),
+            "tier": st.column_config.NumberColumn("tier", help="Opcional (ex.: 1–5)", min_value=1, step=1),
             "slug_nwmp": st.column_config.TextColumn(
                 "slug_nwmp",
                 help="Slug usado no NWMP (ex.: runewood). Necessário para coletar preços automaticamente.",
@@ -1052,7 +1098,7 @@ Retorne **apenas** o JSON (sem comentários).
             "peso": st.column_config.NumberColumn("peso", format="%.3f", help="Peso por unidade"),
             "stack_max": st.column_config.NumberColumn("stack_max", help="Opcional", min_value=1, step=1),
             "tags": st.column_config.TextColumn("tags", help="Separadas por vírgula"),
-            "tier": st.column_config.TextColumn("tier", help="Opcional (ex.: T1–T5)"),
+            "tier": st.column_config.NumberColumn("tier", help="Opcional (ex.: 1–5)", min_value=1, step=1),
             "slug_nwmp": st.column_config.TextColumn(
                 "slug_nwmp",
                 help="Slug usado no NWMP (ex.: runewood). Necessário para coletar preços automaticamente.",
@@ -1079,6 +1125,8 @@ Retorne **apenas** o JSON (sem comentários).
                 if (edited["peso"].fillna(0) <= 0).any():
                     st.error("Há linhas com peso ≤ 0. Corrija e salve novamente.")
                 else:
+                    if "tier" in edited.columns:
+                        edited["tier"] = edited["tier"].apply(_to_tier_int).astype("Int64")
                     save_items(edited)
                     st.success(f"{len(edited)} item(ns) salvos no cadastro.")
                     st.rerun()
@@ -1107,6 +1155,14 @@ Retorne **apenas** o JSON (sem comentários).
                     dfu["tags"] = dfu["tags"].apply(ensure_list_tags)
                 else:
                     dfu["tags"] = [[] for _ in range(len(dfu))]
+                if "tier" in dfu.columns:
+                    dfu["tier"] = dfu["tier"].apply(_to_tier_int).astype("Int64")
+                else:
+                    dfu["tier"] = pd.Series([pd.NA] * len(dfu), dtype="Int64")
+                if "slug_nwmp" in dfu.columns:
+                    dfu["slug_nwmp"] = dfu["slug_nwmp"].fillna("").astype(str)
+                else:
+                    dfu["slug_nwmp"] = ""
                 base = load_items()
                 mask = ~base["item"].isin(dfu["item"])
                 merged = pd.concat([base[mask], dfu], ignore_index=True)
