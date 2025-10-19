@@ -113,48 +113,11 @@ def fmt(x, p=4):
     except: return str(x)
 
 def tier_from_roi(roi):
-    # returns (emoji, label)
     if roi >= 0.30: return "🟢", "🔥 Excelente"
     if roi >= 0.20: return "🟢", "Ótimo"
     if roi >= 0.15: return "🟢", "Bom"
     if roi >= 0.10: return "🟡", "Morno"
     return "🔴", "Baixo"
-
-# -------------------- Sidebar Config (collapsed) --------------------
-with st.sidebar.expander("⚙️ Config (calibração & taxa) — clique para expandir", expanded=False):
-    st.write(f"**Config lida de:** {cfg_path if cfg_path else 'padrões internos'}")
-    st.write(f"HOME: {HOME_CFG}")
-    st.write(f"LOCAL: {LOCAL_CFG}")
-    st.session_state.tax_pct = st.number_input("Sales tax r (%)", 0.0, 15.0, float(st.session_state.tax_pct), 0.25)
-
-    st.markdown("**Calibrar SELL (por duração)**")
-    cols = st.columns(4); changed=False
-    for d, c in zip(DURATIONS, cols):
-        up = c.number_input(f"S{d}d price", key=f"sell_up_{d}", value=float(sell_defaults[d]['S']), format="%.5f")
-        qy = c.number_input(f"Qs{d}d qty", key=f"sell_q_{d}", value=int(sell_defaults[d]['Q']), step=1)
-        fe = c.number_input(f"Fs{d}d fee", key=f"sell_fee_{d}", value=float(sell_defaults[d]['F']), format="%.5f")
-        if c.button(f"Salvar {d}d", key=f"save_sell_{d}"):
-            r_eff = (fe/(up*qy)) if up*qy>0 else 0.0
-            if r_eff>0: st.session_state.sell_rates[d]=r_eff; changed=True
-
-    st.markdown("**Calibrar BUY (por duração)**")
-    cols = st.columns(4)
-    for d, c in zip(DURATIONS, cols):
-        up = c.number_input(f"B{d}d price", key=f"buy_up_{d}", value=float(buy_defaults[d]['B']), format="%.5f")
-        qy = c.number_input(f"Qb{d}d qty", key=f"buy_q_{d}", value=int(buy_defaults[d]['Q']), step=1)
-        fe = c.number_input(f"Fb{d}d fee", key=f"buy_fee_{d}", value=float(buy_defaults[d]['F']), format="%.5f")
-        if c.button(f"Salvar {d}d", key=f"save_buy_{d}"):
-            r_eff = (fe/(up*qy)) if up*qy>0 else 0.0
-            if r_eff>0: st.session_state.buy_rates[d]=r_eff; changed=True
-
-    if changed or (float(cfg.get("tax_pct",-1)) != float(st.session_state.tax_pct)):
-        new_cfg = {
-            "tax_pct": float(st.session_state.tax_pct),
-            "sell_rates": {str(k): float(v) for k,v in st.session_state.sell_rates.items()},
-            "buy_rates":  {str(k): float(v) for k,v in st.session_state.buy_rates.items()},
-        }
-        for p in save_to_all(new_cfg, CFG_CANDIDATES):
-            st.success(f"Config salva em: {p}")
 
 # -------------------- Tabs --------------------
 tab_hist, tab_best, tab_import, tab_calc = st.tabs(["Histórico", "Melhores", "Importar", "Calculadora"])
@@ -166,11 +129,12 @@ with tab_hist:
     st.caption(f"Lendo de: `{(src_path or HISTORY_PATH).resolve()}` (salva em `{HISTORY_PATH.resolve()}`)")
 
     if not hist_df.empty:
-        # Recalcula métricas por linha (com as taxas atuais)
+        # Build view table with original row ids for deletion mapping
         rows = []
-        for _, r in hist_df.iterrows():
+        for idx, r in hist_df.reset_index().iterrows():
             pp, roi, Fb, Fs = compute_metrics(r["buy_price"], r["sell_price"], r["buy_duration"], r["sell_duration"], st.session_state.tax_pct)
             rows.append({
+                "row_id": int(r["index"]),  # original index from file
                 "timestamp": r["timestamp"],
                 "item": r["item"],
                 "buy_price": r["buy_price"],
@@ -178,40 +142,82 @@ with tab_hist:
                 "buy_duration": int(r["buy_duration"]),
                 "sell_duration": int(r["sell_duration"]),
                 "profit_per_unit": pp,
-                "roi": roi,
-                "roi_pct": roi*100.0
+                "roi_pct": (roi*100.0) if pd.notna(roi) else None
             })
         table = pd.DataFrame(rows).sort_values("timestamp", ascending=False)
         if "timestamp" in table.columns:
             table["timestamp"] = pd.to_datetime(table["timestamp"], errors="coerce")
-        st.data_editor(
-            table,
-            column_config={
-                "timestamp": st.column_config.DatetimeColumn("timestamp", format="YYYY-MM-DD HH:mm:ss"),
-                "item": st.column_config.TextColumn("item"),
-                "buy_price": st.column_config.NumberColumn("buy", format="%.2f"),
-                "sell_price": st.column_config.NumberColumn("sell", format="%.2f"),
-                "buy_duration": st.column_config.NumberColumn("buy d"),
-                "sell_duration": st.column_config.NumberColumn("sell d"),
-                "profit_per_unit": st.column_config.NumberColumn("lucro/u", format="%.4f"),
-                "roi": None,
-                "roi_pct": st.column_config.ProgressColumn("ROI", format="%.2f%%", min_value=0, max_value=100)
-            },
-            hide_index=True, use_container_width=True, disabled=True,
-            height=min(560, 90 + 38*max(1, len(table)))
-        )
+
+        # Show a read-only dataframe with multi-row selection using mouse
+        st.caption("Dica: segure Ctrl/Cmd para seleção múltipla")
+        df_key = "hist_tbl"
+        try:
+            st.dataframe(
+                table.set_index("row_id"),
+                use_container_width=True,
+                on_select="rerun",
+                selection_mode="multi-row",
+                key=df_key,
+            )
+            # Retrieve selected row_ids from session_state
+            sel_row_ids = []
+            state = st.session_state.get(df_key, {})
+            sel = state.get("selection", {})
+            # Streamlit may expose as {'rows':[index,...]} or {'rows':[{'row':'<index>'},...]}
+            rows_sel = sel.get("rows", sel.get("indices", []))
+            for r in rows_sel or []:
+                if isinstance(r, dict):
+                    # st may return {'row': <int>} or {'index': <int>}
+                    if "row" in r: sel_row_ids.append(int(r["row"]))
+                    elif "index" in r: sel_row_ids.append(int(r["index"]))
+                elif isinstance(r, int):
+                    sel_row_ids.append(int(r))
+        except Exception:
+            # Fallback: no selection API -> render plain table and inform user
+            st.dataframe(table.set_index("row_id"), use_container_width=True)
+            sel_row_ids = []
+
         c1, c2, c3 = st.columns(3)
         with c1:
-            st.download_button("Baixar histórico (JSON)", data=table.to_json(orient="records", indent=2), file_name="history_with_roi.json", mime="application/json")
+            st.download_button(
+                "Baixar histórico (JSON)",
+                data=table.to_json(orient="records", indent=2),
+                file_name="history_with_roi.json",
+                mime="application/json"
+            )
         with c2:
-            if st.button("Limpar histórico"):
-                HISTORY_PATH.unlink(missing_ok=True)
-                st.rerun()
+            # Delete selected rows (by row_id)
+            disabled = len(sel_row_ids) == 0
+            if st.button(f"🗑️ Apagar selecionados ({len(sel_row_ids)})", disabled=disabled):
+                if sel_row_ids:
+                    new_df = hist_df.drop(index=sel_row_ids, errors="ignore")
+                    save_history(new_df)
+                    st.success(f"Removidas {len(sel_row_ids)} linha(s) do histórico.")
+                    st.rerun()
         with c3:
-            st.caption(f"Registros: {len(table)} • Última atualização: {now_iso()}")
+            # Two-step confirmation to clear all
+            if "confirm_clear" not in st.session_state:
+                st.session_state.confirm_clear = False
+
+            if not st.session_state.confirm_clear:
+                if st.button("⚠️ Limpar histórico (todos)"):
+                    st.session_state.confirm_clear = True
+                    st.experimental_rerun()
+            else:
+                st.warning("Tem certeza que deseja **apagar TODO o histórico**? Essa ação não pode ser desfeita.")
+                b1, b2 = st.columns(2)
+                with b1:
+                    if st.button("✅ Confirmar limpeza"):
+                        HISTORY_PATH.unlink(missing_ok=True)
+                        st.session_state.confirm_clear = False
+                        st.success("Histórico limpo.")
+                        st.rerun()
+                with b2:
+                    if st.button("Cancelar"):
+                        st.session_state.confirm_clear = False
+                        st.info("Cancelado. Nada foi apagado.")
     else:
         st.info("Seu histórico está vazio. Vá na aba **Importar** para adicionar itens.")
-
 # ===== Melhores Tab =====
 with tab_best:
     st.markdown("## 🟩 Melhores oportunidades (último preço por item)")
@@ -228,7 +234,13 @@ with tab_best:
         rows = []
         for _, r in tmp.iterrows():
             pp, roi, Fb, Fs = compute_metrics(r["buy_price"], r["sell_price"], r["buy_duration"], r["sell_duration"], st.session_state.tax_pct)
-            emoji, label = tier_from_roi(roi if pd.notna(roi) else 0.0)
+            emoji, label = ("", "")
+            if pd.notna(roi):
+                if roi >= 0.30: emoji, label = "🟢", "🔥 Excelente"
+                elif roi >= 0.20: emoji, label = "🟢", "Ótimo"
+                elif roi >= 0.15: emoji, label = "🟢", "Bom"
+                elif roi >= 0.10: emoji, label = "🟡", "Morno"
+                else: emoji, label = "🔴", "Baixo"
             rows.append({
                 "item": r["item"],
                 "timestamp": r["timestamp"],
@@ -243,12 +255,12 @@ with tab_best:
             })
         best = pd.DataFrame(rows).sort_values("roi", ascending=False)
 
-        # Controles
         c1, c2, c3 = st.columns([1,1,2])
         min_roi = c1.slider("ROI mínimo", 0.0, 0.5, 0.15, 0.01, help="Filtra oportunidades por ROI (ex.: 0.15 = 15%)")
         top_n   = c2.number_input("Top N", min_value=1, value=min(20, len(best)), step=1)
 
         best_f = best[(best["roi"] >= min_roi) & best["roi"].notna()].head(int(top_n))
+
         if "timestamp" in best_f.columns:
             best_f["timestamp"] = pd.to_datetime(best_f["timestamp"], errors="coerce")
 
@@ -265,7 +277,7 @@ with tab_best:
                 "roi_pct": st.column_config.ProgressColumn("ROI", format="%.2f%%", min_value=0, max_value=100),
                 "tier": st.column_config.TextColumn("status")
             },
-            hide_index=True, use_container_width=True, disabled=True,
+            hide_index=True, use_container_width=True,
             height=min(560, 90 + 38*max(1, len(best_f)))
         )
 
@@ -303,7 +315,6 @@ Validação:
 - Se houver dúvida, **ignore** o item.
 Retorne **apenas** o JSON, sem comentários.
 """
-    # Botão copiar prompt
     components.html(
         f"""
         <div>
@@ -338,12 +349,10 @@ Retorne **apenas** o JSON, sem comentários.
     def parse_rows(txt: str) -> pd.DataFrame:
         if not txt: return pd.DataFrame()
         txt = txt.strip()
-        # Try JSON
         try:
             return pd.DataFrame(json.loads(txt))
         except Exception:
             pass
-        # Try CSV
         try:
             return pd.read_csv(StringIO(txt))
         except Exception:
@@ -392,8 +401,9 @@ Retorne **apenas** o JSON, sem comentários.
         with c1:
             if st.button("Adicionar ao histórico (append)"):
                 cur, _ = load_history()
-                # append-only (mantém todos os registros)
-                new_rows = preview[["timestamp","item","buy_price","sell_price","buy_duration","sell_duration"]]
+                new_rows = preview[["timestamp","item","buy_price","sell_price","buy_duration","sell_duration"]].copy()
+                # As timestamp will be saved as string in JSON; ensure ISO string
+                new_rows["timestamp"] = new_rows["timestamp"].astype("datetime64[ns]").dt.tz_localize("UTC", nonexistent="shift_forward", ambiguous="NaT").dt.strftime("%Y-%m-%dT%H:%M:%SZ")
                 cur = pd.concat([cur, new_rows], ignore_index=True)
                 save_history(cur)
                 st.success(f"{len(new_rows)} registro(s) adicionados ao histórico.")
@@ -403,7 +413,7 @@ Retorne **apenas** o JSON, sem comentários.
     else:
         st.info("Cole ou envie um arquivo para ver a prévia e adicionar ao histórico.")
 
-# ===== Calculator Tab =====
+# ===== Calculadora Tab =====
 with tab_calc:
     st.markdown("## Calculadora de Flip")
     col1, col2 = st.columns(2)
