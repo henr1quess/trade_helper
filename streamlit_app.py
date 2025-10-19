@@ -41,9 +41,8 @@ def load_json_records(path: Path, cols=None):
         return pd.DataFrame(columns=cols or [])
 
 def load_history():
-    # agora inclui colunas para liquidez (timestamps de fill)
-    base_cols = ["timestamp","item","buy_price","sell_price","buy_duration","sell_duration",
-                 "buy_placed_ts","buy_filled_ts","sell_filled_ts"]
+    # Histórico agora guarda apenas os preços de mercado (sem fills/durações)
+    base_cols = ["timestamp", "item", "buy_market", "sell_market"]
     for p in HISTORY_READ_CANDIDATES:
         if p.exists():
             return load_json_records(p, base_cols), p
@@ -234,58 +233,88 @@ with tab_hist:
     hist_df, src_path = load_history()
     st.caption(f"Lendo de: `{(src_path or HISTORY_PATH).resolve()}` (salva em `{HISTORY_PATH.resolve()}`)")
 
+    # Durações assumidas para avaliar ROI histórico
+    colA, colB = st.columns(2)
+    dur_buy_hist = colA.selectbox("Duração assumida (compra) p/ ROI histórico", [1, 3, 7, 14], index=1)
+    dur_sell_hist = colB.selectbox("Duração assumida (venda) p/ ROI histórico", [1, 3, 7, 14], index=1)
+
     if not hist_df.empty:
-        # Conversões de tempo
-        for col in ["timestamp","buy_placed_ts","buy_filled_ts","sell_filled_ts"]:
-            if col in hist_df.columns:
-                hist_df[col] = pd.to_datetime(hist_df[col], utc=True, errors="coerce")
+        hist_df["timestamp"] = pd.to_datetime(hist_df["timestamp"], utc=True, errors="coerce")
 
         rows = []
         for idx, r in hist_df.reset_index().iterrows():
-            pp, roi, Fb, Fs = compute_metrics(r["buy_price"], r["sell_price"], r["buy_duration"], r["sell_duration"], st.session_state.tax_pct)
+            buy_market_val = r.get("buy_market")
+            if (buy_market_val is None or pd.isna(buy_market_val)) and "buy_price" in hist_df.columns:
+                raw = r.get("buy_price")
+                if pd.notna(raw):
+                    buy_market_val = round(float(raw) - 0.01, 2)
+            sell_market_val = r.get("sell_market")
+            if (sell_market_val is None or pd.isna(sell_market_val)) and "sell_price" in hist_df.columns:
+                raw = r.get("sell_price")
+                if pd.notna(raw):
+                    sell_market_val = round(float(raw) + 0.01, 2)
+
+            flip_buy = (float(buy_market_val) + 0.01) if buy_market_val is not None and pd.notna(buy_market_val) else None
+            flip_sell = (float(sell_market_val) - 0.01) if sell_market_val is not None and pd.notna(sell_market_val) else None
+            if flip_buy is not None and flip_sell is not None:
+                pp, roi, Fb, Fs = compute_metrics(flip_buy, flip_sell, dur_buy_hist, dur_sell_hist, st.session_state.tax_pct)
+            else:
+                pp, roi = None, None
             rows.append({
                 "row_id": int(r["index"]),
                 "timestamp": r["timestamp"],
                 "item": r["item"],
-                "buy_price": r["buy_price"],
-                "sell_price": r["sell_price"],
-                "buy_duration": int(r["buy_duration"]),
-                "sell_duration": int(r["sell_duration"]),
-                "profit_per_unit": pp,
-                "roi_pct": (roi*100.0) if pd.notna(roi) else None,
-                "buy_placed_ts": r.get("buy_placed_ts", pd.NaT),
-                "buy_filled_ts": r.get("buy_filled_ts", pd.NaT),
-                "sell_filled_ts": r.get("sell_filled_ts", pd.NaT)
+                "buy_market": buy_market_val,
+                "sell_market": sell_market_val,
+                "flip_buy": round(flip_buy, 2) if flip_buy is not None else None,
+                "flip_sell": round(flip_sell, 2) if flip_sell is not None else None,
+                "profit_per_unit_hist": pp,
+                "roi_hist_pct": (roi * 100.0) if roi is not None and pd.notna(roi) else None
             })
         table = pd.DataFrame(rows).sort_values("timestamp", ascending=False)
 
-        st.caption("Dica: segure Ctrl/Cmd para seleção múltipla")
-        df_key = "hist_tbl"
-        try:
-            st.dataframe(
-                table.set_index("row_id"),
-                use_container_width=True,
-                on_select="rerun",
-                selection_mode="multi-row",
-                key=df_key,
-            )
-            sel_row_ids = []
-            state = st.session_state.get(df_key, {})
-            sel = state.get("selection", {})
-            rows_sel = sel.get("rows", sel.get("indices", []))
-            for r in rows_sel or []:
-                if isinstance(r, dict):
-                    if "row" in r: sel_row_ids.append(int(r["row"]))
-                    elif "index" in r: sel_row_ids.append(int(r["index"]))
-                elif isinstance(r, int):
-                    sel_row_ids.append(int(r))
-        except Exception:
-            st.dataframe(table.set_index("row_id"), use_container_width=True)
-            sel_row_ids = []
+        df_key = "hist_tbl_prices"
+        st.dataframe(
+            table.set_index("row_id")[
+                [
+                    "timestamp",
+                    "item",
+                    "buy_market",
+                    "sell_market",
+                    "flip_buy",
+                    "flip_sell",
+                    "profit_per_unit_hist",
+                    "roi_hist_pct",
+                ]
+            ],
+            use_container_width=True,
+            on_select="rerun",
+            selection_mode="multi-row",
+            key=df_key,
+        )
 
-        c1, c2, c3, c4, c5 = st.columns(5)
+        # Seleção e ações
+        sel_row_ids = []
+        state = st.session_state.get(df_key, {})
+        sel = state.get("selection", {})
+        rows_sel = sel.get("rows", sel.get("indices", []))
+        for r in rows_sel or []:
+            if isinstance(r, dict):
+                if "row" in r:
+                    sel_row_ids.append(int(r["row"]))
+                elif "index" in r:
+                    sel_row_ids.append(int(r["index"]))
+            elif isinstance(r, int):
+                sel_row_ids.append(int(r))
+
+        c1, c2 = st.columns(2)
         with c1:
-            st.download_button("Baixar histórico (JSON)", data=table.to_json(orient="records", indent=2, date_format="iso"), file_name="history_with_roi.json", mime="application/json")
+            st.download_button(
+                "Baixar histórico (JSON)",
+                data=table.to_json(orient="records", indent=2, date_format="iso"),
+                file_name="history_prices.json",
+                mime="application/json",
+            )
         with c2:
             disabled = len(sel_row_ids) == 0
             if st.button(f"🗑️ Apagar selecionados ({len(sel_row_ids)})", disabled=disabled):
@@ -294,56 +323,27 @@ with tab_hist:
                     save_history(new_df)
                     st.success(f"Removidas {len(sel_row_ids)} linha(s) do histórico.")
                     st.rerun()
-        with c3:
-            if "confirm_clear" not in st.session_state:
-                st.session_state.confirm_clear = False
-            if not st.session_state.confirm_clear:
-                if st.button("⚠️ Limpar histórico (todos)"):
-                    st.session_state.confirm_clear = True
-                    st.experimental_rerun()
-            else:
-                st.warning("Tem certeza que deseja **apagar TODO o histórico**? Essa ação não pode ser desfeita.")
-                b1, b2 = st.columns(2)
-                with b1:
-                    if st.button("✅ Confirmar limpeza"):
-                        HISTORY_PATH.unlink(missing_ok=True)
-                        st.session_state.confirm_clear = False
-                        st.success("Histórico limpo.")
-                        st.rerun()
-                with b2:
-                    if st.button("Cancelar"):
-                        st.session_state.confirm_clear = False
-                        st.info("Cancelado. Nada foi apagado.")
-        with c4:
-            disabled = len(sel_row_ids) == 0
-            if st.button("✔️ Marcar BUY filled (selecionados)", disabled=disabled):
-                if sel_row_ids:
-                    new_df = hist_df.copy()
-                    ts_now = to_utc_iso()
-                    for rid in sel_row_ids:
-                        if rid in new_df.index:
-                            if pd.isna(new_df.at[rid, "buy_placed_ts"]):
-                                new_df.at[rid, "buy_placed_ts"] = new_df.at[rid, "timestamp"]
-                            new_df.at[rid, "buy_filled_ts"] = ts_now
-                    save_history(new_df)
-                    st.success(f"BUY filled marcado em {len(sel_row_ids)} registro(s).")
+
+        # Limpar tudo (com confirmação)
+        if "confirm_clear" not in st.session_state:
+            st.session_state.confirm_clear = False
+        if not st.session_state.confirm_clear:
+            if st.button("⚠️ Limpar histórico (todos)"):
+                st.session_state.confirm_clear = True
+                st.experimental_rerun()
+        else:
+            st.warning("Tem certeza que deseja **apagar TODO o histórico**? Essa ação não pode ser desfeita.")
+            b1, b2 = st.columns(2)
+            with b1:
+                if st.button("✅ Confirmar limpeza"):
+                    HISTORY_PATH.unlink(missing_ok=True)
+                    st.session_state.confirm_clear = False
+                    st.success("Histórico limpo.")
                     st.rerun()
-        with c5:
-            disabled = len(sel_row_ids) == 0
-            if st.button("✔️ Marcar SELL filled (selecionados)", disabled=disabled):
-                if sel_row_ids:
-                    new_df = hist_df.copy()
-                    ts_now = to_utc_iso()
-                    for rid in sel_row_ids:
-                        if rid in new_df.index:
-                            # se não tinha buy_placed, considere timestamp como placed
-                            if pd.isna(new_df.at[rid, "buy_placed_ts"]):
-                                new_df.at[rid, "buy_placed_ts"] = new_df.at[rid, "timestamp"]
-                            # se não tinha buy_filled, permite ainda assim registrar sell_filled
-                            new_df.at[rid, "sell_filled_ts"] = ts_now
-                    save_history(new_df)
-                    st.success(f"SELL filled marcado em {len(sel_row_ids)} registro(s).")
-                    st.rerun()
+            with b2:
+                if st.button("Cancelar"):
+                    st.session_state.confirm_clear = False
+                    st.info("Cancelado. Nada foi apagado.")
     else:
         st.info("Seu histórico está vazio. Vá na aba **Importar preços** para adicionar itens.")
 
@@ -366,26 +366,57 @@ with tab_best:
     if hist_df.empty:
         st.info("Ainda não há histórico suficiente. Importe alguns itens primeiro.")
     else:
-        # últimos preços por item
+        # últimos preços por item (de mercado)
         tmp = hist_df.copy()
         tmp["ts"] = pd.to_datetime(tmp["timestamp"], utc=True, errors="coerce")
         tmp = tmp.sort_values("ts").groupby("item", as_index=False).tail(1)
 
+        # controles para duração assumida dos flips
+        c_d1, c_d2 = st.columns(2)
+        assumed_buy = c_d1.selectbox("Duração (compra) p/ flip", [1, 3, 7, 14], index=1)
+        assumed_sell = c_d2.selectbox("Duração (venda) p/ flip", [1, 3, 7, 14], index=1)
+
         rows = []
         for _, r in tmp.iterrows():
-            pp, roi, Fb, Fs = compute_metrics(r["buy_price"], r["sell_price"], r["buy_duration"], r["sell_duration"], st.session_state.tax_pct)
-            rows.append({
-                "item": r["item"],
-                "timestamp": r["timestamp"],
-                "buy_price": r["buy_price"],
-                "sell_price": r["sell_price"],
-                "buy_duration": int(r["buy_duration"]),
-                "sell_duration": int(r["sell_duration"]),
-                "profit_per_unit": pp,
-                "roi": roi,
-                "roi_pct": (roi*100.0) if pd.notna(roi) else None
-            })
-        best = pd.DataFrame(rows).sort_values("roi", ascending=False)
+            buy_market_val = r.get("buy_market")
+            if (buy_market_val is None or pd.isna(buy_market_val)) and "buy_price" in tmp.columns:
+                raw = r.get("buy_price")
+                if pd.notna(raw):
+                    buy_market_val = float(raw) - 0.01
+            sell_market_val = r.get("sell_market")
+            if (sell_market_val is None or pd.isna(sell_market_val)) and "sell_price" in tmp.columns:
+                raw = r.get("sell_price")
+                if pd.notna(raw):
+                    sell_market_val = float(raw) + 0.01
+
+            flip_buy = (float(buy_market_val) + 0.01) if buy_market_val is not None and pd.notna(buy_market_val) else None
+            flip_sell = (float(sell_market_val) - 0.01) if sell_market_val is not None and pd.notna(sell_market_val) else None
+            if flip_buy is not None and flip_sell is not None:
+                pp, roi, Fb, Fs = compute_metrics(flip_buy, flip_sell, assumed_buy, assumed_sell, st.session_state.tax_pct)
+                rows.append({
+                    "item": r["item"],
+                    "timestamp": r["timestamp"],
+                    "flip_buy": round(flip_buy, 2),
+                    "flip_sell": round(flip_sell, 2),
+                    "profit_per_unit": pp,
+                    "roi": roi,
+                    "roi_pct": (roi * 100.0) if pd.notna(roi) else None,
+                })
+        best = pd.DataFrame(rows)
+        if best.empty:
+            best = pd.DataFrame(
+                columns=[
+                    "item",
+                    "timestamp",
+                    "flip_buy",
+                    "flip_sell",
+                    "profit_per_unit",
+                    "roi",
+                    "roi_pct",
+                ]
+            )
+        else:
+            best = best.sort_values("roi", ascending=False)
 
         # Merge com cadastro
         items_df = items_df.drop_duplicates(subset=["item"])
@@ -423,21 +454,30 @@ with tab_best:
             return (row["profit_per_unit"] * row["qty_por_ordem"]) / slots_por_ordem
         enriched["lucro_por_slot"] = enriched.apply(lucro_slot, axis=1)
 
-        # Liquidez (dos seus fills)
+        # Liquidez (dos seus fills) — se disponível no histórico legado
+        enriched["liquidez"] = "—"
         full_hist, _ = load_history()
-        for col in ["buy_placed_ts","buy_filled_ts","sell_filled_ts"]:
-            if col in full_hist.columns:
-                full_hist[col] = pd.to_datetime(full_hist[col], utc=True, errors="coerce")
-        # Por item: mediana do tempo de round-trip quando tivermos buy_placed e sell_filled
-        liq = []
-        for it, g in full_hist.groupby("item"):
-            g = g.copy()
-            mask_rt = g["buy_placed_ts"].notna() & g["sell_filled_ts"].notna()
-            rt = (g.loc[mask_rt, "sell_filled_ts"] - g.loc[mask_rt, "buy_placed_ts"]).dropna()
-            med_h = median_timedelta_hours(rt) if not rt.empty else None
-            liq.append({"item": it, "median_hours": med_h, "liquidez": liquidity_label(med_h)})
-        liq_df = pd.DataFrame(liq)
-        enriched = enriched.merge(liq_df, on="item", how="left")
+        liq_cols = {"buy_placed_ts", "sell_filled_ts"}
+        if liq_cols.issubset(set(full_hist.columns)):
+            for col in liq_cols.union({"buy_filled_ts"}):
+                if col in full_hist.columns:
+                    full_hist[col] = pd.to_datetime(full_hist[col], utc=True, errors="coerce")
+            liq = []
+            for it, g in full_hist.groupby("item"):
+                g = g.copy()
+                if {"buy_placed_ts", "sell_filled_ts"}.issubset(g.columns):
+                    mask_rt = g["buy_placed_ts"].notna() & g["sell_filled_ts"].notna()
+                    rt = (g.loc[mask_rt, "sell_filled_ts"] - g.loc[mask_rt, "buy_placed_ts"]).dropna()
+                    med_h = median_timedelta_hours(rt) if not rt.empty else None
+                else:
+                    med_h = None
+                liq.append({"item": it, "median_hours": med_h, "liquidez": liquidity_label(med_h)})
+            liq_df = pd.DataFrame(liq)
+            enriched = enriched.drop(columns=["liquidez"], errors="ignore").merge(liq_df, on="item", how="left")
+            if "liquidez" not in enriched.columns:
+                enriched["liquidez"] = "—"
+            else:
+                enriched["liquidez"] = enriched["liquidez"].fillna("—")
 
         # Filtros e view
         filt = (enriched["roi"] >= min_roi) & enriched["roi"].notna()
@@ -455,15 +495,15 @@ with tab_best:
                 "tags": st.column_config.ListColumn("tags"),
                 "peso": st.column_config.NumberColumn("peso", format="%.3f"),
                 "timestamp": st.column_config.DatetimeColumn("timestamp", format="YYYY-MM-DD HH:mm:ss"),
-                "buy_price": st.column_config.NumberColumn("buy", format="%.2f"),
-                "sell_price": st.column_config.NumberColumn("sell", format="%.2f"),
+                "flip_buy": st.column_config.NumberColumn("flip buy (+0.01)", format="%.2f"),
+                "flip_sell": st.column_config.NumberColumn("flip sell (−0.01)", format="%.2f"),
                 "profit_per_unit": st.column_config.NumberColumn("lucro/u", format="%.4f"),
                 "roi_pct": st.column_config.ProgressColumn("ROI", format="%.2f%%", min_value=0, max_value=100),
                 "lucro_por_peso": st.column_config.NumberColumn("lucro/peso", format="%.4f"),
                 "lucro_100_peso": st.column_config.NumberColumn("lucro/100 peso", format="%.2f"),
                 "qty_por_ordem": st.column_config.NumberColumn("qty/ordem"),
                 "lucro_por_slot": st.column_config.NumberColumn("lucro/slot", format="%.2f"),
-                "liquidez": st.column_config.TextColumn("⚡ liquidez")
+                "liquidez": st.column_config.TextColumn("⚡ liquidez"),
             }
         else:
             view["tags"] = view["tags"].apply(stringify_tags)
@@ -474,24 +514,42 @@ with tab_best:
                 "tags": st.column_config.TextColumn("tags"),
                 "peso": st.column_config.NumberColumn("peso", format="%.3f"),
                 "timestamp": st.column_config.DatetimeColumn("timestamp", format="YYYY-MM-DD HH:mm:ss"),
-                "buy_price": st.column_config.NumberColumn("buy", format="%.2f"),
-                "sell_price": st.column_config.NumberColumn("sell", format="%.2f"),
+                "flip_buy": st.column_config.NumberColumn("flip buy (+0.01)", format="%.2f"),
+                "flip_sell": st.column_config.NumberColumn("flip sell (−0.01)", format="%.2f"),
                 "profit_per_unit": st.column_config.NumberColumn("lucro/u", format="%.4f"),
                 "roi_pct": st.column_config.ProgressColumn("ROI", format="%.2f%%", min_value=0, max_value=100),
                 "lucro_por_peso": st.column_config.NumberColumn("lucro/peso", format="%.4f"),
                 "lucro_100_peso": st.column_config.NumberColumn("lucro/100 peso", format="%.2f"),
                 "qty_por_ordem": st.column_config.NumberColumn("qty/ordem"),
                 "lucro_por_slot": st.column_config.NumberColumn("lucro/slot", format="%.2f"),
-                "liquidez": st.column_config.TextColumn("⚡ liquidez")
+                "liquidez": st.column_config.TextColumn("⚡ liquidez"),
             }
 
         st.data_editor(
-            view[["item","categoria","tier","tags","peso","timestamp","buy_price","sell_price",
-                  "profit_per_unit","roi_pct","lucro_por_peso","lucro_100_peso","qty_por_ordem",
-                  "lucro_por_slot","liquidez"]],
+            view[
+                [
+                    "item",
+                    "categoria",
+                    "tier",
+                    "tags",
+                    "peso",
+                    "timestamp",
+                    "flip_buy",
+                    "flip_sell",
+                    "profit_per_unit",
+                    "roi_pct",
+                    "lucro_por_peso",
+                    "lucro_100_peso",
+                    "qty_por_ordem",
+                    "lucro_por_slot",
+                    "liquidez",
+                ]
+            ],
             column_config=colcfg,
-            hide_index=True, use_container_width=True, disabled=True,
-            height=min(560, 90 + 38*max(1, len(view)))
+            hide_index=True,
+            use_container_width=True,
+            disabled=True,
+            height=min(560, 90 + 38 * max(1, len(view))),
         )
 
 # --------------------------------------------------------------------------------------
@@ -499,7 +557,7 @@ with tab_best:
 # --------------------------------------------------------------------------------------
 with tab_import:
     st.markdown("## Importar preços")
-    st.caption("Use `item, top_buy, low_sell, buy_duration, sell_duration, timestamp`. Assumo **buy = top_buy + 0.01** e **sell = low_sell - 0.01**.")
+    st.caption("Use `item, top_buy, low_sell, buy_duration, sell_duration, timestamp`. Os preços são salvos como mercado (sem ±0.01).")
 
     PROMPT_TEXT = r"""
 Você é uma IA que recebe **várias capturas de tela** (prints) do Trading Post do jogo *New World* com:
@@ -574,11 +632,10 @@ Retorne **apenas** o JSON, sem comentários.
             return pd.DataFrame()
 
     def add_to_history(preview_df: pd.DataFrame):
+        # Agora grava somente os preços de mercado, sem flip
         cur, _ = load_history()
-        new_rows = preview_df[["timestamp","item","buy_price","sell_price","buy_duration","sell_duration","buy_placed_ts"]].copy()
-        # Normaliza timestamps para UTC ISO
-        for col in ["timestamp","buy_placed_ts"]:
-            new_rows[col] = pd.to_datetime(new_rows[col], utc=True, errors="coerce").dt.strftime("%Y-%m-%dT%H:%M:%SZ")
+        new_rows = preview_df[["timestamp", "item", "buy_market", "sell_market"]].copy()
+        new_rows["timestamp"] = pd.to_datetime(new_rows["timestamp"], utc=True, errors="coerce").dt.strftime("%Y-%m-%dT%H:%M:%SZ")
         cur = pd.concat([cur, new_rows], ignore_index=True)
         save_history(cur)
 
@@ -586,34 +643,49 @@ Retorne **apenas** o JSON, sem comentários.
     items_df = load_items().drop_duplicates(subset=["item"])
 
     if not df_in.empty:
-        for c in ["buy_duration","sell_duration"]:
-            if c not in df_in.columns: df_in[c] = 3
         # timestamp: se não vier, usar agora
         if "timestamp" not in df_in.columns:
             df_in["timestamp"] = now_iso()
         df_in["timestamp"] = df_in["timestamp"].fillna(now_iso())
-        # buy_placed_ts = timestamp da coleta (pode editar depois)
-        df_in["buy_placed_ts"] = df_in["timestamp"]
-
-        # preços efetivos
-        df_in["buy_price"]  = (df_in["top_buy"] + 0.01).round(2)
-        df_in["sell_price"] = (df_in["low_sell"] - 0.01).round(2)
+        # preços de MERCADO (sem ajustes)
+        df_in["buy_market"] = df_in["top_buy"].round(2)
+        df_in["sell_market"] = df_in["low_sell"].round(2)
 
         # Prévia com ROI
         rows = []
         for _, r in df_in.iterrows():
-            pp, roi, Fb, Fs = compute_metrics(r["buy_price"], r["sell_price"], r["buy_duration"], r["sell_duration"], st.session_state.tax_pct)
+            flip_buy = (r["buy_market"] + 0.01).round(2)
+            flip_sell = (r["sell_market"] - 0.01).round(2)
+            pp, roi, Fb, Fs = compute_metrics(flip_buy, flip_sell, 3, 3, st.session_state.tax_pct)
             rows.append({
                 "timestamp": r["timestamp"],
-                "buy_placed_ts": r["buy_placed_ts"],
                 "item": r["item"],
-                "buy_price": r["buy_price"], "sell_price": r["sell_price"],
-                "buy_duration": int(r["buy_duration"]), "sell_duration": int(r["sell_duration"]),
-                "profit_per_unit": pp, "roi": roi, "roi_pct": roi*100.0
+                "buy_market": r["buy_market"],
+                "sell_market": r["sell_market"],
+                "flip_buy": flip_buy,
+                "flip_sell": flip_sell,
+                "profit_per_unit": pp,
+                "roi": roi,
+                "roi_pct": roi * 100.0,
             })
-        preview = pd.DataFrame(rows).sort_values("roi", ascending=False)
-        for col in ["timestamp","buy_placed_ts"]:
-            preview[col] = pd.to_datetime(preview[col], utc=True, errors="coerce")
+        preview = pd.DataFrame(rows)
+        if preview.empty:
+            preview = pd.DataFrame(
+                columns=[
+                    "timestamp",
+                    "item",
+                    "buy_market",
+                    "sell_market",
+                    "flip_buy",
+                    "flip_sell",
+                    "profit_per_unit",
+                    "roi",
+                    "roi_pct",
+                ]
+            )
+        else:
+            preview = preview.sort_values("roi", ascending=False)
+            preview["timestamp"] = pd.to_datetime(preview["timestamp"], utc=True, errors="coerce")
 
         # Itens não cadastrados
         missing_mask = ~preview["item"].isin(items_df["item"])
@@ -627,19 +699,34 @@ Retorne **apenas** o JSON, sem comentários.
         # Exibição
         st.subheader("Prévia (ordenada por ROI)")
         st.data_editor(
-            preview.loc[~(hide_missing & missing_mask), ["status","timestamp","item","buy_price","sell_price","buy_duration","sell_duration","profit_per_unit","roi_pct"]],
+            preview.loc[
+                ~(hide_missing & missing_mask),
+                [
+                    "status",
+                    "timestamp",
+                    "item",
+                    "buy_market",
+                    "sell_market",
+                    "flip_buy",
+                    "flip_sell",
+                    "profit_per_unit",
+                    "roi_pct",
+                ],
+            ],
             column_config={
                 "status": st.column_config.TextColumn("status"),
                 "timestamp": st.column_config.DatetimeColumn("timestamp", format="YYYY-MM-DD HH:mm:ss"),
                 "item": st.column_config.TextColumn("item"),
-                "buy_price": st.column_config.NumberColumn("buy", format="%.2f"),
-                "sell_price": st.column_config.NumberColumn("sell", format="%.2f"),
-                "buy_duration": st.column_config.NumberColumn("buy d"),
-                "sell_duration": st.column_config.NumberColumn("sell d"),
+                "buy_market": st.column_config.NumberColumn("buy (market)", format="%.2f"),
+                "sell_market": st.column_config.NumberColumn("sell (market)", format="%.2f"),
+                "flip_buy": st.column_config.NumberColumn("flip buy (+0.01)", format="%.2f"),
+                "flip_sell": st.column_config.NumberColumn("flip sell (−0.01)", format="%.2f"),
                 "profit_per_unit": st.column_config.NumberColumn("lucro/u", format="%.4f"),
-                "roi_pct": st.column_config.ProgressColumn("ROI", format="%.2f%%", min_value=0, max_value=100)
+                "roi_pct": st.column_config.ProgressColumn("ROI", format="%.2f%%", min_value=0, max_value=100),
             },
-            hide_index=True, use_container_width=True, disabled=True
+            hide_index=True,
+            use_container_width=True,
+            disabled=True,
         )
 
         # Cadastro rápido inline
@@ -688,9 +775,7 @@ Retorne **apenas** o JSON, sem comentários.
         c1, c2 = st.columns(2)
         with c1:
             if st.button("Adicionar ao histórico (append)"):
-                # adiciona também buy_placed_ts
-                df_to_add = preview.copy()
-                add_to_history(df_to_add)
+                add_to_history(preview)
                 st.success(f"{len(preview)} registro(s) adicionados ao histórico.")
                 st.rerun()
         with c2:
