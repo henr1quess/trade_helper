@@ -487,6 +487,22 @@ with tab_best:
         if "timestamp" in view.columns:
             view["timestamp"] = pd.to_datetime(view["timestamp"], utc=True, errors="coerce")
 
+        if "tier" in view.columns:
+            def _tier_to_str(val):
+                if pd.isna(val):
+                    return ""
+                if isinstance(val, str):
+                    return val
+                try:
+                    f = float(val)
+                    if f.is_integer():
+                        return str(int(f))
+                    return str(f)
+                except Exception:
+                    return str(val)
+
+            view["tier"] = view["tier"].apply(_tier_to_str)
+
         if LIST_COL_AVAILABLE:
             colcfg = {
                 "item": st.column_config.TextColumn("item"),
