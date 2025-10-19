@@ -1,0 +1,14 @@
+[
+  {
+    "item":"Runewood",
+    "categoria":"Wood",
+    "peso":0.2,
+    "stack_max":10000
+  },
+  {
+    "item":"Powerful Oakflesh Balm",
+    "categoria":"Consumables",
+    "peso":0.5,
+    "stack_max":100
+  }
+]
