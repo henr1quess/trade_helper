@@ -1340,82 +1340,71 @@ with tab_calc:
 with tab_coletar:
     st.markdown("## Coletar histórico (Devaloka)")
 
-    items_df = load_items()
-    if "slug_nwmp" not in items_df.columns:
-        st.error("Seu cadastro ainda não tem a coluna 'slug_nwmp'. Adicione-a na aba Cadastro.")
+    # Inputs de fonte global (dois snapshots) e destinos
+    c1, c2 = st.columns(2)
+    buy_src = c1.text_input("Buy orders (URL ou caminho local)", placeholder="https://.../devaloka-buy-orders.json.gz")
+    sell_src = c2.text_input("Auctions (URL ou caminho local)", placeholder="https://.../devaloka-auctions.json.gz")
+
+    raw_root = st.text_input("Pasta RAW", value="raw", help="Onde salvar os snapshots brutos e combined.ndjson")
+    out_csv = st.text_input("CSV histórico (NWMP)", value="data/history_devaloka.csv")
+    server = st.text_input("Servidor", value="devaloka")
+
+    # O app já usa history.json no restante das abas (Histórico/Oportunidades)
+    # Vamos continuar projetando pontos para esse arquivo.
+    history_json_path = "history.json"
+
+    # Importa o novo módulo do scraper
+    try:
+        import sys
+        from pathlib import Path as _P
+        ROOT = _P.cwd()
+        if str(ROOT) not in sys.path:
+            sys.path.insert(0, str(ROOT))
+        import nwmp_sync
+    except Exception as e:
+        st.error(f"Falha ao importar nwmp_sync: {e}")
     else:
-        has_slug = items_df.dropna(subset=["slug_nwmp"]).copy()
-        if not has_slug.empty:
-            has_slug = has_slug[has_slug["slug_nwmp"].astype(str).str.strip() != ""]
-        if has_slug.empty:
-            st.info("Nenhum item com slug configurado. Vá na aba **Cadastro** e preencha 'slug_nwmp'.")
-        else:
-            pick_items = st.multiselect(
-                "Itens (com slug configurado)",
-                has_slug["item"].tolist(),
-                default=has_slug["item"].tolist(),
-            )
-
-            out_csv = st.text_input("Arquivo CSV de saída", value="devaloka_prices.csv")
-
-            server = st.text_input(
-                "Servidor",
-                value="devaloka",
-                help="Nome do servidor na série histórica do NWMP",
-            )
-            local_dir = st.text_input(
-                "Diretório local (opcional)",
-                value="",
-                help="Se você tiver .json/.json.gz salvos localmente, informe a pasta aqui; senão deixe vazio para baixar do CDN",
-            )
-
-            if st.button("Coletar agora"):
-                if not pick_items:
-                    st.warning("Selecione ao menos um item.")
-                else:
-                    try:
-                        from devaloka_price_scraper import (
-                            extract_devaloka_records,
-                            fetch_item_data,
-                            update_csv,
+        a, b = st.columns(2)
+        if a.button("🔄 Sincronizar agora", use_container_width=True):
+            if not buy_src or not sell_src:
+                st.warning("Informe as duas fontes (Buy e Auctions).")
+            else:
+                try:
+                    with st.spinner("Baixando, salvando RAW e atualizando histórico..."):
+                        nwmp_sync.run_sync(
+                            buy_src, sell_src,
+                            raw_root=raw_root,
+                            csv_path=out_csv,
+                            history_json_path=history_json_path,
+                            server=server
                         )
-                    except Exception as e:
-                        st.error(f"Não consegui importar o scraper: {e}")
-                    else:
-                        import time
-                        import traceback
+                    st.success("Sincronização concluída ✅")
+                except Exception as e:
+                    st.error(f"Falhou: {e}")
 
-                        slugs = has_slug.set_index("item").loc[pick_items, "slug_nwmp"].to_dict()
+        if b.button("🧱 Reprocessar tudo do RAW → CSV", use_container_width=True):
+            try:
+                with st.spinner("Reconstruindo CSV a partir de raw/snapshots/..."):
+                    nwmp_sync.run_rebuild(raw_root=raw_root, csv_path=out_csv, server=server)
+                st.success("Rebuild concluído ✅")
+            except Exception as e:
+                st.error(f"Falhou: {e}")
 
-                        all_records = []
-                        prog = st.progress(0.0)
-                        status = st.empty()
-                        total = len(slugs)
+        # Mostrar prévia do CSV NWMP e do history.json (se existirem)
+        import pandas as pd
+        prev1, prev2 = st.columns(2)
+        try:
+            if Path(out_csv).exists():
+                df_csv = pd.read_csv(out_csv)
+                prev1.caption(f"Prévia CSV NWMP: {out_csv}")
+                prev1.dataframe(df_csv.tail(50), use_container_width=True)
+        except Exception:
+            pass
+        try:
+            if Path(history_json_path).exists():
+                df_hist = pd.read_json(history_json_path, orient="records")
+                prev2.caption(f"Prévia history.json (app): {history_json_path}")
+                prev2.dataframe(df_hist.tail(50), use_container_width=True)
+        except Exception:
+            pass
 
-                        for i, (nome, slug) in enumerate(slugs.items(), start=1):
-                            status.write(f"Baixando **{nome}** ({slug}) [{i}/{total}] …")
-                            try:
-                                data = fetch_item_data(slug, local_dir=local_dir or None)
-                                recs = extract_devaloka_records(data, server=server)
-                                for rec in recs:
-                                    rec.setdefault("item", nome)
-                                    rec.setdefault("slug", slug)
-                                    if server:
-                                        rec.setdefault("server", server)
-                                all_records.extend(recs)
-                            except Exception as err:
-                                st.error(f"{nome} ({slug}): {err}")
-                                st.caption(traceback.format_exc())
-                            prog.progress(i / total)
-                            time.sleep(0.1)
-
-                        if all_records:
-                            try:
-                                update_csv(all_records, csv_path=out_csv)
-                                st.success(
-                                    f"Coleta concluída: {len(all_records)} linhas → **{out_csv}**"
-                                )
-                            except Exception as e:
-                                st.error(f"Falha ao salvar CSV: {e}")
-                        else:
-                            st.info("Nenhum registro coletado (verifique slugs/servidor).")
