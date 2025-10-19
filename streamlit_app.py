@@ -12,7 +12,9 @@ import streamlit.components.v1 as components
 
 st.set_page_config(page_title="New World Helper", page_icon="🪙", layout="wide")
 
-# -------------------- paths & persistence --------------------
+# --------------------------------------------------------------------------------------
+# Paths & persistence
+# --------------------------------------------------------------------------------------
 SCRIPT_DIR = Path(os.getcwd())
 HOME_CFG  = Path.home() / ".nw_flip_config.json"
 LOCAL_CFG = SCRIPT_DIR / "nw_flip_config.json"
@@ -24,6 +26,9 @@ HISTORY_READ_CANDIDATES = [HISTORY_PATH, LEGACY_WATCHLIST]
 
 ITEMS_PATH = SCRIPT_DIR / "items.json"  # master data of items (cadastro)
 
+# --------------------------------------------------------------------------------------
+# Helpers (I/O)
+# --------------------------------------------------------------------------------------
 def load_json_records(path: Path, cols=None):
     try:
         df = pd.read_json(path, orient="records")
@@ -45,13 +50,33 @@ def save_history(df: pd.DataFrame):
     HISTORY_PATH.parent.mkdir(parents=True, exist_ok=True)
     df.to_json(HISTORY_PATH, orient="records", indent=2)
 
+# Tags helpers
+def ensure_list_tags(x):
+    """Converte qualquer entrada em lista de strings (sem vazios, aparados)."""
+    if isinstance(x, list):
+        return [str(t).strip() for t in x if str(t).strip()]
+    if x is None or (isinstance(x, float) and pd.isna(x)):
+        return []
+    # aceita "tag1, tag2"
+    return [s.strip() for s in str(x).split(",") if s.strip()]
+
+def stringify_tags(x):
+    """Para exibição em texto: lista -> 'a, b, c'."""
+    lst = ensure_list_tags(x)
+    return ", ".join(lst)
+
 def load_items():
-    return load_json_records(ITEMS_PATH, ["item","categoria","peso","stack_max"])
+    # agora inclui 'tags'
+    return load_json_records(ITEMS_PATH, ["item","categoria","peso","stack_max","tags"])
 
 def save_items(df: pd.DataFrame):
     ITEMS_PATH.parent.mkdir(parents=True, exist_ok=True)
-    keep = ["item","categoria","peso","stack_max"]
-    df = df[keep]
+    keep = ["item","categoria","peso","stack_max","tags"]
+    for c in keep:
+        if c not in df.columns:
+            df[c] = None
+    # normaliza tipos
+    df["tags"] = df["tags"].apply(ensure_list_tags)
     df.to_json(ITEMS_PATH, orient="records", indent=2, force_ascii=False)
 
 def load_first_existing(paths):
@@ -78,7 +103,9 @@ def save_to_all(cfg, paths):
 def now_iso():
     return datetime.now(timezone.utc).isoformat()
 
-# -------------------- config (calibração + taxa) --------------------
+# --------------------------------------------------------------------------------------
+# Config (calibração + taxa)
+# --------------------------------------------------------------------------------------
 sell_defaults = {1: {"S": 1.0, "Q": 1844, "F": 28.65000},
                  3: {"S": 1.0, "Q": 1844, "F": 36.11000},
                  7: {"S": 1.0, "Q": 1844, "F": 43.94000},
@@ -104,7 +131,9 @@ if "buy_rates" not in st.session_state:
 if "tax_pct" not in st.session_state:
     st.session_state.tax_pct = tax_pct
 
-# -------------------- helpers --------------------
+# --------------------------------------------------------------------------------------
+# Core helpers
+# --------------------------------------------------------------------------------------
 DURATIONS = [1,3,7,14]
 
 def auto_fee(total_value, rate_dict, duration):
@@ -126,14 +155,12 @@ def fmt(x, p=4):
     try: return f"{x:,.{p}f}"
     except: return str(x)
 
-def tier_from_roi(roi):
-    if roi >= 0.30: return "🟢", "🔥 Excelente"
-    if roi >= 0.20: return "🟢", "Ótimo"
-    if roi >= 0.15: return "🟢", "Bom"
-    if roi >= 0.10: return "🟡", "Morno"
-    return "🔴", "Baixo"
+# Detect support for ListColumn (tags como lista) — fallback para texto se não existir
+LIST_COL_AVAILABLE = hasattr(st.column_config, "ListColumn")
 
-# -------------------- Sidebar Config (colapsada) --------------------
+# --------------------------------------------------------------------------------------
+# Sidebar Config (colapsada)
+# --------------------------------------------------------------------------------------
 with st.sidebar.expander("⚙️ Config (calibração & taxa) — clique para expandir", expanded=False):
     st.write(f"**Config lida de:** {cfg_path if cfg_path else 'padrões internos'}")
     st.write(f"HOME: {HOME_CFG}")
@@ -169,10 +196,14 @@ with st.sidebar.expander("⚙️ Config (calibração & taxa) — clique para ex
         for p in save_to_all(new_cfg, CFG_CANDIDATES):
             st.success(f"Config salva em: {p}")
 
-# -------------------- Tabs --------------------
+# --------------------------------------------------------------------------------------
+# Tabs
+# --------------------------------------------------------------------------------------
 tab_hist, tab_best, tab_import, tab_cad, tab_calc = st.tabs(["Histórico", "Oportunidades", "Importar preços", "Cadastro", "Calculadora"])
 
-# ===== Histórico =====
+# --------------------------------------------------------------------------------------
+# Histórico
+# --------------------------------------------------------------------------------------
 with tab_hist:
     st.markdown("## Histórico")
     hist_df, src_path = load_history()
@@ -255,7 +286,9 @@ with tab_hist:
     else:
         st.info("Seu histórico está vazio. Vá na aba **Importar preços** para adicionar itens.")
 
-# ===== Oportunidades =====
+# --------------------------------------------------------------------------------------
+# Oportunidades
+# --------------------------------------------------------------------------------------
 with tab_best:
     st.markdown("## Oportunidades")
     hist_df, _ = load_history()
@@ -292,33 +325,50 @@ with tab_best:
             })
         best = pd.DataFrame(rows).sort_values("roi", ascending=False)
 
+        # Merge com cadastro
         items_df = items_df.drop_duplicates(subset=["item"])
         enriched = best.merge(items_df, on="item", how="left")
 
+        # Normaliza tags
+        if "tags" not in enriched.columns:
+            enriched["tags"] = [[] for _ in range(len(enriched))]
+        else:
+            enriched["tags"] = enriched["tags"].apply(ensure_list_tags)
+
+        # lucro/peso
         enriched["lucro_por_peso"] = None
         mask = enriched["peso"].apply(lambda x: isinstance(x, (int, float))) & (enriched["peso"]>0)
         enriched.loc[mask, "lucro_por_peso"] = enriched.loc[mask, "profit_per_unit"] / enriched.loc[mask, "peso"]
 
+        # Universo de tags
+        all_tags = sorted({t for ts in enriched["tags"] for t in (ts or [])})
+
+        # Controles
         c1, c2, c3, c4 = st.columns([1,1,1,2])
         min_roi = c1.slider("ROI mínimo", 0.0, 0.5, 0.15, 0.01)
         top_n   = c2.number_input("Top N", min_value=1, value=min(20, len(enriched)), step=1)
         cat = ["(todas)"] + sorted([c for c in enriched["categoria"].dropna().unique()])
         cat_sel = c3.selectbox("Categoria", cat, index=0)
+        tags_sel = c4.multiselect("Tags", options=all_tags, default=[])
 
+        # Filtros
         filt = (enriched["roi"] >= min_roi) & enriched["roi"].notna()
         if cat_sel != "(todas)":
             filt &= (enriched["categoria"] == cat_sel)
-        view = enriched.loc[filt].copy().head(int(top_n))
+        if tags_sel:
+            filt &= enriched["tags"].apply(lambda ts: any(t in (ts or []) for t in tags_sel))
 
+        view = enriched.loc[filt].copy().head(int(top_n))
         if "timestamp" in view.columns:
             view["timestamp"] = pd.to_datetime(view["timestamp"], errors="coerce")
 
-        st.data_editor(
-            view[["item","categoria","peso","timestamp","buy_price","sell_price","profit_per_unit","roi_pct","lucro_por_peso","tier"]],
-            column_config={
+        # Exibição com tags
+        if LIST_COL_AVAILABLE:
+            colcfg = {
                 "item": st.column_config.TextColumn("item"),
                 "categoria": st.column_config.TextColumn("categoria"),
                 "peso": st.column_config.NumberColumn("peso", format="%.3f"),
+                "tags": st.column_config.ListColumn("tags"),
                 "timestamp": st.column_config.DatetimeColumn("timestamp", format="YYYY-MM-DD HH:mm:ss"),
                 "buy_price": st.column_config.NumberColumn("buy", format="%.2f"),
                 "sell_price": st.column_config.NumberColumn("sell", format="%.2f"),
@@ -326,12 +376,33 @@ with tab_best:
                 "roi_pct": st.column_config.ProgressColumn("ROI", format="%.2f%%", min_value=0, max_value=100),
                 "lucro_por_peso": st.column_config.NumberColumn("lucro/peso", format="%.4f"),
                 "tier": st.column_config.TextColumn("status")
-            },
+            }
+        else:
+            view["tags"] = view["tags"].apply(stringify_tags)
+            colcfg = {
+                "item": st.column_config.TextColumn("item"),
+                "categoria": st.column_config.TextColumn("categoria"),
+                "peso": st.column_config.NumberColumn("peso", format="%.3f"),
+                "tags": st.column_config.TextColumn("tags"),
+                "timestamp": st.column_config.DatetimeColumn("timestamp", format="YYYY-MM-DD HH:mm:ss"),
+                "buy_price": st.column_config.NumberColumn("buy", format="%.2f"),
+                "sell_price": st.column_config.NumberColumn("sell", format="%.2f"),
+                "profit_per_unit": st.column_config.NumberColumn("lucro/u", format="%.4f"),
+                "roi_pct": st.column_config.ProgressColumn("ROI", format="%.2f%%", min_value=0, max_value=100),
+                "lucro_por_peso": st.column_config.NumberColumn("lucro/peso", format="%.4f"),
+                "tier": st.column_config.TextColumn("status")
+            }
+
+        st.data_editor(
+            view[["item","categoria","peso","tags","timestamp","buy_price","sell_price","profit_per_unit","roi_pct","lucro_por_peso","tier"]],
+            column_config=colcfg,
             hide_index=True, use_container_width=True, disabled=True,
             height=min(560, 90 + 38*max(1, len(view)))
         )
 
-# ===== Importar preços =====
+# --------------------------------------------------------------------------------------
+# Importar preços
+# --------------------------------------------------------------------------------------
 with tab_import:
     st.markdown("## Importar preços")
     st.caption("Use `item, top_buy, low_sell, buy_duration, sell_duration, timestamp`. Assumo **buy = top_buy + 0.01** e **sell = low_sell - 0.01**.")
@@ -465,7 +536,9 @@ Retorne **apenas** o JSON, sem comentários.
     else:
         st.info("Cole ou envie um arquivo para ver a prévia e adicionar ao histórico.")
 
-# ===== Cadastro =====
+# --------------------------------------------------------------------------------------
+# Cadastro (com Tags)
+# --------------------------------------------------------------------------------------
 with tab_cad:
     st.markdown("## Cadastro")
     st.caption(f"Arquivo: `{ITEMS_PATH.resolve()}`")
@@ -524,8 +597,8 @@ Retorne **apenas** o JSON (sem comentários).
         st.code(IA_PROMPT, language="markdown")
 
     st.subheader("Importar cadastro (JSON/CSV)")
-    st.caption("Campos esperados: `item` (obrig.), `categoria` (obrig.), `peso` (obrig., decimal com ponto), `stack_max` (opcional, inteiro).")
-    pasted_items = st.text_area("Colar JSON/CSV do cadastro", height=140, placeholder='[\n  {"item":"Dark Hide","categoria":"Raw Hide","peso":0.100,"stack_max":1000}\n]')
+    st.caption("Campos esperados: `item` (obrig.), `categoria` (obrig.), `peso` (obrig., decimal com ponto), `stack_max` (opcional, inteiro). Opcional: `tags` (lista ou string separada por vírgulas).")
+    pasted_items = st.text_area("Colar JSON/CSV do cadastro", height=140, placeholder='[\n  {"item":"Dark Hide","categoria":"Raw Hide","peso":0.100,"stack_max":1000,"tags":["leve","pvp"]}\n]')
     upload_items = st.file_uploader("...ou enviar arquivo", type=["json","csv"], key="items_upload")
 
     def parse_items_payload(txt: str) -> pd.DataFrame:
@@ -560,16 +633,36 @@ Retorne **apenas** o JSON (sem comentários).
                     df_items_in["stack_max"] = pd.to_numeric(df_items_in["stack_max"], errors="coerce").astype('Int64')
                 except Exception:
                     pass
+            # normaliza tags
+            if "tags" in df_items_in.columns:
+                df_items_in["tags"] = df_items_in["tags"].apply(ensure_list_tags)
+            else:
+                df_items_in["tags"] = [[] for _ in range(len(df_items_in))]
 
             st.subheader("Prévia do cadastro")
-            st.data_editor(
-                df_items_in[["item","categoria","peso"] + (["stack_max"] if "stack_max" in df_items_in.columns else [])],
-                column_config={
+            prev = df_items_in.copy()
+            # Exibição de tags: ListColumn ou texto
+            if LIST_COL_AVAILABLE:
+                colcfg_prev = {
                     "item": st.column_config.TextColumn("item"),
                     "categoria": st.column_config.TextColumn("categoria"),
                     "peso": st.column_config.NumberColumn("peso", format="%.3f"),
-                    **({"stack_max": st.column_config.NumberColumn("stack_max", min_value=1, step=1)} if "stack_max" in df_items_in.columns else {})
-                },
+                    **({"stack_max": st.column_config.NumberColumn("stack_max", min_value=1, step=1)} if "stack_max" in prev.columns else {}),
+                    "tags": st.column_config.ListColumn("tags", help="tags livres (strings)")
+                }
+            else:
+                prev["tags"] = prev["tags"].apply(stringify_tags)
+                colcfg_prev = {
+                    "item": st.column_config.TextColumn("item"),
+                    "categoria": st.column_config.TextColumn("categoria"),
+                    "peso": st.column_config.NumberColumn("peso", format="%.3f"),
+                    **({"stack_max": st.column_config.NumberColumn("stack_max", min_value=1, step=1)} if "stack_max" in prev.columns else {}),
+                    "tags": st.column_config.TextColumn("tags")
+                }
+
+            st.data_editor(
+                prev[["item","categoria","peso"] + (["stack_max"] if "stack_max" in prev.columns else []) + ["tags"]],
+                column_config=colcfg_prev,
                 hide_index=True, use_container_width=True, disabled=True
             )
 
@@ -601,17 +694,37 @@ Retorne **apenas** o JSON (sem comentários).
             items_df["stack_max"] = pd.to_numeric(items_df["stack_max"], errors="coerce").astype('Int64')
         except Exception:
             pass
+    # Garante coluna tags
+    if "tags" not in items_df.columns:
+        items_df["tags"] = [[] for _ in range(len(items_df))]
+    else:
+        items_df["tags"] = items_df["tags"].apply(ensure_list_tags)
 
-    st.info("Edite os itens abaixo. Regras: **item** e **peso > 0** obrigatórios.")
-    edited = st.data_editor(
-        items_df if not items_df.empty else pd.DataFrame(columns=["item","categoria","peso","stack_max"]),
-        num_rows="dynamic",
-        column_config={
+    st.info("Edite os itens abaixo. Regras: **item** e **peso > 0** obrigatórios. `tags`: lista de strings (ou 'a, b, c').")
+    if LIST_COL_AVAILABLE:
+        colcfg_edit = {
             "item": st.column_config.TextColumn("item", help="Nome canônico do item", required=True),
             "categoria": st.column_config.TextColumn("categoria", help="Ex.: Wood, Ore, Hide, Gem, Consumable..."),
             "peso": st.column_config.NumberColumn("peso", format="%.3f", help="Peso por unidade", required=True),
             "stack_max": st.column_config.NumberColumn("stack_max", help="Opcional", min_value=1, step=1),
-        },
+            "tags": st.column_config.ListColumn("tags", help="Tags livres (ex.: 'pvp', 'leve', 'bulk')", default=[]),
+        }
+    else:
+        # fallback: tratar tags como texto
+        items_df = items_df.copy()
+        items_df["tags"] = items_df["tags"].apply(stringify_tags)
+        colcfg_edit = {
+            "item": st.column_config.TextColumn("item", help="Nome canônico do item", required=True),
+            "categoria": st.column_config.TextColumn("categoria", help="Ex.: Wood, Ore, Hide, Gem, Consumable..."),
+            "peso": st.column_config.NumberColumn("peso", format="%.3f", help="Peso por unidade", required=True),
+            "stack_max": st.column_config.NumberColumn("stack_max", help="Opcional", min_value=1, step=1),
+            "tags": st.column_config.TextColumn("tags", help="Separadas por vírgula"),
+        }
+
+    edited = st.data_editor(
+        items_df if not items_df.empty else pd.DataFrame(columns=["item","categoria","peso","stack_max","tags"]),
+        num_rows="dynamic",
+        column_config=colcfg_edit,
         hide_index=True, use_container_width=True
     )
 
@@ -622,6 +735,8 @@ Retorne **apenas** o JSON (sem comentários).
                 st.error("Campos obrigatórios ausentes (item, peso).")
             else:
                 edited = edited.dropna(subset=["item"]).copy()
+                # normaliza tags (caso fallback em texto)
+                edited["tags"] = edited["tags"].apply(ensure_list_tags)
                 if (edited["peso"].fillna(0) <= 0).any():
                     st.error("Há linhas com peso ≤ 0. Corrija e salve novamente.")
                 else:
@@ -631,7 +746,7 @@ Retorne **apenas** o JSON (sem comentários).
     with c2:
         st.download_button(
             "⬇️ Exportar cadastro (JSON)",
-            data=(items_df if not items_df.empty else pd.DataFrame(columns=["item","categoria","peso","stack_max"])).to_json(orient="records", indent=2, force_ascii=False),
+            data=(load_items()).to_json(orient="records", indent=2, force_ascii=False),
             file_name="items.json", mime="application/json"
         )
     with c3:
@@ -649,6 +764,11 @@ Retorne **apenas** o JSON (sem comentários).
             if dfu.empty or any(c not in dfu.columns for c in needed):
                 st.error("Arquivo inválido. É preciso ao menos: item, categoria, peso.")
             else:
+                # normaliza tags
+                if "tags" in dfu.columns:
+                    dfu["tags"] = dfu["tags"].apply(ensure_list_tags)
+                else:
+                    dfu["tags"] = [[] for _ in range(len(dfu))]
                 base = load_items()
                 mask = ~base["item"].isin(dfu["item"])
                 merged = pd.concat([base[mask], dfu], ignore_index=True)
@@ -656,7 +776,9 @@ Retorne **apenas** o JSON (sem comentários).
                 st.success(f"Cadastro importado: {len(dfu)} item(ns) atualizados/adicionados.")
                 st.rerun()
 
-# ===== Calculadora =====
+# --------------------------------------------------------------------------------------
+# Calculadora
+# --------------------------------------------------------------------------------------
 with tab_calc:
     st.markdown("## Calculadora")
     col1, col2 = st.columns(2)
