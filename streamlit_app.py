@@ -65,16 +65,24 @@ def stringify_tags(x):
     return ", ".join(lst)
 
 def load_items():
-    # now supports optional 'tier'
-    return load_json_records(ITEMS_PATH, ["item","categoria","peso","stack_max","tags","tier"])
+    # now supports optional 'tier' e 'slug_nwmp'
+    return load_json_records(ITEMS_PATH, ["item","categoria","peso","stack_max","tags","tier","slug_nwmp"])
 
 def save_items(df: pd.DataFrame):
     ITEMS_PATH.parent.mkdir(parents=True, exist_ok=True)
-    keep = ["item","categoria","peso","stack_max","tags","tier"]
+    keep = ["item","categoria","peso","stack_max","tags","tier","slug_nwmp"]
     for c in keep:
         if c not in df.columns:
             df[c] = None
     df["tags"] = df["tags"].apply(ensure_list_tags)
+    if "slug_nwmp" in df.columns:
+        def _clean_slug(val):
+            if val is None or (isinstance(val, float) and pd.isna(val)):
+                return ""
+            s = str(val).strip()
+            return s if s.lower() != "nan" else ""
+
+        df["slug_nwmp"] = df["slug_nwmp"].apply(_clean_slug)
     df.to_json(ITEMS_PATH, orient="records", indent=2, force_ascii=False)
 
 def load_first_existing(paths):
@@ -223,7 +231,14 @@ with st.sidebar.expander("⚙️ Config (calibração & taxa) — clique para ex
 # --------------------------------------------------------------------------------------
 # Tabs
 # --------------------------------------------------------------------------------------
-tab_hist, tab_best, tab_import, tab_cad, tab_calc = st.tabs(["Histórico", "Oportunidades", "Importar preços", "Cadastro", "Calculadora"])
+tab_hist, tab_best, tab_import, tab_cad, tab_calc, tab_coletar = st.tabs([
+    "Histórico",
+    "Oportunidades",
+    "Importar preços",
+    "Cadastro",
+    "Calculadora",
+    "Coletar",
+])
 
 # --------------------------------------------------------------------------------------
 # Histórico
@@ -779,7 +794,8 @@ Retorne **apenas** o JSON, sem comentários.
                 "peso": 0.0,
                 "stack_max": pd.Series([None]*len(missing_items), dtype="Int64"),
                 "tags": [[] for _ in missing_items],
-                "tier": ""
+                "tier": "",
+                "slug_nwmp": "",
             })
             if not LIST_COL_AVAILABLE:
                 stub["tags"] = [""]*len(stub)
@@ -794,6 +810,10 @@ Retorne **apenas** o JSON, sem comentários.
             else:
                 colcfg["tags"] = st.column_config.TextColumn("tags", help="Separadas por vírgula")
             colcfg["tier"] = st.column_config.TextColumn("tier", help="Opcional (ex.: T1–T5)")
+            colcfg["slug_nwmp"] = st.column_config.TextColumn(
+                "slug_nwmp",
+                help="Slug usado no NWMP (ex.: runewood). Opcional, mas necessário para coletar preços.",
+            )
 
             quick = st.data_editor(stub, num_rows="dynamic", column_config=colcfg, hide_index=True, use_container_width=True)
             if st.button("💾 Salvar cadastro rápido"):
@@ -887,7 +907,9 @@ Retorne **apenas** o JSON (sem comentários).
         st.code(IA_PROMPT, language="markdown")
 
     st.subheader("Importar cadastro (JSON/CSV)")
-    st.caption("Campos: `item` (obrig.), `categoria` (obrig.), `peso` (obrig.), `stack_max` (opcional), `tags` (opcional).")
+    st.caption(
+        "Campos: `item` (obrig.), `categoria` (obrig.), `peso` (obrig.), `stack_max` (opcional), `tags` (opcional), `tier` (opcional), `slug_nwmp` (opcional)."
+    )
     pasted_items = st.text_area("Colar JSON/CSV do cadastro", height=140, placeholder='[\n  {"item":"Dark Hide","categoria":"Raw Hide","peso":0.100,"stack_max":1000,"tags":["leve","pvp"]}\n]')
     upload_items = st.file_uploader("...ou enviar arquivo", type=["json","csv"], key="items_upload")
 
@@ -929,6 +951,8 @@ Retorne **apenas** o JSON (sem comentários).
                 df_items_in["tags"] = [[] for _ in range(len(df_items_in))]
             if "tier" not in df_items_in.columns:
                 df_items_in["tier"] = None
+            if "slug_nwmp" not in df_items_in.columns:
+                df_items_in["slug_nwmp"] = None
 
             prev = df_items_in.copy()
             if LIST_COL_AVAILABLE:
@@ -938,7 +962,10 @@ Retorne **apenas** o JSON (sem comentários).
                     "peso": st.column_config.NumberColumn("peso", format="%.3f"),
                     **({"stack_max": st.column_config.NumberColumn("stack_max", min_value=1, step=1)} if "stack_max" in prev.columns else {}),
                     "tags": st.column_config.ListColumn("tags"),
-                    "tier": st.column_config.TextColumn("tier", help="Opcional (ex.: T1–T5)")
+                    "tier": st.column_config.TextColumn("tier", help="Opcional (ex.: T1–T5)"),
+                    "slug_nwmp": st.column_config.TextColumn(
+                        "slug_nwmp", help="Slug usado no NWMP (opcional)"
+                    ),
                 }
             else:
                 prev["tags"] = prev["tags"].apply(stringify_tags)
@@ -948,13 +975,16 @@ Retorne **apenas** o JSON (sem comentários).
                     "peso": st.column_config.NumberColumn("peso", format="%.3f"),
                     **({"stack_max": st.column_config.NumberColumn("stack_max", min_value=1, step=1)} if "stack_max" in prev.columns else {}),
                     "tags": st.column_config.TextColumn("tags"),
-                    "tier": st.column_config.TextColumn("tier", help="Opcional (ex.: T1–T5)")
+                    "tier": st.column_config.TextColumn("tier", help="Opcional (ex.: T1–T5)"),
+                    "slug_nwmp": st.column_config.TextColumn(
+                        "slug_nwmp", help="Slug usado no NWMP (opcional)"
+                    ),
                 }
 
             cols_prev = ["item","categoria","peso"]
             if "stack_max" in prev.columns:
                 cols_prev.append("stack_max")
-            cols_prev += ["tags", "tier"]
+            cols_prev += ["tags", "tier", "slug_nwmp"]
 
             st.subheader("Prévia do cadastro")
             st.data_editor(
@@ -997,6 +1027,8 @@ Retorne **apenas** o JSON (sem comentários).
         items_df["tags"] = items_df["tags"].apply(ensure_list_tags)
     if "tier" not in items_df.columns:
         items_df["tier"] = None
+    if "slug_nwmp" not in items_df.columns:
+        items_df["slug_nwmp"] = ""
 
     if LIST_COL_AVAILABLE:
         colcfg_edit = {
@@ -1006,6 +1038,10 @@ Retorne **apenas** o JSON (sem comentários).
             "stack_max": st.column_config.NumberColumn("stack_max", help="Opcional", min_value=1, step=1),
             "tags": st.column_config.ListColumn("tags", help="Tags livres", default=[]),
             "tier": st.column_config.TextColumn("tier", help="Opcional (ex.: T1–T5)"),
+            "slug_nwmp": st.column_config.TextColumn(
+                "slug_nwmp",
+                help="Slug usado no NWMP (ex.: runewood). Necessário para coletar preços automaticamente.",
+            ),
         }
     else:
         items_df = items_df.copy()
@@ -1017,10 +1053,16 @@ Retorne **apenas** o JSON (sem comentários).
             "stack_max": st.column_config.NumberColumn("stack_max", help="Opcional", min_value=1, step=1),
             "tags": st.column_config.TextColumn("tags", help="Separadas por vírgula"),
             "tier": st.column_config.TextColumn("tier", help="Opcional (ex.: T1–T5)"),
+            "slug_nwmp": st.column_config.TextColumn(
+                "slug_nwmp",
+                help="Slug usado no NWMP (ex.: runewood). Necessário para coletar preços automaticamente.",
+            ),
         }
 
     edited = st.data_editor(
-        items_df if not items_df.empty else pd.DataFrame(columns=["item","categoria","peso","stack_max","tags","tier"]),
+        items_df
+        if not items_df.empty
+        else pd.DataFrame(columns=["item","categoria","peso","stack_max","tags","tier","slug_nwmp"]),
         num_rows="dynamic",
         column_config=colcfg_edit,
         hide_index=True, use_container_width=True
@@ -1124,3 +1166,89 @@ with tab_calc:
     t1, t2 = st.columns(2)
     t1.success(f"Vender a **{S_for_target:,.4f}** para {target_roi*100:.0f}% de ROI")
     t2.info(f"Máx. comprar a **{B_max_for_target:,.4f}** para {target_roi*100:.0f}% de ROI")
+
+# --------------------------------------------------------------------------------------
+# Coletar (scraper Devaloka)
+# --------------------------------------------------------------------------------------
+with tab_coletar:
+    st.markdown("## Coletar histórico (Devaloka)")
+
+    items_df = load_items()
+    if "slug_nwmp" not in items_df.columns:
+        st.error("Seu cadastro ainda não tem a coluna 'slug_nwmp'. Adicione-a na aba Cadastro.")
+    else:
+        has_slug = items_df.dropna(subset=["slug_nwmp"]).copy()
+        if not has_slug.empty:
+            has_slug = has_slug[has_slug["slug_nwmp"].astype(str).str.strip() != ""]
+        if has_slug.empty:
+            st.info("Nenhum item com slug configurado. Vá na aba **Cadastro** e preencha 'slug_nwmp'.")
+        else:
+            pick_items = st.multiselect(
+                "Itens (com slug configurado)",
+                has_slug["item"].tolist(),
+                default=has_slug["item"].tolist(),
+            )
+
+            out_csv = st.text_input("Arquivo CSV de saída", value="devaloka_prices.csv")
+
+            server = st.text_input(
+                "Servidor",
+                value="devaloka",
+                help="Nome do servidor na série histórica do NWMP",
+            )
+            local_dir = st.text_input(
+                "Diretório local (opcional)",
+                value="",
+                help="Se você tiver .json/.json.gz salvos localmente, informe a pasta aqui; senão deixe vazio para baixar do CDN",
+            )
+
+            if st.button("Coletar agora"):
+                if not pick_items:
+                    st.warning("Selecione ao menos um item.")
+                else:
+                    try:
+                        from devaloka_price_scraper import (
+                            extract_devaloka_records,
+                            fetch_item_data,
+                            update_csv,
+                        )
+                    except Exception as e:
+                        st.error(f"Não consegui importar o scraper: {e}")
+                    else:
+                        import time
+                        import traceback
+
+                        slugs = has_slug.set_index("item").loc[pick_items, "slug_nwmp"].to_dict()
+
+                        all_records = []
+                        prog = st.progress(0.0)
+                        status = st.empty()
+                        total = len(slugs)
+
+                        for i, (nome, slug) in enumerate(slugs.items(), start=1):
+                            status.write(f"Baixando **{nome}** ({slug}) [{i}/{total}] …")
+                            try:
+                                data = fetch_item_data(slug, local_dir=local_dir or None)
+                                recs = extract_devaloka_records(data, server=server)
+                                for rec in recs:
+                                    rec.setdefault("item", nome)
+                                    rec.setdefault("slug", slug)
+                                    if server:
+                                        rec.setdefault("server", server)
+                                all_records.extend(recs)
+                            except Exception as err:
+                                st.error(f"{nome} ({slug}): {err}")
+                                st.caption(traceback.format_exc())
+                            prog.progress(i / total)
+                            time.sleep(0.1)
+
+                        if all_records:
+                            try:
+                                update_csv(all_records, csv_path=out_csv)
+                                st.success(
+                                    f"Coleta concluída: {len(all_records)} linhas → **{out_csv}**"
+                                )
+                            except Exception as e:
+                                st.error(f"Falha ao salvar CSV: {e}")
+                        else:
+                            st.info("Nenhum registro coletado (verifique slugs/servidor).")
