@@ -1356,8 +1356,8 @@ with tab_coletar:
     # Importa o novo módulo do scraper
     try:
         import sys
-        from pathlib import Path as _P
-        ROOT = _P.cwd()
+        from pathlib import Path  # ← usar Path diretamente
+        ROOT = Path.cwd()
         if str(ROOT) not in sys.path:
             sys.path.insert(0, str(ROOT))
         import nwmp_sync
