@@ -1,5 +1,6 @@
 # nwmp_sync.py
 from __future__ import annotations
+# Requisitos: pandas (obrigatório), requests (apenas para URLs)
 import json, gzip, os
 from io import BytesIO, TextIOWrapper
 from pathlib import Path
