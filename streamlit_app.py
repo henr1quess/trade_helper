@@ -27,6 +27,22 @@ HISTORY_READ_CANDIDATES = [HISTORY_PATH, LEGACY_WATCHLIST]
 ITEMS_PATH = SCRIPT_DIR / "items.json"  # master data of items (cadastro)
 
 # --------------------------------------------------------------------------------------
+# Default sources for Devaloka snapshot sync
+# --------------------------------------------------------------------------------------
+DEFAULT_NWMP_SERVER = os.getenv("NWMP_SERVER", "devaloka")
+DEFAULT_NWMP_BUY_SRC = os.getenv(
+    "NWMP_BUY_SRC",
+    "https://storage.googleapis.com/nwmp-history/devaloka-buy-orders.json.gz",
+)
+DEFAULT_NWMP_SELL_SRC = os.getenv(
+    "NWMP_SELL_SRC",
+    "https://storage.googleapis.com/nwmp-history/devaloka-auctions.json.gz",
+)
+DEFAULT_NWMP_RAW_ROOT = os.getenv("NWMP_RAW_ROOT", "raw")
+DEFAULT_NWMP_CSV = os.getenv("NWMP_CSV_PATH", "data/history_devaloka.csv")
+DEFAULT_HISTORY_JSON = "history.json"
+
+# --------------------------------------------------------------------------------------
 # Helpers (I/O)
 # --------------------------------------------------------------------------------------
 def load_json_records(path: Path, cols=None):
@@ -1340,18 +1356,23 @@ with tab_calc:
 with tab_coletar:
     st.markdown("## Coletar histórico (Devaloka)")
 
-    # Inputs de fonte global (dois snapshots) e destinos
-    c1, c2 = st.columns(2)
-    buy_src = c1.text_input("Buy orders (URL ou caminho local)", placeholder="https://.../devaloka-buy-orders.json.gz")
-    sell_src = c2.text_input("Auctions (URL ou caminho local)", placeholder="https://.../devaloka-auctions.json.gz")
+    # Parâmetros fixos (sem necessidade de entrada manual)
+    settings = {
+        "Buy orders": DEFAULT_NWMP_BUY_SRC,
+        "Auctions": DEFAULT_NWMP_SELL_SRC,
+        "Pasta RAW": DEFAULT_NWMP_RAW_ROOT,
+        "CSV histórico (NWMP)": DEFAULT_NWMP_CSV,
+        "Servidor": DEFAULT_NWMP_SERVER,
+        "history.json": DEFAULT_HISTORY_JSON,
+    }
 
-    raw_root = st.text_input("Pasta RAW", value="raw", help="Onde salvar os snapshots brutos e combined.ndjson")
-    out_csv = st.text_input("CSV histórico (NWMP)", value="data/history_devaloka.csv")
-    server = st.text_input("Servidor", value="devaloka")
+    st.caption("Parâmetros usados automaticamente para coleta/processamento")
+    settings_df = pd.DataFrame(
+        {"Configuração": list(settings.keys()), "Valor": [str(v) for v in settings.values()]}
+    )
+    st.table(settings_df)
 
-    # O app já usa history.json no restante das abas (Histórico/Oportunidades)
-    # Vamos continuar projetando pontos para esse arquivo.
-    history_json_path = "history.json"
+    missing_settings = [name for name, value in settings.items() if not str(value).strip()]
 
     # Importa o novo módulo do scraper
     try:
@@ -1366,44 +1387,60 @@ with tab_coletar:
     else:
         a, b = st.columns(2)
         if a.button("🔄 Sincronizar agora", use_container_width=True):
-            if not buy_src or not sell_src:
-                st.warning("Informe as duas fontes (Buy e Auctions).")
+            if missing_settings:
+                st.error(
+                    "Configurações obrigatórias ausentes: "
+                    + ", ".join(missing_settings)
+                    + ". Defina-as via variáveis de ambiente."
+                )
             else:
                 try:
                     with st.spinner("Baixando, salvando RAW e atualizando histórico..."):
                         nwmp_sync.run_sync(
-                            buy_src, sell_src,
-                            raw_root=raw_root,
-                            csv_path=out_csv,
-                            history_json_path=history_json_path,
-                            server=server
+                            DEFAULT_NWMP_BUY_SRC,
+                            DEFAULT_NWMP_SELL_SRC,
+                            raw_root=DEFAULT_NWMP_RAW_ROOT,
+                            csv_path=DEFAULT_NWMP_CSV,
+                            history_json_path=DEFAULT_HISTORY_JSON,
+                            server=DEFAULT_NWMP_SERVER,
                         )
                     st.success("Sincronização concluída ✅")
                 except Exception as e:
                     st.error(f"Falhou: {e}")
 
         if b.button("🧱 Reprocessar tudo do RAW → CSV", use_container_width=True):
-            try:
-                with st.spinner("Reconstruindo CSV a partir de raw/snapshots/..."):
-                    nwmp_sync.run_rebuild(raw_root=raw_root, csv_path=out_csv, server=server)
-                st.success("Rebuild concluído ✅")
-            except Exception as e:
-                st.error(f"Falhou: {e}")
+            if missing_settings:
+                st.error(
+                    "Configurações obrigatórias ausentes: "
+                    + ", ".join(missing_settings)
+                    + ". Defina-as via variáveis de ambiente."
+                )
+            else:
+                try:
+                    with st.spinner("Reconstruindo CSV a partir de raw/snapshots/..."):
+                        nwmp_sync.run_rebuild(
+                            raw_root=DEFAULT_NWMP_RAW_ROOT,
+                            csv_path=DEFAULT_NWMP_CSV,
+                            server=DEFAULT_NWMP_SERVER,
+                        )
+                    st.success("Rebuild concluído ✅")
+                except Exception as e:
+                    st.error(f"Falhou: {e}")
 
         # Mostrar prévia do CSV NWMP e do history.json (se existirem)
         import pandas as pd
         prev1, prev2 = st.columns(2)
         try:
-            if Path(out_csv).exists():
-                df_csv = pd.read_csv(out_csv)
-                prev1.caption(f"Prévia CSV NWMP: {out_csv}")
+            if Path(DEFAULT_NWMP_CSV).exists():
+                df_csv = pd.read_csv(DEFAULT_NWMP_CSV)
+                prev1.caption(f"Prévia CSV NWMP: {DEFAULT_NWMP_CSV}")
                 prev1.dataframe(df_csv.tail(50), use_container_width=True)
         except Exception:
             pass
         try:
-            if Path(history_json_path).exists():
-                df_hist = pd.read_json(history_json_path, orient="records")
-                prev2.caption(f"Prévia history.json (app): {history_json_path}")
+            if Path(DEFAULT_HISTORY_JSON).exists():
+                df_hist = pd.read_json(DEFAULT_HISTORY_JSON, orient="records")
+                prev2.caption(f"Prévia history.json (app): {DEFAULT_HISTORY_JSON}")
                 prev2.dataframe(df_hist.tail(50), use_container_width=True)
         except Exception:
             pass
