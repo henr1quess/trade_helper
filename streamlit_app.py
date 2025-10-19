@@ -65,6 +65,38 @@ def stringify_tags(x):
     return ", ".join(lst)
 
 
+def merge_patch_by_item(base: pd.DataFrame, patch: pd.DataFrame) -> pd.DataFrame:
+    """
+    Atualiza 'base' com os valores NÃO nulos de 'patch' (chave = item).
+    Apenas colunas presentes em 'patch' são consideradas.
+    """
+    if patch.empty:
+        return base
+    base = base.copy()
+    patch = patch.copy()
+    patch_cols = [c for c in patch.columns if c != "item"]
+    if not patch_cols:
+        return base
+
+    # Índices por 'item'
+    b = base.set_index("item", drop=False)
+    p = patch.set_index("item", drop=False)
+
+    # Garante colunas ausentes
+    for c in patch_cols:
+        if c not in b.columns:
+            b[c] = pd.NA
+
+    # Aplica patch (apenas valores não nulos)
+    for it, row in p.iterrows():
+        if it in b.index:
+            for c in patch_cols:
+                val = row.get(c, pd.NA)
+                if pd.notna(val) and val != "":
+                    b.at[it, c] = val
+    return b.reset_index(drop=True)
+
+
 def _to_tier_int(x):
     if pd.isna(x):
         return pd.NA
@@ -946,9 +978,23 @@ Retorne **apenas** o JSON (sem comentários).
 
     st.subheader("Importar cadastro (JSON/CSV)")
     st.caption(
-        "Campos: `item` (obrig.), `categoria` (obrig.), `peso` (obrig.), `stack_max` (opcional), `tags` (opcional), `tier` (opcional), `slug_nwmp` (opcional)."
+        "Campos: `item` (obrig.), `categoria` (obrig. p/ novos), `peso` (obrig. p/ novos), "
+        "`stack_max` (opcional), `tags` (opcional), `tier` (opcional), `slug_nwmp` (opcional)."
     )
-    pasted_items = st.text_area("Colar JSON/CSV do cadastro", height=140, placeholder='[\n  {"item":"Dark Hide","categoria":"Raw Hide","peso":0.100,"stack_max":1000,"tags":["leve","pvp"]}\n]')
+
+    # ✅ Novo: modo atualização (patch)
+    patch_mode = st.toggle(
+        "Modo atualização (patch): permitir colar apenas campos a atualizar (ex.: `item` + `slug_nwmp`) para itens já existentes.",
+        value=True,
+        help="Quando ativo, linhas com itens já existentes são atualizadas apenas nos campos presentes. "
+             "Para itens novos, ainda é obrigatório informar `categoria` e `peso`."
+    )
+
+    pasted_items = st.text_area(
+        "Colar JSON/CSV do cadastro",
+        height=140,
+        placeholder='[\n  {"item":"Green Wood","slug_nwmp":"woodt1"}\n]'
+    )
     upload_items = st.file_uploader("...ou enviar arquivo", type=["json","csv"], key="items_upload")
 
     def parse_items_payload(txt: str) -> pd.DataFrame:
@@ -969,88 +1015,152 @@ Retorne **apenas** o JSON (sem comentários).
     items_df = load_items()
 
     if not df_items_in.empty:
-        need = ["item","categoria","peso"]
-        missing = [c for c in need if c not in df_items_in.columns]
-        if missing:
-            st.error(f"Campos obrigatórios ausentes: {', '.join(missing)}")
+        # Normalização leve dos tipos presentes
+        if "peso" in df_items_in.columns:
+            df_items_in["peso"] = pd.to_numeric(df_items_in["peso"], errors="coerce")
+        if "stack_max" in df_items_in.columns:
+            df_items_in["stack_max"] = pd.to_numeric(df_items_in["stack_max"], errors="coerce").astype("Int64")
+        if "tier" in df_items_in.columns:
+            df_items_in["tier"] = df_items_in["tier"].apply(_to_tier_int).astype("Int64")
+        if "tags" in df_items_in.columns:
+            df_items_in["tags"] = df_items_in["tags"].apply(ensure_list_tags)
+        if "slug_nwmp" in df_items_in.columns:
+            df_items_in["slug_nwmp"] = df_items_in["slug_nwmp"].fillna("").astype(str)
+
+        # Validação mínima: precisa ter 'item'
+        if "item" not in df_items_in.columns:
+            st.error("Campo obrigatório ausente: item")
         else:
-            try:
-                df_items_in["peso"] = pd.to_numeric(df_items_in["peso"], errors="coerce")
-            except Exception:
-                pass
-            if "stack_max" in df_items_in.columns:
-                try:
-                    df_items_in["stack_max"] = pd.to_numeric(df_items_in["stack_max"], errors="coerce").astype('Int64')
-                except Exception:
-                    pass
-            if "tags" in df_items_in.columns:
-                df_items_in["tags"] = df_items_in["tags"].apply(ensure_list_tags)
-            else:
-                df_items_in["tags"] = [[] for _ in range(len(df_items_in))]
-            if "tier" not in df_items_in.columns:
-                df_items_in["tier"] = pd.Series([pd.NA] * len(df_items_in), dtype="Int64")
-            else:
-                df_items_in["tier"] = df_items_in["tier"].apply(_to_tier_int).astype("Int64")
-            if "slug_nwmp" not in df_items_in.columns:
-                df_items_in["slug_nwmp"] = ""
-            else:
-                df_items_in["slug_nwmp"] = df_items_in["slug_nwmp"].fillna("").astype(str)
+            df_items_in = df_items_in.dropna(subset=["item"]).copy()
 
-            prev = df_items_in.copy()
-            if LIST_COL_AVAILABLE:
-                colcfg_prev = {
-                    "item": st.column_config.TextColumn("item"),
-                    "categoria": st.column_config.TextColumn("categoria"),
-                    "peso": st.column_config.NumberColumn("peso", format="%.3f"),
-                    **({"stack_max": st.column_config.NumberColumn("stack_max", min_value=1, step=1)} if "stack_max" in prev.columns else {}),
-                    "tags": st.column_config.ListColumn("tags"),
-                    "tier": st.column_config.NumberColumn("tier", help="Opcional (ex.: 1–5)", min_value=1, step=1),
-                    "slug_nwmp": st.column_config.TextColumn(
-                        "slug_nwmp", help="Slug usado no NWMP (opcional)"
-                    ),
-                }
+            # Divide entre itens já existentes vs novos
+            exists_mask = df_items_in["item"].isin(items_df["item"])
+            df_patch = df_items_in.loc[exists_mask].copy()        # atualizações (patch)
+            df_new   = df_items_in.loc[~exists_mask].copy()       # novos (precisam categoria + peso)
+
+            # ❗ Para novos: exigir categoria e peso
+            missing_fields = []
+            if not df_new.empty:
+                for col in ["categoria", "peso"]:
+                    if col not in df_new.columns or df_new[col].isna().any():
+                        missing_fields.append(col)
+                # ‘peso’ precisa ser > 0
+                if "peso" in df_new.columns and (df_new["peso"].fillna(0) <= 0).any():
+                    missing_fields.append("peso>0")
+            if not df_new.empty and missing_fields and not patch_mode:
+                st.error("Para itens **novos** (não existentes no cadastro), é obrigatório informar: categoria e peso (>0).")
             else:
-                prev["tags"] = prev["tags"].apply(stringify_tags)
-                colcfg_prev = {
-                    "item": st.column_config.TextColumn("item"),
-                    "categoria": st.column_config.TextColumn("categoria"),
-                    "peso": st.column_config.NumberColumn("peso", format="%.3f"),
-                    **({"stack_max": st.column_config.NumberColumn("stack_max", min_value=1, step=1)} if "stack_max" in prev.columns else {}),
-                    "tags": st.column_config.TextColumn("tags"),
-                    "tier": st.column_config.NumberColumn("tier", help="Opcional (ex.: 1–5)", min_value=1, step=1),
-                    "slug_nwmp": st.column_config.TextColumn(
-                        "slug_nwmp", help="Slug usado no NWMP (opcional)"
-                    ),
-                }
+                # Prévia do que será aplicado
+                st.subheader("Prévia do cadastro")
+                prev = df_items_in.copy()
+                # colunas ordenadas amigáveis
+                wanted = ["item","categoria","peso","stack_max","tags","tier","slug_nwmp"]
+                show_cols = [c for c in wanted if c in prev.columns] + [c for c in prev.columns if c not in wanted]
+                # configurações de exibição
+                if LIST_COL_AVAILABLE:
+                    colcfg_prev = {
+                        "item": st.column_config.TextColumn("item"),
+                        **({"categoria": st.column_config.TextColumn("categoria")} if "categoria" in prev.columns else {}),
+                        **({"peso": st.column_config.NumberColumn("peso", format="%.3f")} if "peso" in prev.columns else {}),
+                        **({"stack_max": st.column_config.NumberColumn("stack_max", min_value=1, step=1)} if "stack_max" in prev.columns else {}),
+                        **({"tags": st.column_config.ListColumn("tags")} if "tags" in prev.columns else {}),
+                        **({"tier": st.column_config.NumberColumn("tier", min_value=1, step=1)} if "tier" in prev.columns else {}),
+                        **({"slug_nwmp": st.column_config.TextColumn("slug_nwmp")} if "slug_nwmp" in prev.columns else {}),
+                    }
+                else:
+                    if "tags" in prev.columns:
+                        prev["tags"] = prev["tags"].apply(stringify_tags)
+                    colcfg_prev = {c: st.column_config.TextColumn(c) for c in show_cols}
 
-            cols_prev = ["item","categoria","peso"]
-            if "stack_max" in prev.columns:
-                cols_prev.append("stack_max")
-            cols_prev += ["tags", "tier", "slug_nwmp"]
+                st.data_editor(
+                    prev[show_cols],
+                    column_config=colcfg_prev,
+                    hide_index=True, use_container_width=True, disabled=True
+                )
 
-            st.subheader("Prévia do cadastro")
-            st.data_editor(
-                prev[cols_prev],
-                column_config=colcfg_prev,
-                hide_index=True, use_container_width=True, disabled=True
-            )
+                # Resumo
+                s1, s2 = st.columns(2)
+                s1.info(f"Itens para PATCH (existentes): **{len(df_patch)}**")
+                s2.info(f"Itens novos (inserir): **{len(df_new)}**")
 
-            c1, c2 = st.columns(2)
-            with c1:
+                # Botão de aplicar
                 if st.button("Adicionar/atualizar cadastro"):
                     base = load_items()
-                    mask = ~base["item"].isin(df_items_in["item"])
-                    merged = pd.concat([base[mask], df_items_in], ignore_index=True)
-                    save_items(merged)
-                    st.success(f"{len(df_items_in)} item(ns) adicionados/atualizados.")
+
+                    # 1) Aplica PATCH nos existentes (apenas campos presentes e não nulos)
+                    if not df_patch.empty:
+                        base = merge_patch_by_item(base, df_patch)
+
+                    # 2) Insere novos (se houver)
+                    inserted = 0
+                    if not df_new.empty:
+                        # Se modo patch estiver ativo, vamos permitir salvar novos **parciais**?
+                        # Decisão: não. Vamos exigir categoria & peso. Mostramos um editor para completar.
+                        need_cols = []
+                        if "categoria" not in df_new.columns:
+                            need_cols.append("categoria")
+                        if "peso" not in df_new.columns:
+                            need_cols.append("peso")
+                        df_ins = df_new.copy()
+                        # Caso falte algo, abre editor para completar antes de salvar
+                        if need_cols or (("peso" in df_ins.columns) and (df_ins["peso"].fillna(0) <= 0).any()):
+                            st.warning("Há itens **novos** sem `categoria` e/ou `peso`. Complete abaixo e clique em **Salvar novos**.")
+                            # Prepara editor
+                            for c in ["categoria","peso","stack_max","tags","tier","slug_nwmp"]:
+                                if c not in df_ins.columns:
+                                    if c == "tags":
+                                        df_ins[c] = [[] for _ in range(len(df_ins))]
+                                    elif c == "tier":
+                                        df_ins[c] = pd.Series([pd.NA]*len(df_ins), dtype="Int64")
+                                    elif c == "stack_max":
+                                        df_ins[c] = pd.Series([pd.NA]*len(df_ins), dtype="Int64")
+                                    else:
+                                        df_ins[c] = ""
+                            if LIST_COL_AVAILABLE:
+                                colcfg_new = {
+                                    "item": st.column_config.TextColumn("item", required=True),
+                                    "categoria": st.column_config.TextColumn("categoria", required=True),
+                                    "peso": st.column_config.NumberColumn("peso", format="%.3f", required=True),
+                                    "stack_max": st.column_config.NumberColumn("stack_max", min_value=1, step=1),
+                                    "tags": st.column_config.ListColumn("tags"),
+                                    "tier": st.column_config.NumberColumn("tier", min_value=1, step=1),
+                                    "slug_nwmp": st.column_config.TextColumn("slug_nwmp"),
+                                }
+                            else:
+                                df_ins["tags"] = df_ins["tags"].apply(stringify_tags)
+                                colcfg_new = None
+
+                            df_ins_edit = st.data_editor(
+                                df_ins[["item","categoria","peso","stack_max","tags","tier","slug_nwmp"]],
+                                column_config=colcfg_new, hide_index=True, use_container_width=True, key="new_items_editor"
+                            )
+                            if st.button("Salvar novos"):
+                                df_ins_edit["peso"] = pd.to_numeric(df_ins_edit["peso"], errors="coerce")
+                                if (df_ins_edit["peso"].fillna(0) <= 0).any():
+                                    st.error("Há linhas com `peso` ≤ 0.")
+                                else:
+                                    if "stack_max" in df_ins_edit.columns:
+                                        df_ins_edit["stack_max"] = pd.to_numeric(df_ins_edit["stack_max"], errors="coerce").astype("Int64")
+                                    if "tier" in df_ins_edit.columns:
+                                        df_ins_edit["tier"] = df_ins_edit["tier"].apply(_to_tier_int).astype("Int64")
+                                    df_ins_edit["tags"] = df_ins_edit["tags"].apply(ensure_list_tags)
+                                    mask = ~base["item"].isin(df_ins_edit["item"])
+                                    base = pd.concat([base[mask], df_ins_edit], ignore_index=True)
+                                    inserted = len(df_ins_edit)
+                                    save_items(base)
+                                    st.success(f"Cadastro atualizado. Inseridos: {inserted}. Patched: {len(df_patch)}.")
+                                    st.rerun()
+                            st.stop()
+                        else:
+                            # Tudo ok para inserir direto
+                            mask = ~base["item"].isin(df_ins["item"])
+                            base = pd.concat([base[mask], df_ins], ignore_index=True)
+                            inserted = len(df_ins)
+
+                    # 3) Salva resultado
+                    save_items(base)
+                    st.success(f"Cadastro atualizado. Inseridos: {inserted}. Patched: {len(df_patch)}.")
                     st.rerun()
-            with c2:
-                st.download_button(
-                    "Baixar prévia (JSON)",
-                    data=df_items_in.to_json(orient="records", indent=2, force_ascii=False),
-                    file_name="items_preview.json",
-                    mime="application/json"
-                )
 
     st.markdown("### Editar cadastro existente")
     # --- normalização de tipos do cadastro ---
