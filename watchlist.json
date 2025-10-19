@@ -1,0 +1,18 @@
+[
+  {
+    "timestamp":"2025-10-18T12:34:56Z",
+    "item":"Infused Weapon Fragment",
+    "buy_price":4.04,
+    "sell_price":5.39,
+    "buy_duration":3,
+    "sell_duration":3
+  },
+  {
+    "timestamp":"2025-10-19T02:36:13.494395+00:00",
+    "item":"Iron Ore",
+    "buy_price":0.63,
+    "sell_price":0.7,
+    "buy_duration":1,
+    "sell_duration":3
+  }
+]
