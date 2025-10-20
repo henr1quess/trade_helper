@@ -196,5 +196,93 @@
     ],
     "tier":null,
     "slug_nwmp":""
+  },
+  {
+    "item":"Voidmetal",
+    "categoria":"Ingot",
+    "peso":0.3,
+    "stack_max":10000,
+    "tags":[
+
+    ],
+    "tier":null,
+    "slug_nwmp":""
+  },
+  {
+    "item":"Charged Sand",
+    "categoria":"Alchemy",
+    "peso":0.1,
+    "stack_max":10000,
+    "tags":[
+
+    ],
+    "tier":null,
+    "slug_nwmp":""
+  },
+  {
+    "item":"Anima Quartz",
+    "categoria":"Ore",
+    "peso":0.2,
+    "stack_max":10000,
+    "tags":[
+
+    ],
+    "tier":null,
+    "slug_nwmp":""
+  },
+  {
+    "item":"Starmetal Ore",
+    "categoria":"Ore",
+    "peso":0.2,
+    "stack_max":10000,
+    "tags":[
+
+    ],
+    "tier":null,
+    "slug_nwmp":""
+  },
+  {
+    "item":"Iron Ore",
+    "categoria":"Ore",
+    "peso":0.2,
+    "stack_max":10000,
+    "tags":[
+
+    ],
+    "tier":null,
+    "slug_nwmp":""
+  },
+  {
+    "item":"Cinnabar",
+    "categoria":"Ore",
+    "peso":0.3,
+    "stack_max":10000,
+    "tags":[
+
+    ],
+    "tier":null,
+    "slug_nwmp":""
+  },
+  {
+    "item":"Wyrdwood",
+    "categoria":"Wood",
+    "peso":0.2,
+    "stack_max":10000,
+    "tags":[
+
+    ],
+    "tier":null,
+    "slug_nwmp":""
+  },
+  {
+    "item":"Ironwood",
+    "categoria":"Wood",
+    "peso":0.2,
+    "stack_max":10000,
+    "tags":[
+
+    ],
+    "tier":null,
+    "slug_nwmp":""
   }
 ]

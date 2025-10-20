@@ -1,58 +1,50 @@
 [
   {
-    "timestamp":1760790896000,
-    "item":"Infused Weapon Fragment",
-    "buy_price":4.04,
-    "sell_price":5.39,
-    "buy_duration":3,
-    "sell_duration":3
+    "timestamp":"2025-10-20T00:39:17Z",
+    "item":"Voidmetal",
+    "buy_market":1.25,
+    "sell_market":3.2
   },
   {
-    "timestamp":1760841373494,
+    "timestamp":"2025-10-20T00:39:17Z",
+    "item":"Charged Sand",
+    "buy_market":21.99,
+    "sell_market":39.5
+  },
+  {
+    "timestamp":"2025-10-20T00:39:17Z",
+    "item":"Anima Quartz",
+    "buy_market":43.01,
+    "sell_market":70.0
+  },
+  {
+    "timestamp":"2025-10-20T00:39:17Z",
+    "item":"Starmetal Ore",
+    "buy_market":0.59,
+    "sell_market":0.9
+  },
+  {
+    "timestamp":"2025-10-20T00:39:17Z",
     "item":"Iron Ore",
-    "buy_price":0.63,
-    "sell_price":0.7,
-    "buy_duration":1,
-    "sell_duration":3
+    "buy_market":0.41,
+    "sell_market":0.56
   },
   {
-    "timestamp":1760879708499,
-    "item":"Runewood",
-    "buy_price":0.51,
-    "sell_price":0.77,
-    "buy_duration":3,
-    "sell_duration":3
+    "timestamp":"2025-10-20T00:39:17Z",
+    "item":"Cinnabar",
+    "buy_market":5.0,
+    "sell_market":6.1
   },
   {
-    "timestamp":1760879708499,
-    "item":"Green Wood",
-    "buy_price":0.08,
-    "sell_price":0.12,
-    "buy_duration":3,
-    "sell_duration":3
-  },
-  {
-    "timestamp":1760879708499,
+    "timestamp":"2025-10-20T00:39:17Z",
     "item":"Wyrdwood",
-    "buy_price":0.41,
-    "sell_price":0.51,
-    "buy_duration":3,
-    "sell_duration":3
+    "buy_market":0.4,
+    "sell_market":0.42
   },
   {
-    "timestamp":1760879708499,
-    "item":"Aged Wood",
-    "buy_price":0.24,
-    "sell_price":0.28,
-    "buy_duration":3,
-    "sell_duration":3
-  },
-  {
-    "timestamp":1760879708499,
+    "timestamp":"2025-10-20T00:39:17Z",
     "item":"Ironwood",
-    "buy_price":0.62,
-    "sell_price":0.67,
-    "buy_duration":3,
-    "sell_duration":3
+    "buy_market":0.66,
+    "sell_market":0.63
   }
 ]
