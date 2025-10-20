@@ -336,7 +336,7 @@ with tab_hist:
         items_meta = {}
         items_df = load_items()
         if not items_df.empty and "item" in items_df.columns:
-            meta_cols = [c for c in ["categoria", "tags"] if c in items_df.columns]
+            meta_cols = [c for c in ["categoria", "tags", "peso"] if c in items_df.columns]
             if meta_cols:
                 items_meta = (
                     items_df.drop_duplicates(subset=["item"])
@@ -366,6 +366,7 @@ with tab_hist:
             meta = items_meta.get(r["item"], {}) if items_meta else {}
             categoria = meta.get("categoria") if meta else None
             tags = ensure_list_tags(meta.get("tags")) if meta else []
+            peso = meta.get("peso") if meta else None
 
             rows.append({
                 "row_id": int(r["index"]),
@@ -379,6 +380,7 @@ with tab_hist:
                 "roi_hist_pct": (roi * 100.0) if roi is not None and pd.notna(roi) else None,
                 "categoria": categoria,
                 "tags": tags,
+                "peso": peso,
             })
         table = pd.DataFrame(rows).sort_values("timestamp", ascending=False)
 
@@ -409,18 +411,23 @@ with tab_hist:
 
         filtered_table = table.loc[mask].sort_values("timestamp", ascending=False)
 
+        display_table = filtered_table.copy()
+        if "tags" in display_table.columns:
+            display_table["tags"] = display_table["tags"].apply(stringify_tags)
+
         df_key = "hist_tbl_prices"
         st.dataframe(
-            filtered_table.set_index("row_id")[
+            display_table.set_index("row_id")[
                 [
                     "timestamp",
                     "item",
-                    "buy_market",
-                    "sell_market",
                     "flip_buy",
                     "flip_sell",
                     "profit_per_unit_hist",
                     "roi_hist_pct",
+                    "categoria",
+                    "tags",
+                    "peso",
                 ]
             ],
             use_container_width=True,
