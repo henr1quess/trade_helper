@@ -1305,21 +1305,61 @@ with tab_coletar:
                     + ", ".join(missing_remote)
                     + ". Defina-as via variáveis de ambiente."
                 )
-            else:
-                try:
-                    with st.spinner("Baixando, salvando RAW e atualizando histórico..."):
-                        nwmp_sync.run_sync(
-                            DEFAULT_NWMP_BUY_SRC,
-                            DEFAULT_NWMP_SELL_SRC,
-                            raw_root=DEFAULT_NWMP_RAW_ROOT,
-                            buy_csv_path=DEFAULT_NWMP_BUY_CSV,
-                            sell_csv_path=DEFAULT_NWMP_SELL_CSV,
-                            history_json_path=DEFAULT_HISTORY_JSON,
-                            server=DEFAULT_NWMP_SERVER,
-                        )
-                    st.success("Sincronização concluída ✅")
-                except Exception as e:
-                    st.error(f"Falhou: {e}")
+                return None
+            try:
+                with st.spinner("Baixando, salvando RAW e atualizando histórico..."):
+                    result = nwmp_sync.run_sync(
+                        DEFAULT_NWMP_BUY_SRC,
+                        DEFAULT_NWMP_SELL_SRC,
+                        raw_root=DEFAULT_NWMP_RAW_ROOT,
+                        buy_csv_path=DEFAULT_NWMP_BUY_CSV,
+                        sell_csv_path=DEFAULT_NWMP_SELL_CSV,
+                        history_json_path=DEFAULT_HISTORY_JSON,
+                        server=DEFAULT_NWMP_SERVER,
+                    )
+                st.success(_format_result_message("Snapshot online", result))
+                return result
+            except Exception as exc:
+                st.error(f"Falhou: {exc}")
+                return None
+
+        def _run_local_sync():
+            if missing_local:
+                st.error(
+                    "Configurações obrigatórias ausentes: "
+                    + ", ".join(missing_local)
+                    + ". Defina-as via variáveis de ambiente."
+                )
+                return None
+            try:
+                auctions_dir = settings_local["Snapshot local (auctions)"]
+                buy_dir = settings_local["Snapshot local (buy-orders)"]
+                auctions_path = Path(auctions_dir)
+                buy_path = Path(buy_dir)
+                if not auctions_path.exists() or not buy_path.exists():
+                    raise FileNotFoundError(f"{auctions_path} | {buy_path}")
+
+                with st.spinner("Processando snapshot local e atualizando histórico..."):
+                    result = nwmp_sync.run_sync_local_snapshot(
+                        auctions_dir=str(auctions_path),
+                        buy_orders_dir=str(buy_path),
+                        raw_root=DEFAULT_NWMP_RAW_ROOT,
+                        buy_csv_path=DEFAULT_NWMP_BUY_CSV,
+                        sell_csv_path=DEFAULT_NWMP_SELL_CSV,
+                        history_json_path=DEFAULT_HISTORY_JSON,
+                        server=DEFAULT_NWMP_SERVER,
+                    )
+                st.success(_format_result_message("Snapshot local", result))
+                return result
+            except FileNotFoundError as exc:
+                st.error(f"Pastas do snapshot local não encontradas: {exc}")
+            except Exception as exc:
+                st.error(f"Falhou: {exc}")
+            return None
+
+        a, b, c, d = st.columns(4)
+        if a.button("🔄 Sincronizar agora", use_container_width=True):
+            _run_remote_sync()
 
         if b.button("🧱 Reprocessar tudo do RAW → CSV", use_container_width=True):
             if missing_remote:
@@ -1339,8 +1379,30 @@ with tab_coletar:
                             server=DEFAULT_NWMP_SERVER,
                         )
                     st.success("Rebuild concluído ✅")
-                except Exception as e:
-                    st.error(f"Falhou: {e}")
+                except Exception as exc:
+                    st.error(f"Falhou: {exc}")
+
+        if c.button("💾 Sincronizar snapshot local", use_container_width=True):
+            _run_local_sync()
+
+        if d.button("🧭 Sincronizar fonte mais recente", use_container_width=True):
+            if latest_source == "local":
+                ts_msg = status_local if status_local != "—" else "desconhecido"
+                st.info(
+                    f"Executando {source_labels['local']} (snapshot {ts_msg})"
+                )
+                _run_local_sync()
+            elif latest_source == "remote":
+                ts_msg = status_remote if status_remote != "—" else "desconhecido"
+                st.info(
+                    f"Executando {source_labels['remote']} (snapshot {ts_msg})"
+                )
+                _run_remote_sync()
+            else:
+                st.info(
+                    "Nenhum snapshot anterior registrado; executando sincronização online padrão."
+                )
+                _run_remote_sync()
 
         if c.button("💾 Sincronizar snapshot local", use_container_width=True):
             if missing_local:
