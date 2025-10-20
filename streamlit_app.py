@@ -47,6 +47,66 @@ DEFAULT_NWMP_BUY_CSV = os.getenv("NWMP_BUY_CSV_PATH", "data/history_devaloka_buy
 DEFAULT_NWMP_SELL_CSV = os.getenv("NWMP_SELL_CSV_PATH", "data/history_devaloka_sell.csv")
 DEFAULT_HISTORY_JSON = "history_local.json"
 
+
+def _resolve_default_local_dir(env_var: str, default_candidate: str, fallback: Path) -> str:
+    from pathlib import Path as _Path
+
+    env_val = os.getenv(env_var)
+    if env_val:
+        return env_val
+
+    candidate_path = _Path(default_candidate)
+    if candidate_path.exists():
+        return str(candidate_path)
+
+    return str(fallback)
+
+
+DEFAULT_LOCAL_AUCTIONS_DIR = _resolve_default_local_dir(
+    "NWMP_LOCAL_AUCTIONS_DIR",
+    r"C:\\Users\\Administrador\\AppData\\Local\\NWMPScanner2\\current\\auctions",
+    SCRIPT_DIR / "example_snapshot" / "auctions",
+)
+
+DEFAULT_LOCAL_BUYORDERS_DIR = _resolve_default_local_dir(
+    "NWMP_LOCAL_BUYORDERS_DIR",
+    r"C:\\Users\\Administrador\\AppData\\Local\\NWMPScanner2\\current\\buy-orders",
+    SCRIPT_DIR / "example_snapshot" / "buy-orders",
+)
+
+# --------------------------------------------------------------------------------------
+# Path helpers
+# --------------------------------------------------------------------------------------
+
+def _resolve_path(value) -> Path:
+    path = Path(value)
+    if not path.is_absolute():
+        path = SCRIPT_DIR / path
+    return path
+
+
+def _parse_iso_datetime(value):
+    if not value:
+        return None
+    try:
+        return datetime.fromisoformat(value.replace("Z", "+00:00"))
+    except Exception:
+        try:
+            ts = pd.to_datetime(value, utc=True, errors="coerce")
+        except Exception:
+            return None
+        if pd.isna(ts):
+            return None
+        return ts.to_pydatetime()
+
+
+def _format_timestamp_label(value) -> str:
+    dt = _parse_iso_datetime(value)
+    if not dt:
+        return "—"
+    return dt.astimezone(timezone.utc).strftime("%Y-%m-%d %H:%MZ")
+
+
 # --------------------------------------------------------------------------------------
 # Helpers (I/O)
 # --------------------------------------------------------------------------------------
@@ -1481,7 +1541,7 @@ with tab_coletar:
     st.markdown("## Coletar histórico (Devaloka)")
 
     # Parâmetros fixos (sem necessidade de entrada manual)
-    settings = {
+    settings_remote = {
         "Buy orders": DEFAULT_NWMP_BUY_SRC,
         "Auctions": DEFAULT_NWMP_SELL_SRC,
         "Pasta RAW": DEFAULT_NWMP_RAW_ROOT,
@@ -1491,13 +1551,84 @@ with tab_coletar:
         "history_local.json": DEFAULT_HISTORY_JSON,
     }
 
+    settings_local = {
+        "Snapshot local (auctions)": DEFAULT_LOCAL_AUCTIONS_DIR,
+        "Snapshot local (buy-orders)": DEFAULT_LOCAL_BUYORDERS_DIR,
+    }
+
     st.caption("Parâmetros usados automaticamente para coleta/processamento")
-    settings_df = pd.DataFrame(
-        {"Configuração": list(settings.keys()), "Valor": [str(v) for v in settings.values()]}
-    )
+    settings_rows = []
+    for name, value in settings_remote.items():
+        settings_rows.append({"Origem": "NWMP online", "Configuração": name, "Valor": str(value)})
+    for name, value in settings_local.items():
+        settings_rows.append({"Origem": "Snapshot local", "Configuração": name, "Valor": str(value)})
+    settings_df = pd.DataFrame(settings_rows)
     st.table(settings_df)
 
-    missing_settings = [name for name, value in settings.items() if not str(value).strip()]
+    last_sync_meta_path = _resolve_path(DEFAULT_NWMP_RAW_ROOT) / "last_sync_meta.json"
+    try:
+        last_sync_meta = json.loads(last_sync_meta_path.read_text(encoding="utf-8")) if last_sync_meta_path.exists() else {}
+    except Exception:
+        last_sync_meta = {}
+
+    remote_meta = last_sync_meta.get("remote") or {}
+    local_meta = last_sync_meta.get("local") or {}
+
+    remote_ts_value = remote_meta.get("snapshot_ts") or remote_meta.get("timestamp")
+    local_ts_value = local_meta.get("snapshot_ts") or local_meta.get("timestamp")
+
+    remote_dt = _parse_iso_datetime(remote_ts_value)
+    local_dt = _parse_iso_datetime(local_ts_value)
+
+    def _fmt_counts(meta) -> str:
+        bits: list[str] = []
+        val = meta.get("sell_entries")
+        if isinstance(val, int):
+            bits.append(f"{val:,} vendas")
+        val = meta.get("buy_entries")
+        if isinstance(val, int):
+            bits.append(f"{val:,} compras")
+        val = meta.get("records")
+        if isinstance(val, int):
+            bits.append(f"{val:,} registros")
+        return " • ".join(bits)
+
+    status_remote = _format_timestamp_label(remote_ts_value)
+    status_local = _format_timestamp_label(local_ts_value)
+
+    latest_source = None
+    if remote_dt and local_dt:
+        latest_source = "remote" if remote_dt >= local_dt else "local"
+    elif remote_dt:
+        latest_source = "remote"
+    elif local_dt:
+        latest_source = "local"
+
+    source_labels = {"remote": "Snapshot online (NWMP)", "local": "Snapshot local"}
+
+    status_cols = st.columns(3)
+    status_cols[0].markdown(f"**Último snapshot online:** {status_remote}")
+    if remote_meta:
+        counts = _fmt_counts(remote_meta)
+        if counts:
+            status_cols[0].caption(counts)
+    status_cols[1].markdown(f"**Último snapshot local:** {status_local}")
+    if local_meta:
+        counts = _fmt_counts(local_meta)
+        if counts:
+            status_cols[1].caption(counts)
+
+    if latest_source:
+        latest_label = source_labels.get(latest_source, latest_source)
+        latest_ts = status_remote if latest_source == "remote" else status_local
+        status_cols[2].markdown(f"**Fonte mais recente processada:** {latest_label}")
+        status_cols[2].caption(f"Snapshot em {latest_ts}")
+    else:
+        status_cols[2].markdown("**Fonte mais recente processada:** —")
+        status_cols[2].caption("Nenhum snapshot processado ainda")
+
+    missing_remote = [name for name, value in settings_remote.items() if not str(value).strip()]
+    missing_local = [name for name, value in settings_local.items() if not str(value).strip()]
 
     # Importa o novo módulo do scraper
     try:
@@ -1510,35 +1641,85 @@ with tab_coletar:
     except Exception as e:
         st.error(f"Falha ao importar nwmp_sync: {e}")
     else:
-        a, b = st.columns(2)
-        if a.button("🔄 Sincronizar agora", use_container_width=True):
-            if missing_settings:
+        def _format_result_message(source_label: str, result) -> str:
+            if not isinstance(result, dict):
+                return source_label
+            ts_raw = result.get("snapshot_ts") or result.get("timestamp")
+            ts_display = _format_timestamp_label(ts_raw)
+            counts = _fmt_counts(result)
+            msg = f"{source_label} sincronizado ✅ (snapshot {ts_display})"
+            if counts:
+                msg += f" — {counts}"
+            return msg
+
+        def _run_remote_sync():
+            if missing_remote:
                 st.error(
                     "Configurações obrigatórias ausentes: "
-                    + ", ".join(missing_settings)
+                    + ", ".join(missing_remote)
                     + ". Defina-as via variáveis de ambiente."
                 )
-            else:
-                try:
-                    with st.spinner("Baixando, salvando RAW e atualizando histórico..."):
-                        nwmp_sync.run_sync(
-                            DEFAULT_NWMP_BUY_SRC,
-                            DEFAULT_NWMP_SELL_SRC,
-                            raw_root=DEFAULT_NWMP_RAW_ROOT,
-                            buy_csv_path=DEFAULT_NWMP_BUY_CSV,
-                            sell_csv_path=DEFAULT_NWMP_SELL_CSV,
-                            history_json_path=DEFAULT_HISTORY_JSON,
-                            server=DEFAULT_NWMP_SERVER,
-                        )
-                    st.success("Sincronização concluída ✅")
-                except Exception as e:
-                    st.error(f"Falhou: {e}")
+                return None
+            try:
+                with st.spinner("Baixando, salvando RAW e atualizando histórico..."):
+                    result = nwmp_sync.run_sync(
+                        DEFAULT_NWMP_BUY_SRC,
+                        DEFAULT_NWMP_SELL_SRC,
+                        raw_root=DEFAULT_NWMP_RAW_ROOT,
+                        buy_csv_path=DEFAULT_NWMP_BUY_CSV,
+                        sell_csv_path=DEFAULT_NWMP_SELL_CSV,
+                        history_json_path=DEFAULT_HISTORY_JSON,
+                        server=DEFAULT_NWMP_SERVER,
+                    )
+                st.success(_format_result_message("Snapshot online", result))
+                return result
+            except Exception as exc:
+                st.error(f"Falhou: {exc}")
+                return None
 
-        if b.button("🧱 Reprocessar tudo do RAW → CSV", use_container_width=True):
-            if missing_settings:
+        def _run_local_sync():
+            if missing_local:
                 st.error(
                     "Configurações obrigatórias ausentes: "
-                    + ", ".join(missing_settings)
+                    + ", ".join(missing_local)
+                    + ". Defina-as via variáveis de ambiente."
+                )
+                return None
+            try:
+                auctions_dir = settings_local["Snapshot local (auctions)"]
+                buy_dir = settings_local["Snapshot local (buy-orders)"]
+                auctions_path = Path(auctions_dir)
+                buy_path = Path(buy_dir)
+                if not auctions_path.exists() or not buy_path.exists():
+                    raise FileNotFoundError(f"{auctions_path} | {buy_path}")
+
+                with st.spinner("Processando snapshot local e atualizando histórico..."):
+                    result = nwmp_sync.run_sync_local_snapshot(
+                        auctions_dir=str(auctions_path),
+                        buy_orders_dir=str(buy_path),
+                        raw_root=DEFAULT_NWMP_RAW_ROOT,
+                        buy_csv_path=DEFAULT_NWMP_BUY_CSV,
+                        sell_csv_path=DEFAULT_NWMP_SELL_CSV,
+                        history_json_path=DEFAULT_HISTORY_JSON,
+                        server=DEFAULT_NWMP_SERVER,
+                    )
+                st.success(_format_result_message("Snapshot local", result))
+                return result
+            except FileNotFoundError as exc:
+                st.error(f"Pastas do snapshot local não encontradas: {exc}")
+            except Exception as exc:
+                st.error(f"Falhou: {exc}")
+            return None
+
+        a, b, c, d = st.columns(4)
+        if a.button("🔄 Sincronizar agora", use_container_width=True):
+            _run_remote_sync()
+
+        if b.button("🧱 Reprocessar tudo do RAW → CSV", use_container_width=True):
+            if missing_remote:
+                st.error(
+                    "Configurações obrigatórias ausentes: "
+                    + ", ".join(missing_remote)
                     + ". Defina-as via variáveis de ambiente."
                 )
             else:
@@ -1552,8 +1733,30 @@ with tab_coletar:
                             server=DEFAULT_NWMP_SERVER,
                         )
                     st.success("Rebuild concluído ✅")
-                except Exception as e:
-                    st.error(f"Falhou: {e}")
+                except Exception as exc:
+                    st.error(f"Falhou: {exc}")
+
+        if c.button("💾 Sincronizar snapshot local", use_container_width=True):
+            _run_local_sync()
+
+        if d.button("🧭 Sincronizar fonte mais recente", use_container_width=True):
+            if latest_source == "local":
+                ts_msg = status_local if status_local != "—" else "desconhecido"
+                st.info(
+                    f"Executando {source_labels['local']} (snapshot {ts_msg})"
+                )
+                _run_local_sync()
+            elif latest_source == "remote":
+                ts_msg = status_remote if status_remote != "—" else "desconhecido"
+                st.info(
+                    f"Executando {source_labels['remote']} (snapshot {ts_msg})"
+                )
+                _run_remote_sync()
+            else:
+                st.info(
+                    "Nenhum snapshot anterior registrado; executando sincronização online padrão."
+                )
+                _run_remote_sync()
 
         # Mostrar prévia do CSV NWMP e do history_local.json (se existirem)
         import pandas as pd

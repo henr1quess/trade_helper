@@ -80,6 +80,19 @@ def _detect_snapshot_ts(entries: List[Dict[str, Any]]) -> str:
     base = min(tss).astimezone(timezone.utc) if tss else datetime.now(timezone.utc)
     return _ts_iso_z(base)
 
+
+def _ensure_iso_timestamp(value: Any, fallback: Optional[datetime] = None) -> str:
+    dt = _normalise_timestamp(value)
+    if dt is None:
+        dt = fallback or datetime.now(timezone.utc)
+    return _ts_iso_z(dt)
+
+
+def _maybe_iso_datetime_field(entry: Dict[str, Any], key: str, fallback: Optional[datetime] = None) -> None:
+    if key not in entry:
+        return
+    entry[key] = _ensure_iso_timestamp(entry.get(key), fallback=fallback)
+
 # ------------------ Load snapshot arrays ------------------
 
 def load_snapshot_array(path_or_url: str, timeout: int = 60) -> List[Dict[str, Any]]:
@@ -108,6 +121,30 @@ def _write_json_list(path: Path, entries: List[Dict[str, Any]]) -> None:
     with open(path, "w", encoding="utf-8") as f:
         json.dump(entries, f, ensure_ascii=False, indent=2)
 
+
+def _load_json_object(path: Path) -> Dict[str, Any]:
+    if not path.exists():
+        return {}
+    try:
+        data = json.loads(path.read_text(encoding="utf-8"))
+    except Exception:
+        return {}
+    return data if isinstance(data, dict) else {}
+
+
+def _write_json_object(path: Path, payload: Dict[str, Any]) -> None:
+    _ensure_dir(path.parent)
+    with open(path, "w", encoding="utf-8") as f:
+        json.dump(payload, f, ensure_ascii=False, indent=2)
+
+
+def _update_last_sync_metadata(meta_path: Path, source: str, payload: Dict[str, Any]) -> None:
+    if not source:
+        return
+    meta = _load_json_object(meta_path)
+    meta[source] = payload
+    _write_json_object(meta_path, meta)
+
 def _merge_history_entries(
     existing: List[Dict[str, Any]], new_entries: Iterable[Dict[str, Any]]
 ) -> List[Dict[str, Any]]:
@@ -132,6 +169,68 @@ def _merge_history_entries(
         merged.append(e)
 
     return merged
+
+
+def _load_local_snapshot_entries(directory: Path) -> List[Dict[str, Any]]:
+    entries: List[Dict[str, Any]] = []
+    if not directory.exists():
+        raise FileNotFoundError(f"Diretório não encontrado: {directory}")
+
+    for json_path in sorted(directory.rglob("*.json")):
+        if not json_path.is_file():
+            continue
+        try:
+            data = json.loads(json_path.read_text(encoding="utf-8"))
+        except Exception:
+            continue
+        if isinstance(data, list):
+            for raw in data:
+                if isinstance(raw, dict):
+                    entries.append(raw.copy())
+    return entries
+
+
+def _normalise_local_entry(
+    entry: Dict[str, Any],
+    snapshot_dt: datetime,
+    server: str,
+) -> Dict[str, Any]:
+    norm: Dict[str, Any] = dict(entry)
+
+    norm["timestamp"] = _ensure_iso_timestamp(norm.get("timestamp"), fallback=snapshot_dt)
+    _maybe_iso_datetime_field(norm, "created_at", fallback=snapshot_dt)
+    _maybe_iso_datetime_field(norm, "expires_at", fallback=snapshot_dt)
+
+    server_norm = (server or "devaloka").lower()
+    norm["server_id"] = server_norm
+    if not norm.get("server"):
+        norm["server"] = server_norm
+
+    slug = str(norm.get("item_id") or norm.get("slug") or norm.get("id") or "").strip()
+    if slug:
+        norm.setdefault("slug", slug)
+    if not norm.get("item_name"):
+        norm["item_name"] = slug or norm.get("item") or ""
+
+    for key in ["price", "quantity"]:
+        if key in norm:
+            try:
+                norm[key] = int(norm[key])
+            except Exception:
+                try:
+                    norm[key] = int(float(norm[key]))
+                except Exception:
+                    pass
+
+    return norm
+
+
+def _append_raw_entries(raw_path: Path, entries: List[Dict[str, Any]]) -> None:
+    if not entries:
+        return
+    existing = _load_json_list(raw_path)
+    merged = _merge_history_entries(existing, entries)
+    _write_json_list(raw_path, merged)
 
 def save_raw_snapshot_array(
     path_or_url: str, out_root_raw: str, label: str, timeout: int = 60
@@ -468,13 +567,41 @@ def sync_sources_save_raw_and_update_csv(
     history_json_path: str,
     server: str = "devaloka",
     timeout: int = 60,
-) -> None:
-    buy_entries, _, _ = save_raw_snapshot_array(buy_orders_path_or_url, raw_root, label="buy", timeout=timeout)
-    sell_entries, _, _ = save_raw_snapshot_array(auctions_path_or_url, raw_root, label="sell", timeout=timeout)
+) -> Dict[str, Any]:
+    buy_entries, buy_snapshot_ts, _ = save_raw_snapshot_array(
+        buy_orders_path_or_url, raw_root, label="buy", timeout=timeout
+    )
+    sell_entries, sell_snapshot_ts, _ = save_raw_snapshot_array(
+        auctions_path_or_url, raw_root, label="sell", timeout=timeout
+    )
     update_side_csv(buy_entries, buy_csv_path, side="buy")
     update_side_csv(sell_entries, sell_csv_path, side="sell")
     records = extract_records_from_snapshots(buy_entries, sell_entries, server=server)
     append_history_json_from_records(records, history_json_path)
+
+    ts_candidates = [
+        _normalise_timestamp(buy_snapshot_ts),
+        _normalise_timestamp(sell_snapshot_ts),
+    ]
+    ts_candidates = [ts for ts in ts_candidates if ts is not None]
+    latest_dt = max(ts_candidates) if ts_candidates else datetime.now(timezone.utc)
+    snapshot_iso = _ts_iso_z(latest_dt)
+
+    meta_payload = {
+        "source": "remote",
+        "snapshot_ts": snapshot_iso,
+        "buy_snapshot_ts": buy_snapshot_ts,
+        "sell_snapshot_ts": sell_snapshot_ts,
+        "buy_entries": len(buy_entries),
+        "sell_entries": len(sell_entries),
+        "records": len(records),
+        "updated_at": _ts_iso_z(datetime.now(timezone.utc)),
+    }
+
+    meta_path = Path(raw_root) / "last_sync_meta.json"
+    _update_last_sync_metadata(meta_path, "remote", meta_payload)
+
+    return meta_payload
 
 def rebuild_csv_from_raw(
     raw_root: str,
@@ -507,8 +634,8 @@ def run_sync(
     history_json_path: str = "history_local.json",
     server: str = "devaloka",
     timeout: int = 60,
-) -> None:
-    sync_sources_save_raw_and_update_csv(
+) -> Dict[str, Any]:
+    return sync_sources_save_raw_and_update_csv(
         buy_url_or_path,
         sell_url_or_path,
         raw_root,
@@ -528,3 +655,49 @@ def run_rebuild(
     server: str = "devaloka",
 ) -> None:
     rebuild_csv_from_raw(raw_root, buy_csv_path, sell_csv_path, history_json_path, server=server)
+
+
+def run_sync_local_snapshot(
+    auctions_dir: str,
+    buy_orders_dir: str,
+    raw_root: str = "raw",
+    buy_csv_path: str = "data/history_devaloka_buy.csv",
+    sell_csv_path: str = "data/history_devaloka_sell.csv",
+    history_json_path: str = "history_local.json",
+    server: str = "devaloka",
+    snapshot_time: Optional[datetime] = None,
+) -> Dict[str, Any]:
+    snapshot_dt = snapshot_time or datetime.now(timezone.utc)
+
+    auctions_entries_raw = _load_local_snapshot_entries(Path(auctions_dir))
+    buy_entries_raw = _load_local_snapshot_entries(Path(buy_orders_dir))
+
+    auctions_entries = [_normalise_local_entry(e, snapshot_dt, server) for e in auctions_entries_raw]
+    buy_entries = [_normalise_local_entry(e, snapshot_dt, server) for e in buy_entries_raw]
+
+    raw_root_path = Path(raw_root)
+    _append_raw_entries(raw_root_path / "sell.json", auctions_entries)
+    _append_raw_entries(raw_root_path / "buy.json", buy_entries)
+
+    update_side_csv(buy_entries, buy_csv_path, side="buy")
+    update_side_csv(auctions_entries, sell_csv_path, side="sell")
+
+    records = extract_records_from_snapshots(buy_entries, auctions_entries, server=server)
+    append_history_json_from_records(records, history_json_path)
+
+    snapshot_iso = _ts_iso_z(snapshot_dt)
+    now_iso = _ts_iso_z(datetime.now(timezone.utc))
+    result = {
+        "source": "local",
+        "timestamp": snapshot_iso,
+        "snapshot_ts": snapshot_iso,
+        "buy_entries": len(buy_entries),
+        "sell_entries": len(auctions_entries),
+        "records": len(records),
+        "updated_at": now_iso,
+    }
+
+    meta_path = raw_root_path / "last_sync_meta.json"
+    _update_last_sync_metadata(meta_path, "local", result)
+
+    return result
