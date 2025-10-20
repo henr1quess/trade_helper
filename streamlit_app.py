@@ -1641,6 +1641,19 @@ with tab_coletar:
                 if not auctions_path.exists():
                     raise FileNotFoundError(str(auctions_path))
 
+                snapshot_dt = None
+                try:
+                    probe = nwmp_sync.probe_local_snapshot(
+                        str(buy_path), str(auctions_path)
+                    )
+                    probe_ts = probe.get("snapshot_ts")
+                    if probe_ts:
+                        probe_dt = pd.to_datetime(probe_ts, utc=True, errors="coerce")
+                        if pd.notna(probe_dt):
+                            snapshot_dt = probe_dt.to_pydatetime()
+                except Exception:
+                    snapshot_dt = None
+
                 with st.spinner("Processando snapshot local e atualizando snapshot consolidado..."):
                     result = nwmp_sync.run_sync_local_snapshot(
                         buy_orders_dir=str(buy_path),
@@ -1651,6 +1664,7 @@ with tab_coletar:
                         history_json_path=DEFAULT_HISTORY_JSON,
                         buy_history_csv_path=DEFAULT_NWMP_BUY_HISTORY_CSV,
                         server=DEFAULT_NWMP_SERVER,
+                        snapshot_time=snapshot_dt,
                     )
                 st.success(_format_result_message(source_labels["local"], result))
                 return result

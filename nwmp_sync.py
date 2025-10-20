@@ -986,10 +986,29 @@ def run_sync_local_snapshot(
     server: str = "devaloka",
     snapshot_time: Optional[datetime] = None,
 ) -> Dict[str, Any]:
-    snapshot_dt = snapshot_time or datetime.now(timezone.utc)
-    snapshot_iso = _ts_iso_z(snapshot_dt)
-
     buy_entries_raw = _load_local_snapshot_entries(Path(buy_orders_dir))
+
+    sell_entries_raw: List[Dict[str, Any]] = []
+    if auctions_dir:
+        sell_entries_raw = _load_local_snapshot_entries(Path(auctions_dir))
+
+    timestamp_candidates: List[datetime] = []
+    buy_dt = _summarise_snapshot_entries(buy_entries_raw, prefer="max")
+    if buy_dt is not None:
+        timestamp_candidates.append(buy_dt)
+    if sell_entries_raw:
+        sell_dt = _summarise_snapshot_entries(sell_entries_raw, prefer="max")
+        if sell_dt is not None:
+            timestamp_candidates.append(sell_dt)
+
+    if timestamp_candidates:
+        snapshot_dt = max(timestamp_candidates).astimezone(timezone.utc)
+    else:
+        snapshot_dt = _normalise_timestamp(snapshot_time) if snapshot_time else None
+        if snapshot_dt is None:
+            snapshot_dt = datetime.now(timezone.utc)
+
+    snapshot_iso = _ts_iso_z(snapshot_dt)
 
     buy_entries = [_normalise_local_entry(e, snapshot_dt, server) for e in buy_entries_raw]
 
@@ -1007,8 +1026,7 @@ def run_sync_local_snapshot(
         buy_history_rows = int(len(summary_df))
 
     sell_entries: List[Dict[str, Any]] = []
-    if auctions_dir:
-        sell_entries_raw = _load_local_snapshot_entries(Path(auctions_dir))
+    if sell_entries_raw:
         sell_entries = [
             _normalise_local_entry(e, snapshot_dt, server) for e in sell_entries_raw
         ]
