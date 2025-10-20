@@ -336,7 +336,7 @@ with tab_hist:
         items_meta = {}
         items_df = load_items()
         if not items_df.empty and "item" in items_df.columns:
-            meta_cols = [c for c in ["categoria", "tags"] if c in items_df.columns]
+            meta_cols = [c for c in ["categoria", "tags", "peso"] if c in items_df.columns]
             if meta_cols:
                 items_meta = (
                     items_df.drop_duplicates(subset=["item"])
@@ -366,6 +366,7 @@ with tab_hist:
             meta = items_meta.get(r["item"], {}) if items_meta else {}
             categoria = meta.get("categoria") if meta else None
             tags = ensure_list_tags(meta.get("tags")) if meta else []
+            peso = meta.get("peso") if meta else None
 
             rows.append({
                 "row_id": int(r["index"]),
@@ -379,6 +380,7 @@ with tab_hist:
                 "roi_hist_pct": (roi * 100.0) if roi is not None and pd.notna(roi) else None,
                 "categoria": categoria,
                 "tags": tags,
+                "peso": peso,
             })
         table = pd.DataFrame(rows).sort_values("timestamp", ascending=False)
 
@@ -409,18 +411,23 @@ with tab_hist:
 
         filtered_table = table.loc[mask].sort_values("timestamp", ascending=False)
 
+        display_table = filtered_table.copy()
+        if "tags" in display_table.columns:
+            display_table["tags"] = display_table["tags"].apply(stringify_tags)
+
         df_key = "hist_tbl_prices"
         st.dataframe(
-            filtered_table.set_index("row_id")[
+            display_table.set_index("row_id")[
                 [
                     "timestamp",
                     "item",
-                    "buy_market",
-                    "sell_market",
                     "flip_buy",
                     "flip_sell",
                     "profit_per_unit_hist",
                     "roi_hist_pct",
+                    "categoria",
+                    "tags",
+                    "peso",
                 ]
             ],
             use_container_width=True,
@@ -998,51 +1005,6 @@ Retorne **apenas** o JSON, sem comentários.
             use_container_width=True,
             disabled=True,
         )
-
-        # Cadastro rápido inline
-        if missing_items:
-            st.markdown("### Cadastro rápido (itens não cadastrados)")
-            stub = pd.DataFrame({
-                "item": missing_items,
-                "categoria": "",
-                "peso": 0.0,
-                "stack_max": pd.Series([None]*len(missing_items), dtype="Int64"),
-                "tags": [[] for _ in missing_items],
-                "tier": pd.Series([pd.NA]*len(missing_items), dtype="Int64"),
-            })
-            if not LIST_COL_AVAILABLE:
-                stub["tags"] = [""]*len(stub)
-            colcfg = {
-                "item": st.column_config.TextColumn("item", help="Nome do item", required=True),
-                "categoria": st.column_config.TextColumn("categoria", help="Ex.: Wood, Ore, Hide..."),
-                "peso": st.column_config.NumberColumn("peso", format="%.3f", help="Peso por unidade", required=True),
-                "stack_max": st.column_config.NumberColumn("stack_max", help="Opcional", min_value=1, step=1)
-            }
-            if LIST_COL_AVAILABLE:
-                colcfg["tags"] = st.column_config.ListColumn("tags", help="Tags livres", default=[])
-            else:
-                colcfg["tags"] = st.column_config.TextColumn("tags", help="Separadas por vírgula")
-            colcfg["tier"] = st.column_config.NumberColumn("tier", help="Opcional (ex.: 1–5)", min_value=1, step=1)
-
-            quick = st.data_editor(stub, num_rows="dynamic", column_config=colcfg, hide_index=True, use_container_width=True)
-            if st.button("💾 Salvar cadastro rápido"):
-                quick = quick.dropna(subset=["item"]).copy()
-                if not LIST_COL_AVAILABLE:
-                    quick["tags"] = quick["tags"].apply(ensure_list_tags)
-                try:
-                    quick["peso"] = pd.to_numeric(quick["peso"], errors="coerce")
-                    if "stack_max" in quick.columns:
-                        quick["stack_max"] = pd.to_numeric(quick["stack_max"], errors="coerce").astype("Int64")
-                    if "tier" in quick.columns:
-                        quick["tier"] = quick["tier"].apply(_to_tier_int).astype("Int64")
-                except Exception:
-                    pass
-                base = load_items()
-                mask_new = ~base["item"].isin(quick["item"])
-                merged = pd.concat([base[mask_new], quick], ignore_index=True)
-                save_items(merged)
-                st.success(f"{len(quick)} item(ns) cadastrados. Recarregando prévia…")
-                st.rerun()
 
         c1, c2 = st.columns(2)
         with c1:
