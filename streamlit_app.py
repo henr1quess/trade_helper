@@ -676,10 +676,12 @@ with tab_import:
     st.caption("Use `item, top_buy, low_sell, buy_duration, sell_duration, timestamp`. Os preços são salvos como mercado (sem ±0.01).")
 
     PROMPT_TEXT = r"""
-Você é uma IA que recebe **várias capturas de tela** (prints) do Trading Post do jogo *New World* com:
+Você é uma IA que recebe **várias capturas de tela** (prints) ou **textos transcritos** do Trading Post do jogo *New World* com:
 - **Current Buy Orders** e **Current Sell Orders**
 - O **nome do item** visível no topo
 - Às vezes a **duração** selecionada para a ordem (ex.: 1d, 3d, 7d, 14d)
+
+Você pode receber essas informações como imagens ou textos; use exatamente os nomes e preços fornecidos.
 
 Seu objetivo é produzir **um JSON único (array)** com um objeto por item, seguindo **exatamente** este formato:
 
@@ -925,12 +927,13 @@ with tab_cad:
     st.caption(f"Arquivo: `{ITEMS_PATH.resolve()}`")
 
     IA_PROMPT = r"""
-Você é uma IA que recebe **imagens** contendo **nomes de vários itens** do jogo *New World*.
+Você é uma IA que recebe **imagens** ou **textos** contendo **nomes de vários itens** do jogo *New World*.
 Para cada item, você deve **consultar o NWDB** (https://nwdb.info) e produzir um **JSON** de cadastro com os campos abaixo.
+As entradas podem ser descrições textuais transcritas; use exatamente os dados fornecidos quando disponíveis.
 
 ### Saída (um único array JSON):
 [
-  {"item":"Dark Hide","categoria":"Raw Hide","peso":0.100,"stack_max":1000},
+  {"item":"Dark Hide","categoria":"Raw Hide","peso":0.100,"stack_max":1000,"tier":5},
   {"item":"Iron Ore","categoria":"Ore","peso":0.100,"stack_max":1000}
 ]
 
@@ -938,16 +941,18 @@ Para cada item, você deve **consultar o NWDB** (https://nwdb.info) e produzir u
 1) **Nome do item (`item`)**: use o nome **exato** encontrado no NWDB.
 2) **Peso (`peso`)**: no NWDB é exibido como **Weight** (ou equivalente). Grave como número decimal com **ponto** e **3 casas** (ex.: 0.100).
 3) **Stack máximo (`stack_max`)**: no NWDB é exibido como **Max Stack** (ou equivalente). Grave como inteiro (ex.: 1000). Se não houver, omita o campo.
-4) **Categoria (`categoria`)**:
+4) **Tier (`tier`)**: procure o **tier** do item no NWDB (ex.: T3) e grave como número inteiro **quando disponível**.
+5) **Categoria (`categoria`)**:
    - A categoria NÃO está claramente na página do item. Então você deve localizar uma **página de listagem** onde esse item aparece (ex.: `https://nwdb.info/db/items/resources/raw-hide/page/1`).
    - Pegue a **última parte legível do caminho** (no exemplo: `raw-hide` → **"Raw Hide"**), substituindo **hífens por espaços** e usando **Title Case**.
    - Exemplo: se **Dark Hide** aparece em `/db/items/resources/raw-hide/page/1`, a categoria deve ser **"Raw Hide"**.
-5) **Um único array** JSON com **todos os itens** detectados nas imagens. **Sem duplicatas**; se houver conflito, mantenha a versão com dados mais completos.
-6) **Formatação**:
+6) **Um único array** JSON com **todos os itens** detectados nas imagens ou textos. **Sem duplicatas**; se houver conflito, mantenha a versão com dados mais completos.
+7) **Formatação**:
    - Use **ponto** como separador decimal em `peso`.
    - `stack_max` apenas se encontrado.
+   - `tier` apenas se encontrado.
    - Não inclua campos extras.
-7) Se algum item não puder ser validado com confiança no NWDB, **ignore**.
+8) Se algum item não puder ser validado com confiança no NWDB, **ignore**.
 
 Retorne **apenas** o JSON (sem comentários).
 """
@@ -1052,7 +1057,7 @@ Retorne **apenas** o JSON (sem comentários).
                 st.subheader("Prévia do cadastro")
                 prev = df_items_in.copy()
                 # colunas ordenadas amigáveis
-                wanted = ["item","categoria","peso","stack_max","tags","tier"]
+                wanted = ["item","categoria","peso","stack_max","tier","tags"]
                 show_cols = [c for c in wanted if c in prev.columns] + [c for c in prev.columns if c not in wanted]
                 # configurações de exibição
                 if LIST_COL_AVAILABLE:
@@ -1061,8 +1066,8 @@ Retorne **apenas** o JSON (sem comentários).
                         **({"categoria": st.column_config.TextColumn("categoria")} if "categoria" in prev.columns else {}),
                         **({"peso": st.column_config.NumberColumn("peso", format="%.3f")} if "peso" in prev.columns else {}),
                         **({"stack_max": st.column_config.NumberColumn("stack_max", min_value=1, step=1)} if "stack_max" in prev.columns else {}),
-                        **({"tags": st.column_config.ListColumn("tags")} if "tags" in prev.columns else {}),
                         **({"tier": st.column_config.NumberColumn("tier", min_value=1, step=1)} if "tier" in prev.columns else {}),
+                        **({"tags": st.column_config.ListColumn("tags")} if "tags" in prev.columns else {}),
                     }
                 else:
                     if "tags" in prev.columns:
