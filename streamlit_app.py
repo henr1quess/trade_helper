@@ -6,6 +6,8 @@ import os
 from datetime import datetime, timezone
 from io import StringIO
 from pathlib import Path
+from typing import Any, Dict, List, Optional
+
 import pandas as pd
 import streamlit as st
 import streamlit.components.v1 as components
@@ -1297,8 +1299,150 @@ with tab_coletar:
     except Exception as e:
         st.error(f"Falha ao importar nwmp_sync: {e}")
     else:
-        a, b, c = st.columns(3)
-        if a.button("🔄 Sincronizar agora", use_container_width=True):
+        source_labels = {
+            "remote": "Snapshot online (NWMP)",
+            "local": "Snapshot local (pastas current)",
+        }
+
+        def _load_last_sync_meta() -> Dict[str, Any]:
+            meta_path = Path(DEFAULT_NWMP_RAW_ROOT) / "last_sync_meta.json"
+            if not meta_path.exists():
+                return {}
+            try:
+                return json.loads(meta_path.read_text(encoding="utf-8"))
+            except Exception:
+                return {}
+
+        last_meta = _load_last_sync_meta()
+        processed_remote = last_meta.get("remote", {}) if isinstance(last_meta, dict) else {}
+        processed_local = last_meta.get("local", {}) if isinstance(last_meta, dict) else {}
+
+        processed_remote_ts = processed_remote.get("snapshot_ts") or processed_remote.get("timestamp")
+        processed_local_ts = processed_local.get("timestamp") or processed_local.get("snapshot_ts")
+
+        if missing_remote:
+            remote_probe: Dict[str, Any] = {
+                "source": "remote",
+                "snapshot_ts": None,
+                "error": "Configurações obrigatórias ausentes",
+            }
+        else:
+            try:
+                remote_probe = nwmp_sync.probe_remote_snapshot(
+                    DEFAULT_NWMP_BUY_SRC,
+                    DEFAULT_NWMP_SELL_SRC,
+                    timeout=15,
+                )
+            except Exception as exc:
+                remote_probe = {"source": "remote", "snapshot_ts": None, "error": str(exc)}
+
+        if missing_local:
+            local_probe: Dict[str, Any] = {
+                "source": "local",
+                "snapshot_ts": None,
+                "error": "Configurações obrigatórias ausentes",
+            }
+        else:
+            try:
+                local_probe = nwmp_sync.probe_local_snapshot(
+                    settings_local["Snapshot local (auctions)"],
+                    settings_local["Snapshot local (buy-orders)"],
+                )
+            except Exception as exc:
+                local_probe = {"source": "local", "snapshot_ts": None, "error": str(exc)}
+
+        def _format_counts(info: Dict[str, Any]) -> str:
+            if not isinstance(info, dict):
+                return ""
+            parts: List[str] = []
+            sell_entries = info.get("sell_entries")
+            buy_entries = info.get("buy_entries")
+            records = info.get("records")
+            if isinstance(sell_entries, int):
+                parts.append(f"{sell_entries:,} vendas")
+            if isinstance(buy_entries, int):
+                parts.append(f"{buy_entries:,} ordens de compra")
+            if isinstance(records, int):
+                parts.append(f"{records:,} registros")
+            return " • ".join(parts)
+
+        def _render_snapshot_status(
+            col, title: str, probe: Dict[str, Any], processed: Dict[str, Any], processed_ts: Optional[str]
+        ) -> None:
+            col.markdown(f"### {title}")
+            probe_ts = probe.get("snapshot_ts") if isinstance(probe, dict) else None
+            probe_counts = _format_counts(probe)
+            if probe_ts:
+                col.metric(
+                    "Snapshot disponível",
+                    probe_ts,
+                    help=probe_counts if probe_counts else None,
+                )
+            elif probe.get("error"):
+                col.warning(f"Não foi possível verificar: {probe['error']}")
+            else:
+                col.info("Não foi possível obter informações em tempo real.")
+
+            processed_ts = processed_ts or processed.get("snapshot_ts") or processed.get("timestamp")
+            processed_counts = _format_counts(processed)
+            caption = f"Último processado: {processed_ts or '—'}"
+            if processed_counts:
+                caption += f"\n{processed_counts}"
+            col.caption(caption)
+
+        live_remote_ts = remote_probe.get("snapshot_ts") if isinstance(remote_probe, dict) else None
+        live_local_ts = local_probe.get("snapshot_ts") if isinstance(local_probe, dict) else None
+
+        status_remote = live_remote_ts or processed_remote_ts or "—"
+        status_local = live_local_ts or processed_local_ts or "—"
+
+        remote_col, local_col = st.columns(2)
+        _render_snapshot_status(
+            remote_col,
+            "Disponível no site",
+            remote_probe,
+            processed_remote,
+            processed_remote_ts,
+        )
+        _render_snapshot_status(
+            local_col,
+            "Disponível localmente",
+            local_probe,
+            processed_local,
+            processed_local_ts,
+        )
+
+        def _coerce_dt(value: Optional[str]):
+            if not value:
+                return None
+            ts = parse_iso(value)
+            if isinstance(ts, pd.Timestamp) and not pd.isna(ts):
+                return ts.to_pydatetime()
+            return None
+
+        latest_source: Optional[str] = None
+        latest_dt = None
+        for src, value in (("remote", live_remote_ts), ("local", live_local_ts)):
+            dt = _coerce_dt(value)
+            if dt and (latest_dt is None or dt > latest_dt):
+                latest_dt = dt
+                latest_source = src
+        if latest_source is None:
+            for src, value in (("remote", processed_remote_ts), ("local", processed_local_ts)):
+                dt = _coerce_dt(value)
+                if dt and (latest_dt is None or dt > latest_dt):
+                    latest_dt = dt
+                    latest_source = src
+
+        def _format_result_message(source_name: str, payload: Optional[Dict[str, Any]]) -> str:
+            if not isinstance(payload, dict):
+                return f"{source_name} sincronizado ✅"
+            counts = _format_counts(payload)
+            if counts:
+                return f"{source_name} sincronizado ✅ ({counts})"
+            return f"{source_name} sincronizado ✅"
+
+        def _run_remote_sync():
             if missing_remote:
                 st.error(
                     "Configurações obrigatórias ausentes: "
@@ -1317,7 +1461,7 @@ with tab_coletar:
                         history_json_path=DEFAULT_HISTORY_JSON,
                         server=DEFAULT_NWMP_SERVER,
                     )
-                st.success(_format_result_message("Snapshot online", result))
+                st.success(_format_result_message(source_labels["remote"], result))
                 return result
             except Exception as exc:
                 st.error(f"Falhou: {exc}")
@@ -1349,7 +1493,7 @@ with tab_coletar:
                         history_json_path=DEFAULT_HISTORY_JSON,
                         server=DEFAULT_NWMP_SERVER,
                     )
-                st.success(_format_result_message("Snapshot local", result))
+                st.success(_format_result_message(source_labels["local"], result))
                 return result
             except FileNotFoundError as exc:
                 st.error(f"Pastas do snapshot local não encontradas: {exc}")
@@ -1357,11 +1501,11 @@ with tab_coletar:
                 st.error(f"Falhou: {exc}")
             return None
 
-        a, b, c, d = st.columns(4)
-        if a.button("🔄 Sincronizar agora", use_container_width=True):
+        actions_remote, actions_rebuild, actions_local, actions_auto = st.columns(4)
+        if actions_remote.button("🔄 Sincronizar agora", use_container_width=True):
             _run_remote_sync()
 
-        if b.button("🧱 Reprocessar tudo do RAW → CSV", use_container_width=True):
+        if actions_rebuild.button("🧱 Reprocessar tudo do RAW → CSV", use_container_width=True):
             if missing_remote:
                 st.error(
                     "Configurações obrigatórias ausentes: "
@@ -1382,10 +1526,10 @@ with tab_coletar:
                 except Exception as exc:
                     st.error(f"Falhou: {exc}")
 
-        if c.button("💾 Sincronizar snapshot local", use_container_width=True):
+        if actions_local.button("💾 Sincronizar snapshot local", use_container_width=True):
             _run_local_sync()
 
-        if d.button("🧭 Sincronizar fonte mais recente", use_container_width=True):
+        if actions_auto.button("🧭 Sincronizar fonte mais recente", use_container_width=True):
             if latest_source == "local":
                 ts_msg = status_local if status_local != "—" else "desconhecido"
                 st.info(
@@ -1403,43 +1547,6 @@ with tab_coletar:
                     "Nenhum snapshot anterior registrado; executando sincronização online padrão."
                 )
                 _run_remote_sync()
-
-        if c.button("💾 Sincronizar snapshot local", use_container_width=True):
-            if missing_local:
-                st.error(
-                    "Configurações obrigatórias ausentes: "
-                    + ", ".join(missing_local)
-                    + ". Defina-as via variáveis de ambiente."
-                )
-            else:
-                try:
-                    auctions_dir = settings_local["Snapshot local (auctions)"]
-                    buy_dir = settings_local["Snapshot local (buy-orders)"]
-                    auctions_path = Path(auctions_dir)
-                    buy_path = Path(buy_dir)
-                    if not auctions_path.exists() or not buy_path.exists():
-                        raise FileNotFoundError(f"{auctions_path} | {buy_path}")
-
-                    with st.spinner("Processando snapshot local e atualizando histórico..."):
-                        result = nwmp_sync.run_sync_local_snapshot(
-                            auctions_dir=str(auctions_path),
-                            buy_orders_dir=str(buy_path),
-                            raw_root=DEFAULT_NWMP_RAW_ROOT,
-                            buy_csv_path=DEFAULT_NWMP_BUY_CSV,
-                            sell_csv_path=DEFAULT_NWMP_SELL_CSV,
-                            history_json_path=DEFAULT_HISTORY_JSON,
-                            server=DEFAULT_NWMP_SERVER,
-                        )
-                    st.success(
-                        "Snapshot local sincronizado ✅ "
-                        + f"({result.get('sell_entries', 0):,} vendas, "
-                        + f"{result.get('buy_entries', 0):,} ordens de compra, "
-                        + f"{result.get('records', 0):,} registros históricos)"
-                    )
-                except FileNotFoundError as exc:
-                    st.error(f"Pastas do snapshot local não encontradas: {exc}")
-                except Exception as e:
-                    st.error(f"Falhou: {e}")
 
         # Mostrar prévia do CSV NWMP e do history_local.json (se existirem)
         import pandas as pd
