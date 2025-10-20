@@ -568,5 +568,215 @@
 
     ],
     "tier":5
+  },
+  {
+    "item":"Linen",
+    "categoria":"Refined Cloth",
+    "peso":0.1,
+    "stack_max":10000,
+    "tags":[
+
+    ],
+    "tier":2
+  },
+  {
+    "item":"Sateen",
+    "categoria":"Refined Cloth",
+    "peso":0.1,
+    "stack_max":10000,
+    "tags":[
+
+    ],
+    "tier":3
+  },
+  {
+    "item":"Silk",
+    "categoria":"Refined Cloth",
+    "peso":0.1,
+    "stack_max":10000,
+    "tags":[
+
+    ],
+    "tier":4
+  },
+  {
+    "item":"Infused Silk",
+    "categoria":"Refined Cloth",
+    "peso":0.1,
+    "stack_max":10000,
+    "tags":[
+
+    ],
+    "tier":5
+  },
+  {
+    "item":"Phoenixweave",
+    "categoria":"Refined Cloth",
+    "peso":0.1,
+    "stack_max":10000,
+    "tags":[
+
+    ],
+    "tier":5
+  },
+  {
+    "item":"Spinweave Cloth",
+    "categoria":"Refined Cloth",
+    "peso":0.1,
+    "stack_max":10000,
+    "tags":[
+
+    ],
+    "tier":5
+  },
+  {
+    "item":"Prismatic Cloth",
+    "categoria":"Refined Cloth",
+    "peso":0.1,
+    "stack_max":10000,
+    "tags":[
+
+    ],
+    "tier":5
+  },
+  {
+    "item":"Stone Block",
+    "categoria":"Refined Stone",
+    "peso":0.3,
+    "stack_max":10000,
+    "tags":[
+
+    ],
+    "tier":2
+  },
+  {
+    "item":"Stone Brick",
+    "categoria":"Refined Stone",
+    "peso":0.3,
+    "stack_max":10000,
+    "tags":[
+
+    ],
+    "tier":3
+  },
+  {
+    "item":"Lodestone Brick",
+    "categoria":"Refined Stone",
+    "peso":0.3,
+    "stack_max":10000,
+    "tags":[
+
+    ],
+    "tier":4
+  },
+  {
+    "item":"Obsidian Voidstone",
+    "categoria":"Refined Stone",
+    "peso":0.3,
+    "stack_max":10000,
+    "tags":[
+
+    ],
+    "tier":5
+  },
+  {
+    "item":"Runestone",
+    "categoria":"Refined Stone",
+    "peso":0.3,
+    "stack_max":10000,
+    "tags":[
+
+    ],
+    "tier":5
+  },
+  {
+    "item":"Runic Voidstone",
+    "categoria":"Refined Stone",
+    "peso":0.3,
+    "stack_max":10000,
+    "tags":[
+
+    ],
+    "tier":5
+  },
+  {
+    "item":"Prismatic Block",
+    "categoria":"Refined Stone",
+    "peso":0.3,
+    "stack_max":10000,
+    "tags":[
+
+    ],
+    "tier":5
+  },
+  {
+    "item":"Iron Ingot",
+    "categoria":"Refined Metal",
+    "peso":0.3,
+    "stack_max":10000,
+    "tags":[
+
+    ],
+    "tier":2
+  },
+  {
+    "item":"Steel Ingot",
+    "categoria":"Refined Metal",
+    "peso":0.3,
+    "stack_max":10000,
+    "tags":[
+
+    ],
+    "tier":3
+  },
+  {
+    "item":"Starmetal Ingot",
+    "categoria":"Refined Metal",
+    "peso":0.3,
+    "stack_max":10000,
+    "tags":[
+
+    ],
+    "tier":4
+  },
+  {
+    "item":"Orichalcum Ingot",
+    "categoria":"Refined Metal",
+    "peso":0.3,
+    "stack_max":10000,
+    "tags":[
+
+    ],
+    "tier":5
+  },
+  {
+    "item":"Asmodeum",
+    "categoria":"Refined Metal",
+    "peso":0.3,
+    "stack_max":10000,
+    "tags":[
+
+    ],
+    "tier":5
+  },
+  {
+    "item":"Mythril Ingot",
+    "categoria":"Refined Metal",
+    "peso":0.3,
+    "stack_max":10000,
+    "tags":[
+
+    ],
+    "tier":5
+  },
+  {
+    "item":"Prismatic Ingot",
+    "categoria":"Refined Metal",
+    "peso":0.3,
+    "stack_max":10000,
+    "tags":[
+
+    ],
+    "tier":5
   }
 ]

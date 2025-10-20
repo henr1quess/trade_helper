@@ -226,5 +226,89 @@
     "item":"Prismatic Cloth",
     "buy_market":145.0,
     "sell_market":163.93
+  },
+  {
+    "timestamp":"2025-10-20T02:21:58Z",
+    "item":"Stone Block",
+    "buy_market":0.48,
+    "sell_market":1.25
+  },
+  {
+    "timestamp":"2025-10-20T02:21:58Z",
+    "item":"Stone Brick",
+    "buy_market":2.25,
+    "sell_market":4.75
+  },
+  {
+    "timestamp":"2025-10-20T02:21:58Z",
+    "item":"Lodestone Brick",
+    "buy_market":15.01,
+    "sell_market":20.0
+  },
+  {
+    "timestamp":"2025-10-20T02:21:58Z",
+    "item":"Runic Voidstone",
+    "buy_market":127.1,
+    "sell_market":168.99
+  },
+  {
+    "timestamp":"2025-10-20T02:21:58Z",
+    "item":"Prismatic Block",
+    "buy_market":796.0,
+    "sell_market":980.0
+  },
+  {
+    "timestamp":"2025-10-20T02:21:58Z",
+    "item":"Runestone",
+    "buy_market":71.19,
+    "sell_market":80.0
+  },
+  {
+    "timestamp":"2025-10-20T02:21:58Z",
+    "item":"Obsidian Voidstone",
+    "buy_market":91.15,
+    "sell_market":98.0
+  },
+  {
+    "timestamp":"2025-10-20T02:24:58Z",
+    "item":"Starmetal Ingot",
+    "buy_market":5.57,
+    "sell_market":11.79
+  },
+  {
+    "timestamp":"2025-10-20T02:24:58Z",
+    "item":"Iron Ingot",
+    "buy_market":0.97,
+    "sell_market":1.85
+  },
+  {
+    "timestamp":"2025-10-20T02:24:58Z",
+    "item":"Steel Ingot",
+    "buy_market":3.16,
+    "sell_market":4.88
+  },
+  {
+    "timestamp":"2025-10-20T02:24:58Z",
+    "item":"Orichalcum Ingot",
+    "buy_market":14.1,
+    "sell_market":20.98
+  },
+  {
+    "timestamp":"2025-10-20T02:24:58Z",
+    "item":"Prismatic Ingot",
+    "buy_market":122.0,
+    "sell_market":147.4
+  },
+  {
+    "timestamp":"2025-10-20T02:24:58Z",
+    "item":"Asmodeum",
+    "buy_market":20.0,
+    "sell_market":23.5
+  },
+  {
+    "timestamp":"2025-10-20T02:24:58Z",
+    "item":"Mythril Ingot",
+    "buy_market":27.09,
+    "sell_market":29.97
   }
 ]
