@@ -732,8 +732,16 @@ Retorne **apenas** o JSON, sem comentários.
     with st.expander("Ver prompt (opcional)"):
         st.code(PROMPT_TEXT, language="markdown")
 
-    pasted = st.text_area("Colar JSON/CSV", height=140, placeholder='[\n  {"item":"Infused Weapon Fragment","top_buy":4.03,"low_sell":5.40,"buy_duration":3,"sell_duration":3}\n]')
-    upload = st.file_uploader("...ou enviar arquivo", type=["json","csv"])
+    IMPORT_TEXT_KEY = "import_raw_input"
+    IMPORT_UPLOAD_KEY = "import_file_uploader"
+
+    pasted = st.text_area(
+        "Colar JSON/CSV",
+        height=140,
+        placeholder='[\n  {"item":"Infused Weapon Fragment","top_buy":4.03,"low_sell":5.40,"buy_duration":3,"sell_duration":3}\n]',
+        key=IMPORT_TEXT_KEY,
+    )
+    upload = st.file_uploader("...ou enviar arquivo", type=["json","csv"], key=IMPORT_UPLOAD_KEY)
 
     raw = upload.read().decode("utf-8", errors="ignore") if upload is not None else pasted if pasted.strip() else None
 
@@ -911,6 +919,8 @@ Retorne **apenas** o JSON, sem comentários.
             if st.button("Adicionar ao histórico (append)"):
                 add_to_history(preview)
                 st.success(f"{len(preview)} registro(s) adicionados ao histórico.")
+                st.session_state[IMPORT_TEXT_KEY] = ""
+                st.session_state.pop(IMPORT_UPLOAD_KEY, None)
                 st.rerun()
         with c2:
             st.download_button("Baixar processado (JSON)",
