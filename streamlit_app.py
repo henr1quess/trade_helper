@@ -778,6 +778,20 @@ with tab_import:
     st.markdown("## Importar preços")
     st.caption("Use `item, top_buy, low_sell, buy_duration, sell_duration, timestamp`. Os preços são salvos como mercado (sem ±0.01).")
 
+    # --- CHAVES & FLAGS (antes dos widgets) ---
+    IMPORT_TEXT_KEY = "import_raw_input"
+    IMPORT_UPLOAD_KEY_BASE = "import_file_uploader"
+
+    if "import_reset" not in st.session_state:
+        st.session_state.import_reset = False
+    if "import_upload_nonce" not in st.session_state:
+        st.session_state.import_upload_nonce = 0
+
+    if st.session_state.import_reset:
+        st.session_state[IMPORT_TEXT_KEY] = ""
+        st.session_state.import_upload_nonce += 1
+        st.session_state.import_reset = False
+
     PROMPT_TEXT = r"""
 Você é uma IA que recebe **várias capturas de tela** (prints) ou **textos transcritos** do Trading Post do jogo *New World* com:
 - **Current Buy Orders** e **Current Sell Orders**
@@ -835,16 +849,17 @@ Retorne **apenas** o JSON, sem comentários.
     with st.expander("Ver prompt (opcional)"):
         st.code(PROMPT_TEXT, language="markdown")
 
-    IMPORT_TEXT_KEY = "import_raw_input"
-    IMPORT_UPLOAD_KEY = "import_file_uploader"
-
     pasted = st.text_area(
         "Colar JSON/CSV",
         height=140,
         placeholder='[\n  {"item":"Infused Weapon Fragment","top_buy":4.03,"low_sell":5.40,"buy_duration":3,"sell_duration":3}\n]',
         key=IMPORT_TEXT_KEY,
     )
-    upload = st.file_uploader("...ou enviar arquivo", type=["json","csv"], key=IMPORT_UPLOAD_KEY)
+    upload = st.file_uploader(
+        "...ou enviar arquivo",
+        type=["json","csv"],
+        key=f"{IMPORT_UPLOAD_KEY_BASE}_{st.session_state.import_upload_nonce}",
+    )
 
     raw = upload.read().decode("utf-8", errors="ignore") if upload is not None else pasted if pasted.strip() else None
 
@@ -1037,8 +1052,7 @@ Retorne **apenas** o JSON, sem comentários.
                 add_to_history(preview)
                 st.session_state["last_import_signature"] = preview_signature
                 st.success(f"{len(preview)} registro(s) adicionados ao histórico.")
-                st.session_state[IMPORT_TEXT_KEY] = ""
-                st.session_state.pop(IMPORT_UPLOAD_KEY, None)
+                st.session_state.import_reset = True
                 st.rerun()
         with c2:
             st.download_button("Baixar processado (JSON)",
