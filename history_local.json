@@ -1,92 +1,230 @@
 [
   {
-    "timestamp":1760924688000,
+    "timestamp":1760925502000,
     "item":"Scalecord",
     "buy_market":0.37,
     "sell_market":1.48
   },
   {
-    "timestamp":1760924688000,
+    "timestamp":1760925502000,
     "item":"Shadecloth",
     "buy_market":0.1,
     "sell_market":0.35
   },
   {
-    "timestamp":1760924688000,
+    "timestamp":1760925502000,
     "item":"Phasefiber",
     "buy_market":0.19,
     "sell_market":0.52
   },
   {
-    "timestamp":1760924688000,
+    "timestamp":1760925502000,
     "item":"Wirefiber",
     "buy_market":0.09,
     "sell_market":0.22
   },
   {
-    "timestamp":1760924688000,
+    "timestamp":1760925502000,
     "item":"Scalecloth",
     "buy_market":1.37,
     "sell_market":2.72
   },
   {
-    "timestamp":1760924688000,
+    "timestamp":1760925502000,
     "item":"Spider Silk",
     "buy_market":8.08,
     "sell_market":14.77
   },
   {
-    "timestamp":1760924688000,
+    "timestamp":1760925502000,
     "item":"Spinfiber",
     "buy_market":0.29,
     "sell_market":0.43
   },
   {
-    "timestamp":1760924688000,
+    "timestamp":1760925502000,
     "item":"Silk Threads",
     "buy_market":0.34,
     "sell_market":0.43
   },
   {
-    "timestamp":1760924688000,
+    "timestamp":1760925502000,
     "item":"Fibers",
     "buy_market":0.39,
     "sell_market":0.49
   },
   {
-    "timestamp":"2025-10-20T01:46:01Z",
+    "timestamp":"2025-10-20T01:58:32Z",
     "item":"Frost Essence",
     "buy_market":0.16,
     "sell_market":6.0
   },
   {
-    "timestamp":"2025-10-20T01:46:01Z",
+    "timestamp":"2025-10-20T01:58:32Z",
     "item":"Whisp Shroom",
     "buy_market":1.05,
     "sell_market":4.62
   },
   {
-    "timestamp":"2025-10-20T01:46:01Z",
+    "timestamp":"2025-10-20T01:58:32Z",
     "item":"Reinforcing Alloy",
     "buy_market":0.25,
     "sell_market":0.9
   },
   {
-    "timestamp":"2025-10-20T01:46:01Z",
+    "timestamp":"2025-10-20T01:58:32Z",
     "item":"Severed Tusks",
     "buy_market":2.05,
     "sell_market":7.0
   },
   {
-    "timestamp":"2025-10-20T01:46:01Z",
+    "timestamp":"2025-10-20T01:58:32Z",
     "item":"Hardened Alluvium",
     "buy_market":35.02,
     "sell_market":86.0
   },
   {
-    "timestamp":"2025-10-20T01:46:01Z",
+    "timestamp":"2025-10-20T01:58:32Z",
     "item":"Dark Crystal",
     "buy_market":2.14,
     "sell_market":4.78
+  },
+  {
+    "timestamp":"2025-10-20T01:58:48Z",
+    "item":"Pristine Opal",
+    "buy_market":38.08,
+    "sell_market":249.0
+  },
+  {
+    "timestamp":"2025-10-20T01:58:48Z",
+    "item":"Shadowfur",
+    "buy_market":0.64,
+    "sell_market":2.8
+  },
+  {
+    "timestamp":"2025-10-20T01:58:48Z",
+    "item":"Pristine Pearl",
+    "buy_market":21.01,
+    "sell_market":58.65
+  },
+  {
+    "timestamp":"2025-10-20T01:58:48Z",
+    "item":"Oil",
+    "buy_market":0.32,
+    "sell_market":0.91
+  },
+  {
+    "timestamp":"2025-10-20T01:58:48Z",
+    "item":"Ragehide",
+    "buy_market":1.26,
+    "sell_market":2.29
+  },
+  {
+    "timestamp":"2025-10-20T01:58:48Z",
+    "item":"Shifthide",
+    "buy_market":2.3,
+    "sell_market":3.68
+  },
+  {
+    "timestamp":"2025-10-20T01:58:48Z",
+    "item":"Pristine Diamond",
+    "buy_market":17.1,
+    "sell_market":19.0
+  },
+  {
+    "timestamp":"2025-10-20T01:58:48Z",
+    "item":"Rawhide",
+    "buy_market":0.53,
+    "sell_market":0.59
+  },
+  {
+    "timestamp":"2025-10-20T01:58:48Z",
+    "item":"Thick Hide",
+    "buy_market":0.31,
+    "sell_market":0.33
+  },
+  {
+    "timestamp":"2025-10-20T02:08:29Z",
+    "item":"Glittering Ebony",
+    "buy_market":15.11,
+    "sell_market":58.6
+  },
+  {
+    "timestamp":"2025-10-20T02:08:29Z",
+    "item":"Timber",
+    "buy_market":0.05,
+    "sell_market":0.19
+  },
+  {
+    "timestamp":"2025-10-20T02:08:29Z",
+    "item":"Ironwood Planks",
+    "buy_market":8.71,
+    "sell_market":15.7
+  },
+  {
+    "timestamp":"2025-10-20T02:08:29Z",
+    "item":"Wyrdwood Planks",
+    "buy_market":4.22,
+    "sell_market":7.15
+  },
+  {
+    "timestamp":"2025-10-20T02:08:29Z",
+    "item":"Lumber",
+    "buy_market":1.05,
+    "sell_market":1.7
+  },
+  {
+    "timestamp":"2025-10-20T02:08:29Z",
+    "item":"Runewood Planks",
+    "buy_market":20.63,
+    "sell_market":29.82
+  },
+  {
+    "timestamp":"2025-10-20T02:08:29Z",
+    "item":"Prismatic Planks",
+    "buy_market":133.05,
+    "sell_market":160.94
+  },
+  {
+    "timestamp":"2025-10-20T02:19:28Z",
+    "item":"Silk",
+    "buy_market":3.67,
+    "sell_market":8.44
+  },
+  {
+    "timestamp":"2025-10-20T02:19:28Z",
+    "item":"Linen",
+    "buy_market":0.72,
+    "sell_market":1.68
+  },
+  {
+    "timestamp":"2025-10-20T02:19:28Z",
+    "item":"Infused Silk",
+    "buy_market":6.2,
+    "sell_market":10.85
+  },
+  {
+    "timestamp":"2025-10-20T02:19:28Z",
+    "item":"Sateen",
+    "buy_market":2.1,
+    "sell_market":3.3
+  },
+  {
+    "timestamp":"2025-10-20T02:19:28Z",
+    "item":"Spinweave Cloth",
+    "buy_market":25.1,
+    "sell_market":29.91
+  },
+  {
+    "timestamp":"2025-10-20T02:19:28Z",
+    "item":"Phoenixweave",
+    "buy_market":25.0,
+    "sell_market":29.3
+  },
+  {
+    "timestamp":"2025-10-20T02:19:28Z",
+    "item":"Prismatic Cloth",
+    "buy_market":145.0,
+    "sell_market":163.93
   }
 ]

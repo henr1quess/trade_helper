@@ -498,5 +498,75 @@
 
     ],
     "tier":1
+  },
+  {
+    "item":"Timber",
+    "categoria":"Refined Wood",
+    "peso":0.2,
+    "stack_max":10000,
+    "tags":[
+
+    ],
+    "tier":2
+  },
+  {
+    "item":"Lumber",
+    "categoria":"Refined Wood",
+    "peso":0.2,
+    "stack_max":10000,
+    "tags":[
+
+    ],
+    "tier":3
+  },
+  {
+    "item":"Wyrdwood Planks",
+    "categoria":"Refined Wood",
+    "peso":0.2,
+    "stack_max":10000,
+    "tags":[
+
+    ],
+    "tier":4
+  },
+  {
+    "item":"Ironwood Planks",
+    "categoria":"Refined Wood",
+    "peso":0.2,
+    "stack_max":10000,
+    "tags":[
+
+    ],
+    "tier":5
+  },
+  {
+    "item":"Glittering Ebony",
+    "categoria":"Refined Wood",
+    "peso":0.2,
+    "stack_max":10000,
+    "tags":[
+
+    ],
+    "tier":5
+  },
+  {
+    "item":"Runewood Planks",
+    "categoria":"Refined Wood",
+    "peso":0.2,
+    "stack_max":10000,
+    "tags":[
+
+    ],
+    "tier":5
+  },
+  {
+    "item":"Prismatic Planks",
+    "categoria":"Refined Wood",
+    "peso":0.2,
+    "stack_max":10000,
+    "tags":[
+
+    ],
+    "tier":5
   }
 ]
