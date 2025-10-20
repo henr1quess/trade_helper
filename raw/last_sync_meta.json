@@ -1,0 +1,12 @@
+{
+  "remote": {
+    "source": "remote",
+    "snapshot_ts": "2025-10-20T18:52:50Z",
+    "buy_snapshot_ts": "2025-10-20T18:52:50Z",
+    "sell_snapshot_ts": "2025-10-20T16:27:12Z",
+    "buy_entries": 295,
+    "sell_entries": 54608,
+    "records": 5279,
+    "updated_at": "2025-10-20T21:17:38.323590Z"
+  }
+}
