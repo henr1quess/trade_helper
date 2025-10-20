@@ -8,7 +8,7 @@ import sys
 from datetime import datetime, timezone
 from io import StringIO
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, Tuple
 
 import pandas as pd
 import streamlit as st
@@ -227,6 +227,75 @@ def parse_iso(s):
     except Exception:
         return pd.NaT
 
+
+def load_latest_snapshot_records(
+    raw_root: Path = Path(DEFAULT_NWMP_RAW_ROOT),
+) -> Tuple[Optional[List[Dict[str, Any]]], Optional[str], Optional[Dict[str, Any]], Dict[str, Any]]:
+    """Load the records from the most recent snapshot described in last_sync_meta.json.
+
+    Returns a tuple (records, source, metadata_entry, full_metadata). Records is
+    ``None`` when it was not possible to load a valid snapshot payload.
+    """
+
+    meta_path = Path(raw_root) / "last_sync_meta.json"
+    if not meta_path.exists():
+        return None, None, None, {}
+
+    try:
+        meta_data = json.loads(meta_path.read_text(encoding="utf-8"))
+    except Exception:
+        return None, None, None, {}
+
+    if not isinstance(meta_data, dict):
+        return None, None, None, {}
+
+    best_source: Optional[str] = None
+    best_entry: Optional[Dict[str, Any]] = None
+    best_dt = None
+
+    for source in ("remote", "local"):
+        entry = meta_data.get(source)
+        if not isinstance(entry, dict):
+            continue
+        ts_value = entry.get("snapshot_ts") or entry.get("timestamp")
+        ts_parsed = parse_iso(ts_value)
+        if isinstance(ts_parsed, pd.Timestamp) and not pd.isna(ts_parsed):
+            dt_value = ts_parsed.to_pydatetime()
+        else:
+            continue
+        if best_dt is None or dt_value > best_dt:
+            best_dt = dt_value
+            best_source = source
+            best_entry = entry
+
+    if not best_entry:
+        return None, None, None, meta_data
+
+    snapshot_path_raw = best_entry.get("snapshot_path")
+    if not snapshot_path_raw:
+        return None, best_source, best_entry, meta_data
+
+    snapshot_path = Path(snapshot_path_raw)
+    if not snapshot_path.is_absolute():
+        snapshot_path = Path(raw_root) / snapshot_path
+
+    if not snapshot_path.exists():
+        return None, best_source, best_entry, meta_data
+
+    try:
+        payload = json.loads(snapshot_path.read_text(encoding="utf-8"))
+    except Exception:
+        return None, best_source, best_entry, meta_data
+
+    if isinstance(payload, dict) and "records" in payload:
+        records = payload.get("records")
+    elif isinstance(payload, list):
+        records = payload
+    else:
+        records = None
+
+    return records, best_source, best_entry, meta_data
+
 # --------------------------------------------------------------------------------------
 # Config (calibração + taxa)
 # --------------------------------------------------------------------------------------
@@ -254,6 +323,8 @@ if "buy_rates" not in st.session_state:
     st.session_state.buy_rates = {int(k): float(v) for k, v in buy_rates_cfg.items()}
 if "tax_pct" not in st.session_state:
     st.session_state.tax_pct = tax_pct
+if "auto_sync_last_source" not in st.session_state:
+    st.session_state.auto_sync_last_source = None
 
 # --------------------------------------------------------------------------------------
 # Core helpers
@@ -1323,18 +1394,18 @@ with tab_coletar:
             "local": "Snapshot local (pastas current)",
         }
 
-        def _load_last_sync_meta() -> Dict[str, Any]:
-            meta_path = Path(DEFAULT_NWMP_RAW_ROOT) / "last_sync_meta.json"
-            if not meta_path.exists():
-                return {}
-            try:
-                return json.loads(meta_path.read_text(encoding="utf-8"))
-            except Exception:
-                return {}
+        (
+            latest_snapshot_records,
+            latest_snapshot_source,
+            latest_snapshot_entry,
+            last_meta,
+        ) = load_latest_snapshot_records(Path(DEFAULT_NWMP_RAW_ROOT))
 
-        last_meta = _load_last_sync_meta()
-        processed_remote = last_meta.get("remote", {}) if isinstance(last_meta, dict) else {}
-        processed_local = last_meta.get("local", {}) if isinstance(last_meta, dict) else {}
+        if not isinstance(last_meta, dict):
+            last_meta = {}
+
+        processed_remote = last_meta.get("remote", {})
+        processed_local = last_meta.get("local", {})
 
         processed_remote_ts = processed_remote.get("snapshot_ts") or processed_remote.get("timestamp")
         processed_local_ts = processed_local.get("timestamp") or processed_local.get("snapshot_ts")
@@ -1439,19 +1510,28 @@ with tab_coletar:
                 return ts.to_pydatetime()
             return None
 
-        latest_source: Optional[str] = None
+        latest_source_probe: Optional[str] = None
         latest_dt = None
         for src, value in (("remote", live_remote_ts), ("local", live_local_ts)):
             dt = _coerce_dt(value)
             if dt and (latest_dt is None or dt > latest_dt):
                 latest_dt = dt
-                latest_source = src
-        if latest_source is None:
+                latest_source_probe = src
+        if latest_source_probe is None:
             for src, value in (("remote", processed_remote_ts), ("local", processed_local_ts)):
                 dt = _coerce_dt(value)
                 if dt and (latest_dt is None or dt > latest_dt):
                     latest_dt = dt
-                    latest_source = src
+                    latest_source_probe = src
+
+        preferred_auto_source = latest_snapshot_source or latest_source_probe
+
+        has_valid_snapshot = latest_snapshot_entry is not None and latest_snapshot_records is not None
+        if not has_valid_snapshot:
+            st.warning(
+                "Nenhum snapshot consolidado disponível. Execute uma sincronização manual "
+                "(online ou local) para gerar dados atualizados."
+            )
 
         def _format_result_message(source_name: str, payload: Optional[Dict[str, Any]]) -> str:
             if not isinstance(payload, dict):
@@ -1550,24 +1630,53 @@ with tab_coletar:
         if actions_local.button("💾 Sincronizar snapshot local", use_container_width=True):
             _run_local_sync()
 
-        if actions_auto.button("🧭 Sincronizar fonte mais recente", use_container_width=True):
-            if latest_source == "local":
-                ts_msg = status_local if status_local != "—" else "desconhecido"
-                st.info(
-                    f"Executando {source_labels['local']} (snapshot {ts_msg})"
-                )
-                _run_local_sync()
-            elif latest_source == "remote":
-                ts_msg = status_remote if status_remote != "—" else "desconhecido"
-                st.info(
-                    f"Executando {source_labels['remote']} (snapshot {ts_msg})"
-                )
-                _run_remote_sync()
+        def _entry_for_source(src: Optional[str]) -> Optional[Dict[str, Any]]:
+            if not src:
+                return None
+            if src == latest_snapshot_source and latest_snapshot_entry is not None:
+                return latest_snapshot_entry
+            if src == "remote":
+                return processed_remote if isinstance(processed_remote, dict) else {}
+            if src == "local":
+                return processed_local if isinstance(processed_local, dict) else {}
+            return None
+
+        def _format_snapshot_ts(src: str) -> str:
+            entry = _entry_for_source(src)
+            ts_value = None
+            if isinstance(entry, dict):
+                ts_value = entry.get("snapshot_ts") or entry.get("timestamp")
+            if src == "local":
+                fallback = status_local if status_local != "—" else None
             else:
+                fallback = status_remote if status_remote != "—" else None
+            return ts_value or fallback or "desconhecido"
+
+        if actions_auto.button("🧭 Sincronizar fonte mais recente", use_container_width=True):
+            chosen_source = preferred_auto_source or "remote"
+
+            if preferred_auto_source is None:
                 st.info(
-                    "Nenhum snapshot anterior registrado; executando sincronização online padrão."
+                    "Nenhum snapshot consolidado válido registrado; executando sincronização online padrão."
                 )
+
+            if chosen_source == "local":
+                st.session_state.auto_sync_last_source = "local"
+                ts_msg = _format_snapshot_ts("local")
+                st.info(f"Executando {source_labels['local']} (snapshot {ts_msg})")
+                _run_local_sync()
+            else:
+                st.session_state.auto_sync_last_source = "remote"
+                ts_msg = _format_snapshot_ts("remote")
+                st.info(f"Executando {source_labels['remote']} (snapshot {ts_msg})")
                 _run_remote_sync()
+
+        last_auto_source = st.session_state.get("auto_sync_last_source")
+        if last_auto_source:
+            st.caption(
+                "Última sincronização automática executada: "
+                f"{source_labels.get(last_auto_source, last_auto_source)}."
+            )
 
         # Mostrar prévia do CSV NWMP e do history_local.json (se existirem)
         import pandas as pd
