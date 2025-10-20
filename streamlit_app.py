@@ -129,8 +129,7 @@ def _to_tier_int(x):
         return pd.NA
 
 def load_items():
-    # now supports optional 'tier' e 'slug_nwmp'
-    df = load_json_records(ITEMS_PATH, ["item","categoria","peso","stack_max","tags","tier","slug_nwmp"])
+    df = load_json_records(ITEMS_PATH, ["item","categoria","peso","stack_max","tags","tier"])
     if "peso" in df.columns:
         df["peso"] = pd.to_numeric(df["peso"], errors="coerce")
     if "stack_max" in df.columns:
@@ -143,97 +142,11 @@ def load_items():
         df["tier"] = df["tier"].apply(_to_tier_int).astype("Int64")
     else:
         df["tier"] = pd.Series([pd.NA] * len(df), dtype="Int64")
-    if "slug_nwmp" not in df.columns:
-        df["slug_nwmp"] = ""
-    else:
-        df["slug_nwmp"] = df["slug_nwmp"].fillna("").astype(str)
     return df
-
-def _normalise_item_key(value):
-    if value is None:
-        return ""
-    if isinstance(value, float) and pd.isna(value):
-        return ""
-    return str(value).strip().casefold()
-
-def _load_nwmp_slug_map():
-    mapping = {}
-
-    def _register(name, slug):
-        key = _normalise_item_key(name)
-        if not key:
-            return
-        if slug is None:
-            return
-        if isinstance(slug, float) and pd.isna(slug):
-            return
-        val = str(slug).strip()
-        if not val:
-            return
-        mapping.setdefault(key, val)
-
-    raw_root = Path(DEFAULT_NWMP_RAW_ROOT)
-    for fname in ("buy.json", "sell.json"):
-        path = raw_root / fname
-        if not path.exists():
-            continue
-        try:
-            data = json.loads(path.read_text(encoding="utf-8"))
-        except Exception:
-            continue
-        if isinstance(data, list):
-            for entry in data:
-                if isinstance(entry, dict):
-                    slug = entry.get("item_id") or entry.get("slug") or entry.get("id")
-                    _register(entry.get("item_name"), slug)
-
-    for csv_candidate in (DEFAULT_NWMP_BUY_CSV, DEFAULT_NWMP_SELL_CSV):
-        path = Path(csv_candidate)
-        if not path.exists():
-            continue
-        try:
-            df_csv = pd.read_csv(path)
-        except Exception:
-            continue
-        if df_csv.empty or "item" not in df_csv.columns:
-            continue
-        slug_col = None
-        for candidate in ("slug", "item_id", "id"):
-            if candidate in df_csv.columns:
-                slug_col = candidate
-                break
-        if slug_col is None:
-            continue
-        subset = df_csv[["item", slug_col]].dropna()
-        for _, row in subset.iterrows():
-            _register(row.get("item"), row.get(slug_col))
-
-    history_paths = list(dict.fromkeys([Path(p) for p in HISTORY_READ_CANDIDATES] + [HISTORY_PATH, Path(DEFAULT_HISTORY_JSON)]))
-    for hpath in history_paths:
-        if not hpath.exists():
-            continue
-        try:
-            df_hist = pd.read_json(hpath, orient="records")
-        except Exception:
-            continue
-        if df_hist.empty or "item" not in df_hist.columns:
-            continue
-        slug_col = None
-        for candidate in ("slug", "item_id", "id"):
-            if candidate in df_hist.columns:
-                slug_col = candidate
-                break
-        if slug_col is None:
-            continue
-        subset = df_hist[["item", slug_col]].dropna()
-        for _, row in subset.iterrows():
-            _register(row.get("item"), row.get(slug_col))
-
-    return mapping
 
 def save_items(df: pd.DataFrame):
     ITEMS_PATH.parent.mkdir(parents=True, exist_ok=True)
-    keep = ["item","categoria","peso","stack_max","tags","tier","slug_nwmp"]
+    keep = ["item","categoria","peso","stack_max","tags","tier"]
     for c in keep:
         if c not in df.columns:
             df[c] = None
@@ -244,19 +157,6 @@ def save_items(df: pd.DataFrame):
     if "tier" in df.columns:
         df["tier"] = df["tier"].apply(_to_tier_int).astype("Int64")
 
-    def _clean_slug(val):
-        if val is None or (isinstance(val, float) and pd.isna(val)):
-            return ""
-        s = str(val).strip()
-        return "" if s.lower() == "nan" else s
-
-    df["slug_nwmp"] = df["slug_nwmp"].apply(_clean_slug)
-    slug_map = _load_nwmp_slug_map()
-    if slug_map:
-        normalized_items = df["item"].apply(_normalise_item_key)
-        inferred = normalized_items.map(slug_map).fillna("")
-        mask = df["slug_nwmp"] == ""
-        df.loc[mask, "slug_nwmp"] = inferred[mask]
     df.to_json(ITEMS_PATH, orient="records", indent=2, force_ascii=False)
 
 def load_first_existing(paths):
@@ -776,10 +676,12 @@ with tab_import:
     st.caption("Use `item, top_buy, low_sell, buy_duration, sell_duration, timestamp`. Os preços são salvos como mercado (sem ±0.01).")
 
     PROMPT_TEXT = r"""
-Você é uma IA que recebe **várias capturas de tela** (prints) do Trading Post do jogo *New World* com:
+Você é uma IA que recebe **várias capturas de tela** (prints) ou **textos transcritos** do Trading Post do jogo *New World* com:
 - **Current Buy Orders** e **Current Sell Orders**
 - O **nome do item** visível no topo
 - Às vezes a **duração** selecionada para a ordem (ex.: 1d, 3d, 7d, 14d)
+
+Você pode receber essas informações como imagens ou textos; use exatamente os nomes e preços fornecidos.
 
 Seu objetivo é produzir **um JSON único (array)** com um objeto por item, seguindo **exatamente** este formato:
 
@@ -985,7 +887,6 @@ Retorne **apenas** o JSON, sem comentários.
             colcfg["tier"] = st.column_config.NumberColumn("tier", help="Opcional (ex.: 1–5)", min_value=1, step=1)
 
             quick = st.data_editor(stub, num_rows="dynamic", column_config=colcfg, hide_index=True, use_container_width=True)
-            st.caption("O slug NWMP é preenchido automaticamente ao salvar, quando o item existir nos dados coletados.")
             if st.button("💾 Salvar cadastro rápido"):
                 quick = quick.dropna(subset=["item"]).copy()
                 if not LIST_COL_AVAILABLE:
@@ -1026,12 +927,13 @@ with tab_cad:
     st.caption(f"Arquivo: `{ITEMS_PATH.resolve()}`")
 
     IA_PROMPT = r"""
-Você é uma IA que recebe **imagens** contendo **nomes de vários itens** do jogo *New World*.
+Você é uma IA que recebe **imagens** ou **textos** contendo **nomes de vários itens** do jogo *New World*.
 Para cada item, você deve **consultar o NWDB** (https://nwdb.info) e produzir um **JSON** de cadastro com os campos abaixo.
+As entradas podem ser descrições textuais transcritas; use exatamente os dados fornecidos quando disponíveis.
 
 ### Saída (um único array JSON):
 [
-  {"item":"Dark Hide","categoria":"Raw Hide","peso":0.100,"stack_max":1000},
+  {"item":"Dark Hide","categoria":"Raw Hide","peso":0.100,"stack_max":1000,"tier":5},
   {"item":"Iron Ore","categoria":"Ore","peso":0.100,"stack_max":1000}
 ]
 
@@ -1039,16 +941,18 @@ Para cada item, você deve **consultar o NWDB** (https://nwdb.info) e produzir u
 1) **Nome do item (`item`)**: use o nome **exato** encontrado no NWDB.
 2) **Peso (`peso`)**: no NWDB é exibido como **Weight** (ou equivalente). Grave como número decimal com **ponto** e **3 casas** (ex.: 0.100).
 3) **Stack máximo (`stack_max`)**: no NWDB é exibido como **Max Stack** (ou equivalente). Grave como inteiro (ex.: 1000). Se não houver, omita o campo.
-4) **Categoria (`categoria`)**:
+4) **Tier (`tier`)**: procure o **tier** do item no NWDB (ex.: T3) e grave como número inteiro **quando disponível**.
+5) **Categoria (`categoria`)**:
    - A categoria NÃO está claramente na página do item. Então você deve localizar uma **página de listagem** onde esse item aparece (ex.: `https://nwdb.info/db/items/resources/raw-hide/page/1`).
    - Pegue a **última parte legível do caminho** (no exemplo: `raw-hide` → **"Raw Hide"**), substituindo **hífens por espaços** e usando **Title Case**.
    - Exemplo: se **Dark Hide** aparece em `/db/items/resources/raw-hide/page/1`, a categoria deve ser **"Raw Hide"**.
-5) **Um único array** JSON com **todos os itens** detectados nas imagens. **Sem duplicatas**; se houver conflito, mantenha a versão com dados mais completos.
-6) **Formatação**:
+6) **Um único array** JSON com **todos os itens** detectados nas imagens ou textos. **Sem duplicatas**; se houver conflito, mantenha a versão com dados mais completos.
+7) **Formatação**:
    - Use **ponto** como separador decimal em `peso`.
    - `stack_max` apenas se encontrado.
+   - `tier` apenas se encontrado.
    - Não inclua campos extras.
-7) Se algum item não puder ser validado com confiança no NWDB, **ignore**.
+8) Se algum item não puder ser validado com confiança no NWDB, **ignore**.
 
 Retorne **apenas** o JSON (sem comentários).
 """
@@ -1081,13 +985,12 @@ Retorne **apenas** o JSON (sem comentários).
     st.subheader("Importar cadastro (JSON/CSV)")
     st.caption(
         "Campos: `item` (obrig.), `categoria` (obrig. p/ novos), `peso` (obrig. p/ novos), "
-        "`stack_max` (opcional), `tags` (opcional), `tier` (opcional). "
-        "O campo `slug_nwmp` é preenchido automaticamente quando houver correspondência no NWMP."
+        "`stack_max` (opcional), `tags` (opcional), `tier` (opcional)."
     )
 
     # ✅ Novo: modo atualização (patch)
     patch_mode = st.toggle(
-        "Modo atualização (patch): permitir colar apenas campos a atualizar (ex.: `item` + `slug_nwmp`) para itens já existentes.",
+        "Modo atualização (patch): permitir colar apenas campos a atualizar (ex.: `item` + `categoria`) para itens já existentes.",
         value=True,
         help="Quando ativo, linhas com itens já existentes são atualizadas apenas nos campos presentes. "
              "Para itens novos, ainda é obrigatório informar `categoria` e `peso`."
@@ -1127,9 +1030,6 @@ Retorne **apenas** o JSON (sem comentários).
             df_items_in["tier"] = df_items_in["tier"].apply(_to_tier_int).astype("Int64")
         if "tags" in df_items_in.columns:
             df_items_in["tags"] = df_items_in["tags"].apply(ensure_list_tags)
-        if "slug_nwmp" in df_items_in.columns:
-            df_items_in["slug_nwmp"] = df_items_in["slug_nwmp"].fillna("").astype(str)
-
         # Validação mínima: precisa ter 'item'
         if "item" not in df_items_in.columns:
             st.error("Campo obrigatório ausente: item")
@@ -1157,7 +1057,7 @@ Retorne **apenas** o JSON (sem comentários).
                 st.subheader("Prévia do cadastro")
                 prev = df_items_in.copy()
                 # colunas ordenadas amigáveis
-                wanted = ["item","categoria","peso","stack_max","tags","tier","slug_nwmp"]
+                wanted = ["item","categoria","peso","stack_max","tier","tags"]
                 show_cols = [c for c in wanted if c in prev.columns] + [c for c in prev.columns if c not in wanted]
                 # configurações de exibição
                 if LIST_COL_AVAILABLE:
@@ -1166,9 +1066,8 @@ Retorne **apenas** o JSON (sem comentários).
                         **({"categoria": st.column_config.TextColumn("categoria")} if "categoria" in prev.columns else {}),
                         **({"peso": st.column_config.NumberColumn("peso", format="%.3f")} if "peso" in prev.columns else {}),
                         **({"stack_max": st.column_config.NumberColumn("stack_max", min_value=1, step=1)} if "stack_max" in prev.columns else {}),
-                        **({"tags": st.column_config.ListColumn("tags")} if "tags" in prev.columns else {}),
                         **({"tier": st.column_config.NumberColumn("tier", min_value=1, step=1)} if "tier" in prev.columns else {}),
-                        **({"slug_nwmp": st.column_config.TextColumn("slug_nwmp")} if "slug_nwmp" in prev.columns else {}),
+                        **({"tags": st.column_config.ListColumn("tags")} if "tags" in prev.columns else {}),
                     }
                 else:
                     if "tags" in prev.columns:
@@ -1209,7 +1108,7 @@ Retorne **apenas** o JSON (sem comentários).
                         if need_cols or (("peso" in df_ins.columns) and (df_ins["peso"].fillna(0) <= 0).any()):
                             st.warning("Há itens **novos** sem `categoria` e/ou `peso`. Complete abaixo e clique em **Salvar novos**.")
                             # Prepara editor
-                            for c in ["categoria","peso","stack_max","tags","tier","slug_nwmp"]:
+                            for c in ["categoria","peso","stack_max","tags","tier"]:
                                 if c not in df_ins.columns:
                                     if c == "tags":
                                         df_ins[c] = [[] for _ in range(len(df_ins))]
@@ -1217,6 +1116,8 @@ Retorne **apenas** o JSON (sem comentários).
                                         df_ins[c] = pd.Series([pd.NA]*len(df_ins), dtype="Int64")
                                     elif c == "stack_max":
                                         df_ins[c] = pd.Series([pd.NA]*len(df_ins), dtype="Int64")
+                                    elif c == "peso":
+                                        df_ins[c] = 0.0
                                     else:
                                         df_ins[c] = ""
                             if LIST_COL_AVAILABLE:
@@ -1227,14 +1128,13 @@ Retorne **apenas** o JSON (sem comentários).
                                     "stack_max": st.column_config.NumberColumn("stack_max", min_value=1, step=1),
                                     "tags": st.column_config.ListColumn("tags"),
                                     "tier": st.column_config.NumberColumn("tier", min_value=1, step=1),
-                                    "slug_nwmp": st.column_config.TextColumn("slug_nwmp"),
                                 }
                             else:
                                 df_ins["tags"] = df_ins["tags"].apply(stringify_tags)
                                 colcfg_new = None
 
                             df_ins_edit = st.data_editor(
-                                df_ins[["item","categoria","peso","stack_max","tags","tier","slug_nwmp"]],
+                                df_ins[["item","categoria","peso","stack_max","tags","tier"]],
                                 column_config=colcfg_new, hide_index=True, use_container_width=True, key="new_items_editor"
                             )
                             if st.button("Salvar novos"):
@@ -1283,10 +1183,6 @@ Retorne **apenas** o JSON (sem comentários).
     else:
         items_df["tier"] = pd.Series([pd.NA] * len(items_df), dtype="Int64")
 
-    if "slug_nwmp" not in items_df.columns:
-        items_df["slug_nwmp"] = ""
-    else:
-        items_df["slug_nwmp"] = items_df["slug_nwmp"].fillna("").astype(str)
     # --- fim normalização ---
 
     items_edit_df = items_df.copy()
@@ -1299,10 +1195,6 @@ Retorne **apenas** o JSON (sem comentários).
             "stack_max": st.column_config.NumberColumn("stack_max", help="Opcional", min_value=1, step=1),
             "tags": st.column_config.ListColumn("tags", help="Tags livres", default=[]),
             "tier": st.column_config.NumberColumn("tier", help="Opcional (ex.: 1–5)", min_value=1, step=1),
-            "slug_nwmp": st.column_config.TextColumn(
-                "slug_nwmp",
-                help="Slug usado no NWMP (ex.: runewood). Preenchido automaticamente quando disponível, mas pode ser ajustado manualmente.",
-            ),
         }
     else:
         items_edit_df["tags"] = items_edit_df["tags"].apply(stringify_tags)
@@ -1313,16 +1205,12 @@ Retorne **apenas** o JSON (sem comentários).
             "stack_max": st.column_config.NumberColumn("stack_max", help="Opcional", min_value=1, step=1),
             "tags": st.column_config.TextColumn("tags", help="Separadas por vírgula"),
             "tier": st.column_config.NumberColumn("tier", help="Opcional (ex.: 1–5)", min_value=1, step=1),
-            "slug_nwmp": st.column_config.TextColumn(
-                "slug_nwmp",
-                help="Slug usado no NWMP (ex.: runewood). Preenchido automaticamente quando disponível, mas pode ser ajustado manualmente.",
-            ),
         }
 
     edited = st.data_editor(
         items_edit_df
         if not items_edit_df.empty
-        else pd.DataFrame(columns=["item","categoria","peso","stack_max","tags","tier","slug_nwmp"]),
+        else pd.DataFrame(columns=["item","categoria","peso","stack_max","tags","tier"]),
         num_rows="dynamic",
         column_config=colcfg_edit,
         hide_index=True, use_container_width=True
@@ -1373,10 +1261,6 @@ Retorne **apenas** o JSON (sem comentários).
                     dfu["tier"] = dfu["tier"].apply(_to_tier_int).astype("Int64")
                 else:
                     dfu["tier"] = pd.Series([pd.NA] * len(dfu), dtype="Int64")
-                if "slug_nwmp" in dfu.columns:
-                    dfu["slug_nwmp"] = dfu["slug_nwmp"].fillna("").astype(str)
-                else:
-                    dfu["slug_nwmp"] = ""
                 base = load_items()
                 mask = ~base["item"].isin(dfu["item"])
                 merged = pd.concat([base[mask], dfu], ignore_index=True)
