@@ -348,5 +348,155 @@
 
     ],
     "tier":4
+  },
+  {
+    "item":"Frost Essence",
+    "categoria":"Perk Resource",
+    "peso":0.1,
+    "stack_max":2000,
+    "tags":[
+
+    ],
+    "tier":5
+  },
+  {
+    "item":"Whisp Shroom",
+    "categoria":"Perk Resource",
+    "peso":0.1,
+    "stack_max":2000,
+    "tags":[
+
+    ],
+    "tier":5
+  },
+  {
+    "item":"Reinforcing Alloy",
+    "categoria":"Perk Resource",
+    "peso":0.1,
+    "stack_max":2000,
+    "tags":[
+
+    ],
+    "tier":5
+  },
+  {
+    "item":"Severed Tusks",
+    "categoria":"Perk Resource",
+    "peso":0.1,
+    "stack_max":2000,
+    "tags":[
+
+    ],
+    "tier":5
+  },
+  {
+    "item":"Hardened Alluvium",
+    "categoria":"Perk Resource",
+    "peso":0.1,
+    "stack_max":2000,
+    "tags":[
+
+    ],
+    "tier":5
+  },
+  {
+    "item":"Dark Crystal",
+    "categoria":"Perk Resource",
+    "peso":0.1,
+    "stack_max":2000,
+    "tags":[
+
+    ],
+    "tier":5
+  },
+  {
+    "item":"Scalecord",
+    "categoria":"Cloth",
+    "peso":0.3,
+    "stack_max":10000,
+    "tags":[
+
+    ],
+    "tier":4
+  },
+  {
+    "item":"Shadecloth",
+    "categoria":"Cloth",
+    "peso":0.3,
+    "stack_max":10000,
+    "tags":[
+
+    ],
+    "tier":2
+  },
+  {
+    "item":"Phasefiber",
+    "categoria":"Cloth",
+    "peso":0.3,
+    "stack_max":10000,
+    "tags":[
+
+    ],
+    "tier":3
+  },
+  {
+    "item":"Wirefiber",
+    "categoria":"Fibers",
+    "peso":0.1,
+    "stack_max":10000,
+    "tags":[
+
+    ],
+    "tier":5
+  },
+  {
+    "item":"Scalecloth",
+    "categoria":"Cloth",
+    "peso":0.3,
+    "stack_max":10000,
+    "tags":[
+
+    ],
+    "tier":5
+  },
+  {
+    "item":"Spider Silk",
+    "categoria":"Cloth",
+    "peso":0.2,
+    "stack_max":10000,
+    "tags":[
+
+    ],
+    "tier":4
+  },
+  {
+    "item":"Spinfiber",
+    "categoria":"Fibers",
+    "peso":0.1,
+    "stack_max":10000,
+    "tags":[
+
+    ],
+    "tier":5
+  },
+  {
+    "item":"Silk Threads",
+    "categoria":"Fibers",
+    "peso":0.1,
+    "stack_max":10000,
+    "tags":[
+
+    ],
+    "tier":4
+  },
+  {
+    "item":"Fibers",
+    "categoria":"Fibers",
+    "peso":0.1,
+    "stack_max":10000,
+    "tags":[
+
+    ],
+    "tier":1
   }
 ]

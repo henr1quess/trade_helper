@@ -1,104 +1,122 @@
 [
   {
-    "timestamp":1760922014000,
-    "item":"Voidmetal",
-    "buy_market":1.25,
-    "sell_market":3.2
+    "timestamp":1760923851000,
+    "item":"Shadecloth",
+    "buy_market":0.1,
+    "sell_market":0.35
   },
   {
-    "timestamp":1760922014000,
-    "item":"Charged Sand",
-    "buy_market":21.99,
-    "sell_market":39.5
+    "timestamp":1760923851000,
+    "item":"Phasefiber",
+    "buy_market":0.19,
+    "sell_market":0.52
   },
   {
-    "timestamp":1760922014000,
-    "item":"Anima Quartz",
-    "buy_market":43.01,
-    "sell_market":70.0
+    "timestamp":1760923851000,
+    "item":"Wirefiber",
+    "buy_market":0.09,
+    "sell_market":0.22
   },
   {
-    "timestamp":1760922014000,
-    "item":"Starmetal Ore",
-    "buy_market":0.59,
-    "sell_market":0.9
+    "timestamp":1760923851000,
+    "item":"Scalecloth",
+    "buy_market":1.37,
+    "sell_market":2.72
   },
   {
-    "timestamp":1760922014000,
-    "item":"Iron Ore",
-    "buy_market":0.41,
-    "sell_market":0.56
+    "timestamp":1760923851000,
+    "item":"Spider Silk",
+    "buy_market":8.08,
+    "sell_market":14.77
   },
   {
-    "timestamp":1760922014000,
-    "item":"Cinnabar",
-    "buy_market":5.0,
-    "sell_market":6.1
+    "timestamp":1760923851000,
+    "item":"Spinfiber",
+    "buy_market":0.29,
+    "sell_market":0.43
   },
   {
-    "timestamp":1760922014000,
-    "item":"Wyrdwood",
-    "buy_market":0.4,
-    "sell_market":0.42
+    "timestamp":1760923851000,
+    "item":"Silk Threads",
+    "buy_market":0.34,
+    "sell_market":0.43
   },
   {
-    "timestamp":1760922014000,
-    "item":"Ironwood",
-    "buy_market":0.66,
-    "sell_market":0.63
+    "timestamp":1760923851000,
+    "item":"Fibers",
+    "buy_market":0.39,
+    "sell_market":0.49
   },
   {
-    "timestamp":"2025-10-20T01:15:43Z",
-    "item":"Pristine Opal",
-    "buy_market":38.08,
-    "sell_market":249.0
+    "timestamp":1760923854000,
+    "item":"Scalecord",
+    "buy_market":0.37,
+    "sell_market":1.48
   },
   {
-    "timestamp":"2025-10-20T01:15:43Z",
-    "item":"Shadowfur",
-    "buy_market":0.64,
-    "sell_market":2.8
+    "timestamp":1760923854000,
+    "item":"Shadecloth",
+    "buy_market":0.1,
+    "sell_market":0.35
   },
   {
-    "timestamp":"2025-10-20T01:15:43Z",
-    "item":"Pristine Pearl",
-    "buy_market":21.01,
-    "sell_market":58.65
+    "timestamp":1760923854000,
+    "item":"Phasefiber",
+    "buy_market":0.19,
+    "sell_market":0.52
   },
   {
-    "timestamp":"2025-10-20T01:15:43Z",
-    "item":"Oil",
-    "buy_market":0.32,
-    "sell_market":0.91
+    "timestamp":1760923854000,
+    "item":"Wirefiber",
+    "buy_market":0.09,
+    "sell_market":0.22
   },
   {
-    "timestamp":"2025-10-20T01:15:43Z",
-    "item":"Ragehide",
-    "buy_market":1.26,
-    "sell_market":2.29
+    "timestamp":1760923854000,
+    "item":"Scalecloth",
+    "buy_market":1.37,
+    "sell_market":2.72
   },
   {
-    "timestamp":"2025-10-20T01:15:43Z",
-    "item":"Shifthide",
-    "buy_market":2.3,
-    "sell_market":3.68
+    "timestamp":1760923854000,
+    "item":"Spider Silk",
+    "buy_market":8.08,
+    "sell_market":14.77
   },
   {
-    "timestamp":"2025-10-20T01:15:43Z",
-    "item":"Pristine Diamond",
-    "buy_market":17.1,
-    "sell_market":19.0
+    "timestamp":1760923854000,
+    "item":"Spinfiber",
+    "buy_market":0.29,
+    "sell_market":0.43
   },
   {
-    "timestamp":"2025-10-20T01:15:43Z",
-    "item":"Rawhide",
-    "buy_market":0.53,
-    "sell_market":0.59
+    "timestamp":1760923854000,
+    "item":"Silk Threads",
+    "buy_market":0.34,
+    "sell_market":0.43
   },
   {
-    "timestamp":"2025-10-20T01:15:43Z",
-    "item":"Thick Hide",
-    "buy_market":0.31,
-    "sell_market":0.33
+    "timestamp":1760923854000,
+    "item":"Fibers",
+    "buy_market":0.39,
+    "sell_market":0.49
+  },
+  {
+    "timestamp":1760923962000,
+    "item":"Shadecloth",
+    "buy_market":0.1,
+    "sell_market":0.35
+  },
+  {
+    "timestamp":1760923966000,
+    "item":"Shadecloth",
+    "buy_market":0.1,
+    "sell_market":0.35
+  },
+  {
+    "timestamp":1760923968000,
+    "item":"Shadecloth",
+    "buy_market":0.1,
+    "sell_market":0.35
   }
 ]
