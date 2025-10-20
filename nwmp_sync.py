@@ -690,7 +690,6 @@ def sync_sources_save_raw_and_update_csv(
     auctions_path_or_url: str,
     raw_root: str,
     buy_csv_path: str,
-    sell_csv_path: str,
     history_json_path: str,
     server: str = "devaloka",
     timeout: int = 60,
@@ -702,7 +701,6 @@ def sync_sources_save_raw_and_update_csv(
         auctions_path_or_url, raw_root, label="sell", timeout=timeout
     )
     update_side_csv(buy_entries, buy_csv_path, side="buy")
-    update_side_csv(sell_entries, sell_csv_path, side="sell")
     records = extract_records_from_snapshots(buy_entries, sell_entries, server=server)
     append_history_json_from_records(records, history_json_path)
 
@@ -718,7 +716,6 @@ def sync_sources_save_raw_and_update_csv(
         "source": "remote",
         "snapshot_ts": snapshot_iso,
         "buy_snapshot_ts": buy_snapshot_ts,
-        "sell_snapshot_ts": sell_snapshot_ts,
         "buy_entries": len(buy_entries),
         "sell_entries": len(sell_entries),
         "records": len(records),
@@ -733,7 +730,6 @@ def sync_sources_save_raw_and_update_csv(
 def rebuild_csv_from_raw(
     raw_root: str,
     buy_csv_path: str,
-    sell_csv_path: str,
     history_json_path: str,
     server: str = "devaloka",
 ) -> None:
@@ -747,7 +743,6 @@ def rebuild_csv_from_raw(
     sell_entries = _load_json_list(sell_path)
 
     update_side_csv(buy_entries, buy_csv_path, side="buy")
-    update_side_csv(sell_entries, sell_csv_path, side="sell")
     records = extract_records_from_snapshots(buy_entries, sell_entries, server=server)
     append_history_json_from_records(records, history_json_path)
 
@@ -757,7 +752,6 @@ def run_sync(
     sell_url_or_path: str,
     raw_root: str = "raw",
     buy_csv_path: str = "data/history_devaloka_buy.csv",
-    sell_csv_path: str = "data/history_devaloka_sell.csv",
     history_json_path: str = "history_local.json",
     server: str = "devaloka",
     timeout: int = 60,
@@ -767,7 +761,6 @@ def run_sync(
         sell_url_or_path,
         raw_root,
         buy_csv_path,
-        sell_csv_path,
         history_json_path,
         server,
         timeout,
@@ -777,11 +770,10 @@ def run_sync(
 def run_rebuild(
     raw_root: str = "raw",
     buy_csv_path: str = "data/history_devaloka_buy.csv",
-    sell_csv_path: str = "data/history_devaloka_sell.csv",
     history_json_path: str = "history_local.json",
     server: str = "devaloka",
 ) -> None:
-    rebuild_csv_from_raw(raw_root, buy_csv_path, sell_csv_path, history_json_path, server=server)
+    rebuild_csv_from_raw(raw_root, buy_csv_path, history_json_path, server=server)
 
 
 def run_sync_local_snapshot(
@@ -789,7 +781,6 @@ def run_sync_local_snapshot(
     buy_orders_dir: str,
     raw_root: str = "raw",
     buy_csv_path: str = "data/history_devaloka_buy.csv",
-    sell_csv_path: str = "data/history_devaloka_sell.csv",
     history_json_path: str = "history_local.json",
     server: str = "devaloka",
     snapshot_time: Optional[datetime] = None,
@@ -807,7 +798,6 @@ def run_sync_local_snapshot(
     _append_raw_entries(raw_root_path / "buy.json", buy_entries)
 
     update_side_csv(buy_entries, buy_csv_path, side="buy")
-    update_side_csv(auctions_entries, sell_csv_path, side="sell")
 
     records = extract_records_from_snapshots(buy_entries, auctions_entries, server=server)
     append_history_json_from_records(records, history_json_path)
