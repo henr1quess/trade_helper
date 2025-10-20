@@ -1,4 +1,7 @@
 """
+devaloka_price_scraper.py
+===========================
+
 Coleta histórico de preços do servidor Devaloka (New World, NWMP) e
 atualiza/append em um CSV. Funciona sem argumentos de linha de comando:
 basta editar ITEM_IDS, CSV_PATH e LOCAL_JSON_DIR abaixo.
@@ -53,10 +56,7 @@ def fetch_item_data(item_id: str, *, local_dir: Optional[str] = None) -> Dict:
                     data = f.read()
                 if ext.endswith(".gz"):
                     data = gzip.decompress(data)
-                payload = json.loads(data.decode("utf-8"))
-                if isinstance(payload, dict):
-                    payload.setdefault("item_id", item_id)
-                return payload
+                return json.loads(data.decode("utf-8"))
         raise FileNotFoundError(f"{item_id}: arquivo não encontrado em {local_dir}")
 
     url = f"https://scdn.gaming.tools/nwmp/dev/history/items/{item_id}.json.gz"
@@ -76,30 +76,13 @@ def fetch_item_data(item_id: str, *, local_dir: Optional[str] = None) -> Dict:
             raw = gzip.decompress(raw)
         except OSError:
             logger.warning(f"{item_id}: falha ao descomprimir; tentando como JSON puro.")
-    data = json.loads(raw.decode("utf-8"))
-    if isinstance(data, dict):
-        data.setdefault("item_id", item_id)
-    return data
+    return json.loads(raw.decode("utf-8"))
 
 
-def extract_devaloka_records(
-    item_data: Dict,
-    *,
-    server: str = "devaloka",
-    item_id: Optional[str] = None,
-) -> List[Dict[str, object]]:
+def extract_devaloka_records(item_data: Dict, *, server: str = "devaloka") -> List[Dict[str, object]]:
     """Normaliza as entradas de Devaloka, convertendo preços e data/hora."""
     if "servers" not in item_data or server not in item_data["servers"]:
         return []
-
-    item_slug = (
-        item_data.get("item_id")
-        or item_data.get("itemId")
-        or item_data.get("item")
-        or item_data.get("itemName")
-        or item_data.get("slug")
-        or item_id
-    )
 
     records: List[Dict[str, object]] = []
     for entry in item_data["servers"][server]:
@@ -120,7 +103,7 @@ def extract_devaloka_records(
         records.append({
             "date": date_str,
             "time": time_str,  # <- garantimos a coluna time
-            "item_id": item_slug,
+            "item_id": item_data.get("item_id"),
             "min_price": min_price,
             "median_price": median_price,
             "mean_price": mean_price,
@@ -228,7 +211,7 @@ def main() -> None:
             logger.error(f"{item_id}: erro ao buscar dados -> {exc}")
             continue
 
-        recs = extract_devaloka_records(item_data, server="devaloka", item_id=item_id)
+        recs = extract_devaloka_records(item_data, server="devaloka")
         if not recs:
             logger.warning(f"{item_id}: não há dados de Devaloka")
             continue
