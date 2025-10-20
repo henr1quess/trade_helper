@@ -1,4 +1,4 @@
-# New World Helper — Histórico | Oportunidades | Importar preços | Cadastro | Calculadora
+# New World Helper — Histórico | Oportunidades | Cadastro | Calculadora
 # Run: streamlit run streamlit_app.py
 
 import json
@@ -11,9 +11,6 @@ import streamlit as st
 import streamlit.components.v1 as components
 
 st.set_page_config(page_title="New World Helper", page_icon="🪙", layout="wide")
-
-if "last_import_signature" not in st.session_state:
-    st.session_state["last_import_signature"] = None
 
 # --------------------------------------------------------------------------------------
 # Paths & persistence
@@ -335,10 +332,9 @@ with st.sidebar.expander("⚙️ Config (calibração & taxa) — clique para ex
 # --------------------------------------------------------------------------------------
 # Tabs
 # --------------------------------------------------------------------------------------
-tab_best, tab_hist, tab_import, tab_cad, tab_calc, tab_coletar = st.tabs([
+tab_best, tab_hist, tab_cad, tab_calc, tab_coletar = st.tabs([
     "Oportunidades",
     "Histórico",
-    "Importar preços",
     "Cadastro",
     "Calculadora",
     "Coletar",
@@ -495,7 +491,7 @@ with tab_hist:
                     st.rerun()
 
     else:
-        st.info("Seu histórico está vazio. Vá na aba **Importar preços** para adicionar itens.")
+        st.info("Seu histórico está vazio.")
 
 # --------------------------------------------------------------------------------------
 # Oportunidades
@@ -804,251 +800,6 @@ with tab_best:
             disabled=True,
             height=min(560, 90 + 38 * max(1, len(view))),
         )
-
-# --------------------------------------------------------------------------------------
-# Importar preços
-# --------------------------------------------------------------------------------------
-with tab_import:
-    st.markdown("## Importar preços")
-    st.caption("Use `item, top_buy, low_sell, buy_duration, sell_duration, timestamp`. Os preços são salvos como mercado (sem ±0.01).")
-
-    # --- CHAVES & FLAGS (antes dos widgets) ---
-    IMPORT_TEXT_KEY = "import_raw_input"
-    IMPORT_UPLOAD_KEY_BASE = "import_file_uploader"
-
-    if "import_reset" not in st.session_state:
-        st.session_state.import_reset = False
-    if "import_upload_nonce" not in st.session_state:
-        st.session_state.import_upload_nonce = 0
-
-    if st.session_state.import_reset:
-        st.session_state[IMPORT_TEXT_KEY] = ""
-        st.session_state.import_upload_nonce += 1
-        st.session_state.import_reset = False
-
-    PROMPT_TEXT = r"""
-Você é uma IA que recebe **várias capturas de tela** (prints) ou **textos transcritos** do Trading Post do jogo *New World* com:
-- **Current Buy Orders** e **Current Sell Orders**
-- O **nome do item** visível no topo
-- Às vezes a **duração** selecionada para a ordem (ex.: 1d, 3d, 7d, 14d)
-
-Você pode receber essas informações como imagens ou textos; use exatamente os nomes e preços fornecidos.
-
-Seu objetivo é produzir **um JSON único (array)** com um objeto por item, seguindo **exatamente** este formato:
-
-[
-  {"item":"NOME DO ITEM","top_buy":4.03,"low_sell":5.40,"buy_duration":3,"sell_duration":3,"timestamp":"2025-10-18T12:34:56Z"},
-  {"item":"Outro Item","top_buy":0.62,"low_sell":0.71,"buy_duration":1,"sell_duration":3}
-]
-
-Regras:
-1) Para cada print, identifique o **nome exato** do item e use no campo `"item"` (sem tier/raridade).
-2) Em **Current Buy Orders**, pegue **o maior preço** (topo). Grave como `"top_buy"` (número com ponto).
-3) Em **Current Sell Orders**, pegue **o menor preço** (topo). Grave como `"low_sell"`.
-4) Arredonde para **2 casas decimais** (ex.: 5.399 → 5.40).
-5) Se a **duração** (1d/3d/7d/14d) estiver clara no print, preencha `"buy_duration"` e `"sell_duration"` (em dias, inteiro). Se não aparecer, use **3**.
-6) Inclua `"timestamp"` ISO **se** disponível; caso contrário pode **omitir**.
-7) **Não** aplique +0.01/−0.01; apenas extraia **top_buy** e **low_sell**. O app fará os ajustes.
-8) Saída final: **um único array JSON** com **todos os itens** dos prints, sem duplicatas (se repetir, mantêm-se **o último**).
-
-Validação:
-- Use **ponto** como separador decimal.
-- Mínimo por objeto: `"item"`, `"top_buy"`, `"low_sell"`.
-- Se houver dúvida, **ignore** o item.
-Retorne **apenas** o JSON, sem comentários.
-"""
-    components.html(
-        f"""
-        <div>
-          <button id="copyPrompt" style="padding:8px 12px; border:1px solid #ccc; border-radius:6px; background:#f3f4f6; cursor:pointer;">
-            📋 Copiar prompt p/ IA
-          </button>
-          <textarea id="promptPayload" style="position:absolute; left:-10000px; top:-10000px;">{PROMPT_TEXT}</textarea>
-        </div>
-        <script>
-          const btn = document.getElementById('copyPrompt');
-          btn.addEventListener('click', async () => {{
-            const txt = document.getElementById('promptPayload').value;
-            try {{ await navigator.clipboard.writeText(txt); btn.innerText = '✅ Copiado!'; }}
-            catch(e) {{
-              const ta = document.getElementById('promptPayload');
-              ta.focus(); ta.select(); document.execCommand('copy'); btn.innerText = '✅ Copiado!';
-            }}
-            setTimeout(()=>btn.innerText='📋 Copiar prompt p/ IA', 1500);
-          }});
-        </script>
-        """,
-        height=60
-    )
-    with st.expander("Ver prompt (opcional)"):
-        st.code(PROMPT_TEXT, language="markdown")
-
-    pasted = st.text_area(
-        "Colar JSON/CSV",
-        height=140,
-        placeholder='[\n  {"item":"Infused Weapon Fragment","top_buy":4.03,"low_sell":5.40,"buy_duration":3,"sell_duration":3}\n]',
-        key=IMPORT_TEXT_KEY,
-    )
-    upload = st.file_uploader(
-        "...ou enviar arquivo",
-        type=["json","csv"],
-        key=f"{IMPORT_UPLOAD_KEY_BASE}_{st.session_state.import_upload_nonce}",
-    )
-
-    raw = upload.read().decode("utf-8", errors="ignore") if upload is not None else pasted if pasted.strip() else None
-
-    def parse_rows(txt: str) -> pd.DataFrame:
-        if not txt: return pd.DataFrame()
-        txt = txt.strip()
-        try:
-            return pd.DataFrame(json.loads(txt))
-        except Exception:
-            pass
-        try:
-            return pd.read_csv(StringIO(txt))
-        except Exception:
-            return pd.DataFrame()
-
-    def add_to_history(preview_df: pd.DataFrame):
-        # Agora grava somente os preços de mercado, sem flip
-        cur, _ = load_history()
-        new_rows = preview_df[["timestamp", "item", "buy_market", "sell_market"]].copy()
-        new_rows["timestamp"] = pd.to_datetime(new_rows["timestamp"], utc=True, errors="coerce").dt.strftime("%Y-%m-%dT%H:%M:%SZ")
-        cur = pd.concat([cur, new_rows], ignore_index=True)
-        save_history(cur)
-
-    df_in = parse_rows(raw) if raw else pd.DataFrame()
-    items_df = load_items().drop_duplicates(subset=["item"])
-
-    if not df_in.empty:
-        # timestamp: se não vier, usar agora
-        if "timestamp" not in df_in.columns:
-            df_in["timestamp"] = now_iso()
-        df_in["timestamp"] = df_in["timestamp"].fillna(now_iso())
-
-        # garantir numérico antes de arredondar
-        df_in["top_buy"] = pd.to_numeric(df_in.get("top_buy"), errors="coerce")
-        df_in["low_sell"] = pd.to_numeric(df_in.get("low_sell"), errors="coerce")
-
-        # preços de MERCADO (sem ajustes)
-        df_in["buy_market"] = df_in["top_buy"].round(2)
-        df_in["sell_market"] = df_in["low_sell"].round(2)
-
-        # descartar entradas inválidas
-        df_in = df_in.dropna(subset=["buy_market", "sell_market", "item"])
-
-        if df_in.empty:
-            st.warning("Nenhum registro válido após processar os preços.")
-            st.stop()
-
-        # Prévia com ROI
-        rows = []
-        for _, r in df_in.iterrows():
-            buy_market_val = float(r["buy_market"])
-            sell_market_val = float(r["sell_market"])
-            flip_buy = max(round(buy_market_val + 0.01, 2), 0.0)
-            flip_sell = max(round(sell_market_val - 0.01, 2), 0.0)
-            pp, roi, Fb, Fs = compute_metrics(flip_buy, flip_sell, 3, 3, st.session_state.tax_pct)
-            rows.append({
-                "timestamp": r["timestamp"],
-                "item": r["item"],
-                "buy_market": r["buy_market"],
-                "sell_market": r["sell_market"],
-                "flip_buy": flip_buy,
-                "flip_sell": flip_sell,
-                "profit_per_unit": pp,
-                "roi": roi,
-                "roi_pct": roi * 100.0,
-            })
-        preview = pd.DataFrame(rows)
-        if preview.empty:
-            preview = pd.DataFrame(
-                columns=[
-                    "timestamp",
-                    "item",
-                    "buy_market",
-                    "sell_market",
-                    "flip_buy",
-                    "flip_sell",
-                    "profit_per_unit",
-                    "roi",
-                    "roi_pct",
-                ]
-            )
-        else:
-            preview = preview.sort_values("roi", ascending=False)
-            preview["timestamp"] = pd.to_datetime(preview["timestamp"], utc=True, errors="coerce")
-
-        signature_df = preview[["timestamp", "item", "buy_market", "sell_market"]].copy()
-        if not signature_df.empty:
-            signature_df["timestamp"] = signature_df["timestamp"].apply(
-                lambda x: x.isoformat() if pd.notna(x) else ""
-            )
-            signature_df = signature_df.sort_values(
-                ["timestamp", "item", "buy_market", "sell_market"],
-                kind="mergesort",
-            )
-        preview_signature = signature_df.to_json(orient="records", date_format="iso") if not signature_df.empty else "[]"
-        already_added = st.session_state.get("last_import_signature") == preview_signature
-
-        # Itens não cadastrados
-        missing_mask = ~preview["item"].isin(items_df["item"])
-        missing_items = preview.loc[missing_mask, "item"].unique().tolist()
-        hide_missing = st.toggle("Ocultar não cadastrados", value=False)
-        if missing_items:
-            st.warning(f"Há {len(missing_items)} item(ns) **não cadastrados**: " + ", ".join(missing_items))
-        # Badge na prévia
-        preview["status"] = preview["item"].apply(lambda x: "🚩 não cadastrado" if x in missing_items else "—")
-
-        # Exibição
-        st.subheader("Prévia (ordenada por ROI)")
-        st.data_editor(
-            preview.loc[
-                ~(hide_missing & missing_mask),
-                [
-                    "status",
-                    "timestamp",
-                    "item",
-                    "buy_market",
-                    "sell_market",
-                    "flip_buy",
-                    "flip_sell",
-                    "profit_per_unit",
-                    "roi_pct",
-                ],
-            ],
-            column_config={
-                "status": st.column_config.TextColumn("status"),
-                "timestamp": st.column_config.DatetimeColumn("timestamp", format="YYYY-MM-DD HH:mm:ss"),
-                "item": st.column_config.TextColumn("item"),
-                "buy_market": st.column_config.NumberColumn("buy (market)", format="%.2f"),
-                "sell_market": st.column_config.NumberColumn("sell (market)", format="%.2f"),
-                "flip_buy": st.column_config.NumberColumn("flip buy (+0.01)", format="%.2f"),
-                "flip_sell": st.column_config.NumberColumn("flip sell (−0.01)", format="%.2f"),
-                "profit_per_unit": st.column_config.NumberColumn("lucro/u", format="%.4f"),
-                "roi_pct": st.column_config.ProgressColumn("ROI", format="%.2f%%", min_value=0, max_value=100),
-            },
-            hide_index=True,
-            use_container_width=True,
-            disabled=True,
-        )
-
-        c1, c2 = st.columns(2)
-        with c1:
-            if already_added:
-                st.info("Prévia já adicionada ao histórico nesta sessão.")
-            if st.button("Adicionar ao histórico (append)", disabled=already_added):
-                add_to_history(preview)
-                st.session_state["last_import_signature"] = preview_signature
-                st.success(f"{len(preview)} registro(s) adicionados ao histórico.")
-                st.session_state.import_reset = True
-                st.rerun()
-        with c2:
-            st.download_button("Baixar processado (JSON)",
-                               data=preview.to_json(orient="records", indent=2, date_format="iso"),
-                               file_name="import_preview.json", mime="application/json")
-    else:
-        st.info("Cole ou envie um arquivo para ver a prévia e adicionar ao histórico.")
 
 # --------------------------------------------------------------------------------------
 # Cadastro (com Tags)
