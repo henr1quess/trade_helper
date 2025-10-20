@@ -333,6 +333,17 @@ with tab_hist:
     if not hist_df.empty:
         hist_df["timestamp"] = pd.to_datetime(hist_df["timestamp"], utc=True, errors="coerce")
 
+        items_meta = {}
+        items_df = load_items()
+        if not items_df.empty and "item" in items_df.columns:
+            meta_cols = [c for c in ["categoria", "tags"] if c in items_df.columns]
+            if meta_cols:
+                items_meta = (
+                    items_df.drop_duplicates(subset=["item"])
+                    .set_index("item")[meta_cols]
+                    .to_dict("index")
+                )
+
         rows = []
         for idx, r in hist_df.reset_index().iterrows():
             buy_market_val = r.get("buy_market")
@@ -352,6 +363,10 @@ with tab_hist:
                 pp, roi, Fb, Fs = compute_metrics(flip_buy, flip_sell, dur_buy_hist, dur_sell_hist, st.session_state.tax_pct)
             else:
                 pp, roi = None, None
+            meta = items_meta.get(r["item"], {}) if items_meta else {}
+            categoria = meta.get("categoria") if meta else None
+            tags = ensure_list_tags(meta.get("tags")) if meta else []
+
             rows.append({
                 "row_id": int(r["index"]),
                 "timestamp": r["timestamp"],
@@ -361,13 +376,42 @@ with tab_hist:
                 "flip_buy": round(flip_buy, 2) if flip_buy is not None else None,
                 "flip_sell": round(flip_sell, 2) if flip_sell is not None else None,
                 "profit_per_unit_hist": pp,
-                "roi_hist_pct": (roi * 100.0) if roi is not None and pd.notna(roi) else None
+                "roi_hist_pct": (roi * 100.0) if roi is not None and pd.notna(roi) else None,
+                "categoria": categoria,
+                "tags": tags,
             })
         table = pd.DataFrame(rows).sort_values("timestamp", ascending=False)
 
+        if "tags" in table.columns:
+            table["tags"] = table["tags"].apply(ensure_list_tags)
+
+        col_f_nome, col_f_cat, col_f_tag = st.columns(3)
+        filtro_nome = col_f_nome.text_input("Filtrar por nome do item")
+        categoria_opts = (
+            sorted(table["categoria"].dropna().unique())
+            if "categoria" in table.columns
+            else []
+        )
+        filtro_categorias = col_f_cat.multiselect("Categorias", categoria_opts)
+
+        tag_opts = []
+        if "tags" in table.columns:
+            tag_opts = sorted({t for tags in table["tags"] for t in ensure_list_tags(tags)})
+        filtro_tags = col_f_tag.multiselect("Tags", tag_opts)
+
+        mask = pd.Series(True, index=table.index)
+        if filtro_nome:
+            mask &= table["item"].astype(str).str.contains(filtro_nome, case=False, na=False)
+        if filtro_categorias:
+            mask &= table["categoria"].isin(filtro_categorias)
+        if filtro_tags:
+            mask &= table["tags"].apply(lambda tags: all(tag in ensure_list_tags(tags) for tag in filtro_tags))
+
+        filtered_table = table.loc[mask].sort_values("timestamp", ascending=False)
+
         df_key = "hist_tbl_prices"
         st.dataframe(
-            table.set_index("row_id")[
+            filtered_table.set_index("row_id")[
                 [
                     "timestamp",
                     "item",
@@ -403,7 +447,7 @@ with tab_hist:
         with c1:
             st.download_button(
                 "Baixar histórico (JSON)",
-                data=table.to_json(orient="records", indent=2, date_format="iso"),
+                data=filtered_table.to_json(orient="records", indent=2, date_format="iso"),
                 file_name="history_prices.json",
                 mime="application/json",
             )
@@ -525,13 +569,25 @@ with tab_best:
         items_df = items_df.drop_duplicates(subset=["item"])
         enriched = best.merge(items_df, on="item", how="left")
 
-        # Normaliza tags
+        # Normaliza campos usados para filtragem
         if "tags" not in enriched.columns:
             enriched["tags"] = [[] for _ in range(len(enriched))]
         else:
             enriched["tags"] = enriched["tags"].apply(ensure_list_tags)
         if "tier" not in enriched.columns:
             enriched["tier"] = None
+        if "categoria" not in enriched.columns:
+            enriched["categoria"] = ""
+        else:
+            enriched["categoria"] = enriched["categoria"].fillna("")
+        if "peso" in enriched.columns:
+            enriched["peso"] = pd.to_numeric(enriched["peso"], errors="coerce")
+        else:
+            enriched["peso"] = (
+                pd.Series([pd.NA] * len(enriched), index=enriched.index, dtype="Float64")
+                if len(enriched)
+                else pd.Series(dtype="Float64")
+            )
 
         # lucro/peso & lucro/100peso
         enriched["lucro_por_peso"] = None
@@ -582,8 +638,72 @@ with tab_best:
             else:
                 enriched["liquidez"] = enriched["liquidez"].fillna("—")
 
+        # Controles de filtragem
+        st.markdown("### Filtros")
+        col_itens, col_cats, col_tags = st.columns(3)
+        with col_itens:
+            item_options = sorted(enriched["item"].dropna().unique())
+            selected_items = st.multiselect("Itens", item_options, placeholder="Selecionar itens")
+        with col_cats:
+            categoria_options = sorted({c for c in enriched["categoria"].dropna().unique() if str(c).strip()})
+            selected_cats = st.multiselect("Categorias", categoria_options, placeholder="Selecionar categorias")
+        with col_tags:
+            tag_options = sorted({t for tags in enriched["tags"] for t in tags})
+            selected_tags = st.multiselect("Tags", tag_options, placeholder="Selecionar tags")
+
+        tier_range = None
+        peso_range = None
+        col_tier, col_peso = st.columns(2)
+        tier_values = [int(t) for t in enriched["tier"].dropna().unique() if str(t).strip()]
+        if tier_values:
+            tier_min, tier_max = int(min(tier_values)), int(max(tier_values))
+            with col_tier:
+                if tier_min == tier_max:
+                    tier_range = (tier_min, tier_max)
+                    st.caption(f"Tier disponível: T{tier_min}")
+                else:
+                    tier_range = st.slider(
+                        "Intervalo de tier",
+                        min_value=tier_min,
+                        max_value=tier_max,
+                        value=(tier_min, tier_max),
+                        step=1,
+                    )
+        peso_valid = enriched["peso"].dropna()
+        if not peso_valid.empty:
+            peso_min, peso_max = float(peso_valid.min()), float(peso_valid.max())
+            with col_peso:
+                if peso_min == peso_max:
+                    peso_range = (peso_min, peso_max)
+                    st.caption(f"Peso disponível: {peso_min:.3f}")
+                else:
+                    step_val = max(0.001, round((peso_max - peso_min) / 20, 3))
+                    peso_range = st.slider(
+                        "Intervalo de peso",
+                        min_value=float(peso_min),
+                        max_value=float(peso_max),
+                        value=(float(peso_min), float(peso_max)),
+                        step=float(step_val),
+                    )
+
         # Filtros e view
-        filt = (enriched["roi"] >= min_roi) & enriched["roi"].notna()
+        filt = enriched["roi"].notna() & (enriched["roi"] >= min_roi)
+        if selected_items:
+            filt &= enriched["item"].isin(selected_items)
+        if selected_cats:
+            filt &= enriched["categoria"].isin(selected_cats)
+        if selected_tags:
+            filt &= enriched["tags"].apply(lambda lst: any(tag in lst for tag in selected_tags))
+        if tier_range is not None:
+            tier_mask = enriched["tier"].isna()
+            tier_mask |= enriched["tier"].between(tier_range[0], tier_range[1])
+            filt &= tier_mask
+        if peso_range is not None:
+            peso_series = enriched["peso"].astype(float, errors="ignore")
+            peso_mask = peso_series.isna()
+            peso_mask |= (peso_series >= peso_range[0]) & (peso_series <= peso_range[1])
+            filt &= peso_mask
+
         view = enriched.loc[filt].copy().sort_values(["lucro_por_slot","roi"], ascending=[False, False])
 
         # Exibição
