@@ -37,13 +37,8 @@ DEFAULT_NWMP_BUY_SRC = os.getenv(
     "NWMP_BUY_SRC",
     "https://nwmpdata.gaming.tools/buy-orders2/devaloka.json",
 )
-DEFAULT_NWMP_SELL_SRC = os.getenv(
-    "NWMP_SELL_SRC",
-    "https://nwmpdata.gaming.tools/auctions2/devaloka.json",
-)
 DEFAULT_NWMP_RAW_ROOT = os.getenv("NWMP_RAW_ROOT", "raw")
 DEFAULT_NWMP_BUY_CSV = os.getenv("NWMP_BUY_CSV_PATH", "data/history_devaloka_buy.csv")
-DEFAULT_NWMP_SELL_CSV = os.getenv("NWMP_SELL_CSV_PATH", "data/history_devaloka_sell.csv")
 DEFAULT_HISTORY_JSON = "history_local.json"
 
 
@@ -60,12 +55,6 @@ def _resolve_default_local_dir(env_var: str, default_candidate: str, fallback: P
 
     return str(fallback)
 
-
-DEFAULT_LOCAL_AUCTIONS_DIR = _resolve_default_local_dir(
-    "NWMP_LOCAL_AUCTIONS_DIR",
-    r"C:\\Users\\Administrador\\AppData\\Local\\NWMPScanner2\\current\\auctions",
-    SCRIPT_DIR / "example_snapshot" / "auctions",
-)
 
 DEFAULT_LOCAL_BUYORDERS_DIR = _resolve_default_local_dir(
     "NWMP_LOCAL_BUYORDERS_DIR",
@@ -1263,16 +1252,13 @@ with tab_coletar:
     # Parâmetros fixos (sem necessidade de entrada manual)
     settings_remote = {
         "Buy orders": DEFAULT_NWMP_BUY_SRC,
-        "Auctions": DEFAULT_NWMP_SELL_SRC,
         "Pasta RAW": DEFAULT_NWMP_RAW_ROOT,
         "CSV Buy (NWMP)": DEFAULT_NWMP_BUY_CSV,
-        "CSV Sell (NWMP)": DEFAULT_NWMP_SELL_CSV,
         "Servidor": DEFAULT_NWMP_SERVER,
         "history_local.json": DEFAULT_HISTORY_JSON,
     }
 
     settings_local = {
-        "Snapshot local (auctions)": DEFAULT_LOCAL_AUCTIONS_DIR,
         "Snapshot local (buy-orders)": DEFAULT_LOCAL_BUYORDERS_DIR,
     }
 
@@ -1287,6 +1273,11 @@ with tab_coletar:
 
     missing_remote = [name for name, value in settings_remote.items() if not str(value).strip()]
     missing_local = [name for name, value in settings_local.items() if not str(value).strip()]
+
+    st.info(
+        "O CSV de sell agora deve ser gerado via `devaloka_price_scraper.py`. "
+        "Esta página atualiza apenas o CSV de buy orders."
+    )
 
     # Importa o novo módulo do scraper
     try:
@@ -1330,7 +1321,6 @@ with tab_coletar:
             try:
                 remote_probe = nwmp_sync.probe_remote_snapshot(
                     DEFAULT_NWMP_BUY_SRC,
-                    DEFAULT_NWMP_SELL_SRC,
                     timeout=15,
                 )
             except Exception as exc:
@@ -1345,7 +1335,6 @@ with tab_coletar:
         else:
             try:
                 local_probe = nwmp_sync.probe_local_snapshot(
-                    settings_local["Snapshot local (auctions)"],
                     settings_local["Snapshot local (buy-orders)"],
                 )
             except Exception as exc:
@@ -1355,11 +1344,8 @@ with tab_coletar:
             if not isinstance(info, dict):
                 return ""
             parts: List[str] = []
-            sell_entries = info.get("sell_entries")
             buy_entries = info.get("buy_entries")
             records = info.get("records")
-            if isinstance(sell_entries, int):
-                parts.append(f"{sell_entries:,} vendas")
             if isinstance(buy_entries, int):
                 parts.append(f"{buy_entries:,} ordens de compra")
             if isinstance(records, int):
@@ -1454,10 +1440,8 @@ with tab_coletar:
                 with st.spinner("Baixando, salvando RAW e atualizando histórico..."):
                     result = nwmp_sync.run_sync(
                         DEFAULT_NWMP_BUY_SRC,
-                        DEFAULT_NWMP_SELL_SRC,
                         raw_root=DEFAULT_NWMP_RAW_ROOT,
                         buy_csv_path=DEFAULT_NWMP_BUY_CSV,
-                        sell_csv_path=DEFAULT_NWMP_SELL_CSV,
                         history_json_path=DEFAULT_HISTORY_JSON,
                         server=DEFAULT_NWMP_SERVER,
                     )
@@ -1476,20 +1460,16 @@ with tab_coletar:
                 )
                 return None
             try:
-                auctions_dir = settings_local["Snapshot local (auctions)"]
                 buy_dir = settings_local["Snapshot local (buy-orders)"]
-                auctions_path = Path(auctions_dir)
                 buy_path = Path(buy_dir)
-                if not auctions_path.exists() or not buy_path.exists():
-                    raise FileNotFoundError(f"{auctions_path} | {buy_path}")
+                if not buy_path.exists():
+                    raise FileNotFoundError(str(buy_path))
 
-                with st.spinner("Processando snapshot local e atualizando histórico..."):
+                with st.spinner("Processando snapshot local de buy orders e atualizando histórico..."):
                     result = nwmp_sync.run_sync_local_snapshot(
-                        auctions_dir=str(auctions_path),
                         buy_orders_dir=str(buy_path),
                         raw_root=DEFAULT_NWMP_RAW_ROOT,
                         buy_csv_path=DEFAULT_NWMP_BUY_CSV,
-                        sell_csv_path=DEFAULT_NWMP_SELL_CSV,
                         history_json_path=DEFAULT_HISTORY_JSON,
                         server=DEFAULT_NWMP_SERVER,
                     )
@@ -1514,11 +1494,10 @@ with tab_coletar:
                 )
             else:
                 try:
-                    with st.spinner("Reconstruindo CSV a partir de raw/buy.json + raw/sell.json..."):
+                    with st.spinner("Reconstruindo CSV de buy orders a partir de raw/buy.json..."):
                         nwmp_sync.run_rebuild(
                             raw_root=DEFAULT_NWMP_RAW_ROOT,
                             buy_csv_path=DEFAULT_NWMP_BUY_CSV,
-                            sell_csv_path=DEFAULT_NWMP_SELL_CSV,
                             history_json_path=DEFAULT_HISTORY_JSON,
                             server=DEFAULT_NWMP_SERVER,
                         )
@@ -1552,14 +1531,11 @@ with tab_coletar:
         import pandas as pd
         prev1, prev2 = st.columns(2)
         try:
-            for label, csv_path in (
-                ("Buy", DEFAULT_NWMP_BUY_CSV),
-                ("Sell", DEFAULT_NWMP_SELL_CSV),
-            ):
-                if Path(csv_path).exists():
-                    df_csv = pd.read_csv(csv_path)
-                    prev1.caption(f"Prévia CSV {label} NWMP: {csv_path}")
-                    prev1.dataframe(df_csv.tail(50), use_container_width=True)
+            csv_path = DEFAULT_NWMP_BUY_CSV
+            if Path(csv_path).exists():
+                df_csv = pd.read_csv(csv_path)
+                prev1.caption(f"Prévia CSV Buy NWMP: {csv_path}")
+                prev1.dataframe(df_csv.tail(50), use_container_width=True)
         except Exception:
             pass
         try:
