@@ -3,6 +3,8 @@
 
 import json
 import os
+import subprocess
+import sys
 from datetime import datetime, timezone
 from io import StringIO
 from pathlib import Path
@@ -1105,6 +1107,172 @@ with tab_calc:
 # --------------------------------------------------------------------------------------
 with tab_coletar:
     st.markdown("## Coletar snapshot (Devaloka)")
+
+    env_csv_path = os.getenv("DEVALOKA_SCRAPER_CSV_PATH")
+    env_output_dir = os.getenv("DEVALOKA_SCRAPER_OUTPUT_DIR", "")
+    env_csv_filename = os.getenv("DEVALOKA_SCRAPER_CSV_FILENAME", "devaloka_prices.csv")
+    env_local_dir = os.getenv("DEVALOKA_SCRAPER_LOCAL_DIR", "")
+
+    if env_csv_path:
+        resolved_env_csv_path = Path(os.path.expanduser(env_csv_path))
+        env_parent = resolved_env_csv_path.parent
+        default_dir = str(env_parent if env_parent != Path(".") else SCRIPT_DIR)
+        default_filename = resolved_env_csv_path.name
+        default_full_path = str(resolved_env_csv_path)
+    else:
+        default_dir = env_output_dir or str(SCRIPT_DIR)
+        default_filename = env_csv_filename
+        default_full_path = ""
+
+    if "scraper_csv_dir_input" not in st.session_state:
+        st.session_state.scraper_csv_dir_input = default_dir
+    if "scraper_csv_filename_input" not in st.session_state:
+        st.session_state.scraper_csv_filename_input = default_filename
+    if "scraper_csv_full_path_input" not in st.session_state:
+        st.session_state.scraper_csv_full_path_input = default_full_path
+    if "scraper_local_json_dir_input" not in st.session_state:
+        st.session_state.scraper_local_json_dir_input = env_local_dir or ""
+    if "confirm_scraper_run" not in st.session_state:
+        st.session_state.confirm_scraper_run = False
+
+    st.markdown("### Scraper de preços (sell)")
+    st.caption(
+        "Execute o script `devaloka_price_scraper.py` diretamente daqui. "
+        "Configure a pasta/arquivo do CSV antes de rodar."
+    )
+
+    dir_col, file_col = st.columns([3, 2])
+    with dir_col:
+        csv_dir_input = st.text_input(
+            "Pasta de saída do CSV",
+            value=st.session_state.scraper_csv_dir_input,
+            key="scraper_csv_dir_input",
+            help="Diretório onde o CSV será salvo. Pode usar ~ para a pasta do usuário.",
+        )
+    with file_col:
+        csv_filename_input = st.text_input(
+            "Nome do arquivo CSV",
+            value=st.session_state.scraper_csv_filename_input,
+            key="scraper_csv_filename_input",
+            help="Nome do arquivo, ex.: devaloka_prices.csv",
+        )
+
+    csv_full_override = st.text_input(
+        "Caminho completo (opcional — sobrescreve os campos acima)",
+        value=st.session_state.scraper_csv_full_path_input,
+        key="scraper_csv_full_path_input",
+        help="Se informado, será usado como caminho final do CSV.",
+    )
+
+    local_json_dir_input = st.text_input(
+        "Pasta local de JSONs (opcional)",
+        value=st.session_state.scraper_local_json_dir_input,
+        key="scraper_local_json_dir_input",
+        help="Se informado, o scraper lerá {item}.json(.gz) dessa pasta em vez do CDN.",
+    )
+
+    csv_dir_clean = csv_dir_input.strip()
+    csv_filename_clean = csv_filename_input.strip() or "devaloka_prices.csv"
+    csv_full_clean = csv_full_override.strip()
+
+    if csv_full_clean:
+        resolved_csv_path = Path(os.path.expanduser(csv_full_clean))
+    elif csv_dir_clean:
+        resolved_csv_path = Path(os.path.expanduser(csv_dir_clean)) / csv_filename_clean
+    else:
+        resolved_csv_path = Path(os.path.expanduser(csv_filename_clean))
+
+    st.caption(f"CSV final: `{resolved_csv_path}`")
+
+    confirm_run = st.checkbox(
+        "Confirmo que desejo executar o scraper agora",
+        key="confirm_scraper_run",
+    )
+
+    if st.button("🚀 Executar scraper de preços", use_container_width=True, disabled=not confirm_run):
+        env = os.environ.copy()
+
+        if csv_full_clean:
+            env["DEVALOKA_SCRAPER_CSV_PATH"] = str(resolved_csv_path)
+            env.pop("DEVALOKA_SCRAPER_OUTPUT_DIR", None)
+            env.pop("DEVALOKA_SCRAPER_CSV_FILENAME", None)
+        else:
+            env.pop("DEVALOKA_SCRAPER_CSV_PATH", None)
+            if csv_dir_clean:
+                env["DEVALOKA_SCRAPER_OUTPUT_DIR"] = str(Path(os.path.expanduser(csv_dir_clean)))
+            else:
+                env.pop("DEVALOKA_SCRAPER_OUTPUT_DIR", None)
+
+            if csv_filename_clean:
+                env["DEVALOKA_SCRAPER_CSV_FILENAME"] = csv_filename_clean
+            else:
+                env.pop("DEVALOKA_SCRAPER_CSV_FILENAME", None)
+
+        local_json_dir_clean = local_json_dir_input.strip()
+        if local_json_dir_clean:
+            env["DEVALOKA_SCRAPER_LOCAL_DIR"] = str(Path(os.path.expanduser(local_json_dir_clean)))
+        else:
+            env.pop("DEVALOKA_SCRAPER_LOCAL_DIR", None)
+
+        command = [sys.executable, str(SCRIPT_DIR / "devaloka_price_scraper.py")]
+
+        with st.spinner("Executando scraper de preços..."):
+            result = subprocess.run(
+                command,
+                capture_output=True,
+                text=True,
+                env=env,
+                cwd=str(SCRIPT_DIR),
+            )
+
+        st.session_state.confirm_scraper_run = False
+        st.session_state.scraper_last_csv_path = str(resolved_csv_path)
+        st.session_state.scraper_last_stdout = result.stdout or ""
+        st.session_state.scraper_last_stderr = result.stderr or ""
+        st.session_state.scraper_last_returncode = result.returncode
+        st.session_state.scraper_last_run_ts = to_utc_iso()
+
+        if result.returncode == 0:
+            st.session_state.scraper_last_status = "success"
+            st.session_state.scraper_last_message = "Scraper executado com sucesso ✅"
+        else:
+            st.session_state.scraper_last_status = "error"
+            st.session_state.scraper_last_message = f"Scraper finalizado com código {result.returncode}"
+
+    last_returncode = st.session_state.get("scraper_last_returncode")
+    if last_returncode is not None:
+        status = st.session_state.get("scraper_last_status", "info")
+        message = st.session_state.get("scraper_last_message", "Resultado da última execução")
+        run_ts = st.session_state.get("scraper_last_run_ts")
+        csv_path_str = st.session_state.get("scraper_last_csv_path")
+
+        if status == "success":
+            st.success(message)
+        else:
+            st.error(message)
+
+        if run_ts:
+            st.caption(f"Última execução: {run_ts}")
+
+        st.markdown("#### Logs do scraper")
+        log_cols = st.columns(2)
+        with log_cols[0]:
+            st.caption("stdout")
+            st.code(st.session_state.get("scraper_last_stdout", "") or "(sem saída)", language="text")
+        with log_cols[1]:
+            st.caption("stderr")
+            st.code(st.session_state.get("scraper_last_stderr", "") or "(sem saída)", language="text")
+
+        st.markdown("#### Prévia do CSV atualizado")
+        if csv_path_str:
+            st.caption(f"Arquivo: {csv_path_str}")
+            try:
+                df_tail = pd.read_csv(csv_path_str)
+                st.dataframe(df_tail.tail(50), use_container_width=True)
+            except FileNotFoundError:
+                st.warning(f"Arquivo não encontrado: {csv_path_str}")
+            except Exception as exc:
+                st.error(f"Falha ao carregar o CSV: {exc}")
 
     # Parâmetros fixos (sem necessidade de entrada manual)
     settings_remote = {

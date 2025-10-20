@@ -30,10 +30,21 @@ ITEM_IDS: List[str] = [
     "oret1",      # Iron Ore
     "bananat1",   # Banana (exemplo)
 ]
-CSV_PATH: str = "devaloka_prices.csv"
+
+_ENV_CSV_PATH = os.getenv("DEVALOKA_SCRAPER_CSV_PATH")
+_ENV_OUTPUT_DIR = os.getenv("DEVALOKA_SCRAPER_OUTPUT_DIR")
+_ENV_CSV_FILENAME = os.getenv("DEVALOKA_SCRAPER_CSV_FILENAME", "devaloka_prices.csv")
+
+if _ENV_CSV_PATH:
+    CSV_PATH: str = _ENV_CSV_PATH
+elif _ENV_OUTPUT_DIR:
+    CSV_PATH = os.path.join(_ENV_OUTPUT_DIR, _ENV_CSV_FILENAME)
+else:
+    CSV_PATH = _ENV_CSV_FILENAME
+
 # Se o CDN bloquear requests no seu ambiente, baixe {item}.json(.gz) manualmente
 # e aponte LOCAL_JSON_DIR para a pasta. Deixe None para baixar do CDN.
-LOCAL_JSON_DIR: Optional[str] = None
+LOCAL_JSON_DIR: Optional[str] = os.getenv("DEVALOKA_SCRAPER_LOCAL_DIR")
 # --------------------------------
 
 # ---- LOGGING ----
@@ -194,6 +205,11 @@ def update_csv(records: List[Dict[str, object]], *, csv_path: str) -> None:
     # Ordenação e ordem de colunas final
     df_concat.sort_values(by=["item_id", "date", "time"], inplace=True)
     df_concat = _ensure_column_order(df_concat)
+
+    csv_dir = os.path.dirname(csv_path)
+    if csv_dir:
+        os.makedirs(csv_dir, exist_ok=True)
+
     df_concat.to_csv(csv_path, index=False)
 
     logger.info(f"Foram adicionadas {appended_rows} linha(s) novas ao arquivo {csv_path}")
