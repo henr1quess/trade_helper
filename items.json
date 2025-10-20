@@ -1,210 +1,502 @@
 [
   {
-    "item": "Runewood",
-    "categoria": "Wood",
-    "peso": 0.2,
-    "stack_max": 10000,
-    "tags": [],
-    "tier": null
+    "item":"Runewood",
+    "categoria":"Wood",
+    "peso":0.2,
+    "stack_max":10000,
+    "tags":[
+
+    ],
+    "tier":null
   },
   {
-    "item": "Powerful Oakflesh Balm",
-    "categoria": "Consumables",
-    "peso": 0.5,
-    "stack_max": 100,
-    "tags": [],
-    "tier": null
+    "item":"Powerful Oakflesh Balm",
+    "categoria":"Consumables",
+    "peso":0.5,
+    "stack_max":100,
+    "tags":[
+
+    ],
+    "tier":null
   },
   {
-    "item": "Tostones",
-    "categoria": "Attribute Bonus Foods",
-    "peso": 0.3,
-    "stack_max": 100,
-    "tags": [],
-    "tier": null
+    "item":"Tostones",
+    "categoria":"Attribute Bonus Foods",
+    "peso":0.3,
+    "stack_max":100,
+    "tags":[
+
+    ],
+    "tier":null
   },
   {
-    "item": "Blackened Lava Barb with Corn Succotash",
-    "categoria": "Attribute Bonus Foods",
-    "peso": 0.3,
-    "stack_max": 100,
-    "tags": [],
-    "tier": null
+    "item":"Blackened Lava Barb with Corn Succotash",
+    "categoria":"Attribute Bonus Foods",
+    "peso":0.3,
+    "stack_max":100,
+    "tags":[
+
+    ],
+    "tier":null
   },
   {
-    "item": "Desert Sunrise",
-    "categoria": "Attribute Bonus Foods",
-    "peso": 0.3,
-    "stack_max": 100,
-    "tags": [],
-    "tier": null
+    "item":"Desert Sunrise",
+    "categoria":"Attribute Bonus Foods",
+    "peso":0.3,
+    "stack_max":100,
+    "tags":[
+
+    ],
+    "tier":null
   },
   {
-    "item": "Roasted Prismatic Filet",
-    "categoria": "Attribute Bonus Foods",
-    "peso": 0.3,
-    "stack_max": 100,
-    "tags": [],
-    "tier": null
+    "item":"Roasted Prismatic Filet",
+    "categoria":"Attribute Bonus Foods",
+    "peso":0.3,
+    "stack_max":100,
+    "tags":[
+
+    ],
+    "tier":null
   },
   {
-    "item": "Banana Bread",
-    "categoria": "Attribute Bonus Foods",
-    "peso": 0.3,
-    "stack_max": 100,
-    "tags": [],
-    "tier": null
+    "item":"Banana Bread",
+    "categoria":"Attribute Bonus Foods",
+    "peso":0.3,
+    "stack_max":100,
+    "tags":[
+
+    ],
+    "tier":null
   },
   {
-    "item": "Roasted Gnufish",
-    "categoria": "Attribute Bonus Foods",
-    "peso": 0.3,
-    "stack_max": 100,
-    "tags": [],
-    "tier": null
+    "item":"Roasted Gnufish",
+    "categoria":"Attribute Bonus Foods",
+    "peso":0.3,
+    "stack_max":100,
+    "tags":[
+
+    ],
+    "tier":null
   },
   {
-    "item": "Banana Pudding",
-    "categoria": "Attribute Bonus Foods",
-    "peso": 0.3,
-    "stack_max": 100,
-    "tags": [],
-    "tier": null
+    "item":"Banana Pudding",
+    "categoria":"Attribute Bonus Foods",
+    "peso":0.3,
+    "stack_max":100,
+    "tags":[
+
+    ],
+    "tier":null
   },
   {
-    "item": "Fried Albenaja",
-    "categoria": "Attribute Bonus Foods",
-    "peso": 0.3,
-    "stack_max": 100,
-    "tags": [],
-    "tier": null
+    "item":"Fried Albenaja",
+    "categoria":"Attribute Bonus Foods",
+    "peso":0.3,
+    "stack_max":100,
+    "tags":[
+
+    ],
+    "tier":null
   },
   {
-    "item": "Chili con Armadillo",
-    "categoria": "Attribute Bonus Foods",
-    "peso": 0.3,
-    "stack_max": 100,
-    "tags": [],
-    "tier": null
+    "item":"Chili con Armadillo",
+    "categoria":"Attribute Bonus Foods",
+    "peso":0.3,
+    "stack_max":100,
+    "tags":[
+
+    ],
+    "tier":null
   },
   {
-    "item": "Fruit Salad",
-    "categoria": "Attribute Bonus Foods",
-    "peso": 0.3,
-    "stack_max": 100,
-    "tags": [],
-    "tier": null
+    "item":"Fruit Salad",
+    "categoria":"Attribute Bonus Foods",
+    "peso":0.3,
+    "stack_max":100,
+    "tags":[
+
+    ],
+    "tier":null
   },
   {
-    "item": "Steamed Abaia Serpe",
-    "categoria": "Attribute Bonus Foods",
-    "peso": 0.3,
-    "stack_max": 100,
-    "tags": [],
-    "tier": null
+    "item":"Steamed Abaia Serpe",
+    "categoria":"Attribute Bonus Foods",
+    "peso":0.3,
+    "stack_max":100,
+    "tags":[
+
+    ],
+    "tier":null
   },
   {
-    "item": "Banana Parfait",
-    "categoria": "Attribute Bonus Foods",
-    "peso": 0.3,
-    "stack_max": 100,
-    "tags": [],
-    "tier": null
+    "item":"Banana Parfait",
+    "categoria":"Attribute Bonus Foods",
+    "peso":0.3,
+    "stack_max":100,
+    "tags":[
+
+    ],
+    "tier":null
   },
   {
-    "item": "Roasted Rabbit with Seasoned Vegetables",
-    "categoria": "Attribute Bonus Foods",
-    "peso": 0.3,
-    "stack_max": 100,
-    "tags": [],
-    "tier": null
+    "item":"Roasted Rabbit with Seasoned Vegetables",
+    "categoria":"Attribute Bonus Foods",
+    "peso":0.3,
+    "stack_max":100,
+    "tags":[
+
+    ],
+    "tier":null
   },
   {
-    "item": "Hyssop",
-    "categoria": "Alchemy",
-    "peso": 0.1,
-    "stack_max": 10000,
-    "tags": [],
-    "tier": null
+    "item":"Hyssop",
+    "categoria":"Alchemy",
+    "peso":0.1,
+    "stack_max":10000,
+    "tags":[
+
+    ],
+    "tier":null
   },
   {
-    "item": "Infused Weapon Fragment",
-    "categoria": "Resources",
-    "peso": 0.2,
-    "stack_max": 10000,
-    "tags": [],
-    "tier": null
+    "item":"Infused Weapon Fragment",
+    "categoria":"Resources",
+    "peso":0.2,
+    "stack_max":10000,
+    "tags":[
+
+    ],
+    "tier":null
   },
   {
-    "item": "Green Wood",
-    "categoria": "Wood",
-    "peso": 0.2,
-    "stack_max": 10000,
-    "tags": [],
-    "tier": null
+    "item":"Green Wood",
+    "categoria":"Wood",
+    "peso":0.2,
+    "stack_max":10000,
+    "tags":[
+
+    ],
+    "tier":null
   },
   {
-    "item": "Voidmetal",
-    "categoria": "Ingot",
-    "peso": 0.3,
-    "stack_max": 10000,
-    "tags": [],
-    "tier": null
+    "item":"Voidmetal",
+    "categoria":"Ingot",
+    "peso":0.3,
+    "stack_max":10000,
+    "tags":[
+
+    ],
+    "tier":null
   },
   {
-    "item": "Charged Sand",
-    "categoria": "Alchemy",
-    "peso": 0.1,
-    "stack_max": 10000,
-    "tags": [],
-    "tier": null
+    "item":"Charged Sand",
+    "categoria":"Alchemy",
+    "peso":0.1,
+    "stack_max":10000,
+    "tags":[
+
+    ],
+    "tier":null
   },
   {
-    "item": "Anima Quartz",
-    "categoria": "Ore",
-    "peso": 0.2,
-    "stack_max": 10000,
-    "tags": [],
-    "tier": null
+    "item":"Anima Quartz",
+    "categoria":"Ore",
+    "peso":0.2,
+    "stack_max":10000,
+    "tags":[
+
+    ],
+    "tier":null
   },
   {
-    "item": "Starmetal Ore",
-    "categoria": "Ore",
-    "peso": 0.2,
-    "stack_max": 10000,
-    "tags": [],
-    "tier": null
+    "item":"Starmetal Ore",
+    "categoria":"Ore",
+    "peso":0.2,
+    "stack_max":10000,
+    "tags":[
+
+    ],
+    "tier":null
   },
   {
-    "item": "Iron Ore",
-    "categoria": "Ore",
-    "peso": 0.2,
-    "stack_max": 10000,
-    "tags": [],
-    "tier": null
+    "item":"Iron Ore",
+    "categoria":"Ore",
+    "peso":0.2,
+    "stack_max":10000,
+    "tags":[
+
+    ],
+    "tier":null
   },
   {
-    "item": "Cinnabar",
-    "categoria": "Ore",
-    "peso": 0.3,
-    "stack_max": 10000,
-    "tags": [],
-    "tier": null
+    "item":"Cinnabar",
+    "categoria":"Ore",
+    "peso":0.3,
+    "stack_max":10000,
+    "tags":[
+
+    ],
+    "tier":null
   },
   {
-    "item": "Wyrdwood",
-    "categoria": "Wood",
-    "peso": 0.2,
-    "stack_max": 10000,
-    "tags": [],
-    "tier": null
+    "item":"Wyrdwood",
+    "categoria":"Wood",
+    "peso":0.2,
+    "stack_max":10000,
+    "tags":[
+
+    ],
+    "tier":null
   },
   {
-    "item": "Ironwood",
-    "categoria": "Wood",
-    "peso": 0.2,
-    "stack_max": 10000,
-    "tags": [],
-    "tier": null
+    "item":"Ironwood",
+    "categoria":"Wood",
+    "peso":0.2,
+    "stack_max":10000,
+    "tags":[
+
+    ],
+    "tier":null
+  },
+  {
+    "item":"Pristine Opal",
+    "categoria":"Raw Gem",
+    "peso":0.1,
+    "stack_max":10000,
+    "tags":[
+
+    ],
+    "tier":5
+  },
+  {
+    "item":"Shadowfur",
+    "categoria":"Raw Hide",
+    "peso":0.3,
+    "stack_max":10000,
+    "tags":[
+
+    ],
+    "tier":3
+  },
+  {
+    "item":"Pristine Pearl",
+    "categoria":"Raw Gem",
+    "peso":0.1,
+    "stack_max":10000,
+    "tags":[
+
+    ],
+    "tier":5
+  },
+  {
+    "item":"Oil",
+    "categoria":"Alchemy",
+    "peso":0.2,
+    "stack_max":10000,
+    "tags":[
+
+    ],
+    "tier":null
+  },
+  {
+    "item":"Ragehide",
+    "categoria":"Raw Hide",
+    "peso":0.3,
+    "stack_max":10000,
+    "tags":[
+
+    ],
+    "tier":2
+  },
+  {
+    "item":"Shifthide",
+    "categoria":"Raw Hide",
+    "peso":0.3,
+    "stack_max":10000,
+    "tags":[
+
+    ],
+    "tier":4
+  },
+  {
+    "item":"Pristine Diamond",
+    "categoria":"Raw Gem",
+    "peso":0.1,
+    "stack_max":10000,
+    "tags":[
+
+    ],
+    "tier":5
+  },
+  {
+    "item":"Rawhide",
+    "categoria":"Raw Hide",
+    "peso":0.2,
+    "stack_max":10000,
+    "tags":[
+
+    ],
+    "tier":1
+  },
+  {
+    "item":"Thick Hide",
+    "categoria":"Raw Hide",
+    "peso":0.2,
+    "stack_max":10000,
+    "tags":[
+
+    ],
+    "tier":4
+  },
+  {
+    "item":"Frost Essence",
+    "categoria":"Perk Resource",
+    "peso":0.1,
+    "stack_max":2000,
+    "tags":[
+
+    ],
+    "tier":5
+  },
+  {
+    "item":"Whisp Shroom",
+    "categoria":"Perk Resource",
+    "peso":0.1,
+    "stack_max":2000,
+    "tags":[
+
+    ],
+    "tier":5
+  },
+  {
+    "item":"Reinforcing Alloy",
+    "categoria":"Perk Resource",
+    "peso":0.1,
+    "stack_max":2000,
+    "tags":[
+
+    ],
+    "tier":5
+  },
+  {
+    "item":"Severed Tusks",
+    "categoria":"Perk Resource",
+    "peso":0.1,
+    "stack_max":2000,
+    "tags":[
+
+    ],
+    "tier":5
+  },
+  {
+    "item":"Hardened Alluvium",
+    "categoria":"Perk Resource",
+    "peso":0.1,
+    "stack_max":2000,
+    "tags":[
+
+    ],
+    "tier":5
+  },
+  {
+    "item":"Dark Crystal",
+    "categoria":"Perk Resource",
+    "peso":0.1,
+    "stack_max":2000,
+    "tags":[
+
+    ],
+    "tier":5
+  },
+  {
+    "item":"Scalecord",
+    "categoria":"Cloth",
+    "peso":0.3,
+    "stack_max":10000,
+    "tags":[
+
+    ],
+    "tier":4
+  },
+  {
+    "item":"Shadecloth",
+    "categoria":"Cloth",
+    "peso":0.3,
+    "stack_max":10000,
+    "tags":[
+
+    ],
+    "tier":2
+  },
+  {
+    "item":"Phasefiber",
+    "categoria":"Cloth",
+    "peso":0.3,
+    "stack_max":10000,
+    "tags":[
+
+    ],
+    "tier":3
+  },
+  {
+    "item":"Wirefiber",
+    "categoria":"Fibers",
+    "peso":0.1,
+    "stack_max":10000,
+    "tags":[
+
+    ],
+    "tier":5
+  },
+  {
+    "item":"Scalecloth",
+    "categoria":"Cloth",
+    "peso":0.3,
+    "stack_max":10000,
+    "tags":[
+
+    ],
+    "tier":5
+  },
+  {
+    "item":"Spider Silk",
+    "categoria":"Cloth",
+    "peso":0.2,
+    "stack_max":10000,
+    "tags":[
+
+    ],
+    "tier":4
+  },
+  {
+    "item":"Spinfiber",
+    "categoria":"Fibers",
+    "peso":0.1,
+    "stack_max":10000,
+    "tags":[
+
+    ],
+    "tier":5
+  },
+  {
+    "item":"Silk Threads",
+    "categoria":"Fibers",
+    "peso":0.1,
+    "stack_max":10000,
+    "tags":[
+
+    ],
+    "tier":4
+  },
+  {
+    "item":"Fibers",
+    "categoria":"Fibers",
+    "peso":0.1,
+    "stack_max":10000,
+    "tags":[
+
+    ],
+    "tier":1
   }
 ]
