@@ -46,5 +46,59 @@
     "item":"Ironwood",
     "buy_market":0.66,
     "sell_market":0.63
+  },
+  {
+    "timestamp":"2025-10-20T01:15:43Z",
+    "item":"Pristine Opal",
+    "buy_market":38.08,
+    "sell_market":249.0
+  },
+  {
+    "timestamp":"2025-10-20T01:15:43Z",
+    "item":"Shadowfur",
+    "buy_market":0.64,
+    "sell_market":2.8
+  },
+  {
+    "timestamp":"2025-10-20T01:15:43Z",
+    "item":"Pristine Pearl",
+    "buy_market":21.01,
+    "sell_market":58.65
+  },
+  {
+    "timestamp":"2025-10-20T01:15:43Z",
+    "item":"Oil",
+    "buy_market":0.32,
+    "sell_market":0.91
+  },
+  {
+    "timestamp":"2025-10-20T01:15:43Z",
+    "item":"Ragehide",
+    "buy_market":1.26,
+    "sell_market":2.29
+  },
+  {
+    "timestamp":"2025-10-20T01:15:43Z",
+    "item":"Shifthide",
+    "buy_market":2.3,
+    "sell_market":3.68
+  },
+  {
+    "timestamp":"2025-10-20T01:15:43Z",
+    "item":"Pristine Diamond",
+    "buy_market":17.1,
+    "sell_market":19.0
+  },
+  {
+    "timestamp":"2025-10-20T01:15:43Z",
+    "item":"Rawhide",
+    "buy_market":0.53,
+    "sell_market":0.59
+  },
+  {
+    "timestamp":"2025-10-20T01:15:43Z",
+    "item":"Thick Hide",
+    "buy_market":0.31,
+    "sell_market":0.33
   }
 ]
