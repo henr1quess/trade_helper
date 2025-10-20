@@ -232,6 +232,133 @@ def _append_raw_entries(raw_path: Path, entries: List[Dict[str, Any]]) -> None:
     merged = _merge_history_entries(existing, entries)
     _write_json_list(raw_path, merged)
 
+
+# ------------------ Snapshot probes ------------------
+
+def _summarise_snapshot_entries(
+    entries: List[Dict[str, Any]], *, prefer: str = "min"
+) -> Optional[datetime]:
+    if not entries:
+        return None
+    timestamps: List[datetime] = []
+    for entry in entries:
+        ts = _normalise_timestamp(entry.get("timestamp"))
+        if ts is not None:
+            timestamps.append(ts)
+    if not timestamps:
+        return None
+    if prefer == "max":
+        return max(timestamps)
+    return min(timestamps)
+
+
+def probe_remote_snapshot(
+    buy_orders_url: str,
+    auctions_url: str,
+    *,
+    timeout: int = 30,
+) -> Dict[str, Any]:
+    """Collect lightweight metadata about the remote snapshots without persisting."""
+
+    result: Dict[str, Any] = {
+        "source": "remote",
+        "snapshot_ts": None,
+        "buy_entries": None,
+        "sell_entries": None,
+        "buy_snapshot_ts": None,
+        "sell_snapshot_ts": None,
+        "error": None,
+    }
+
+    errors: List[str] = []
+    buy_dt: Optional[datetime] = None
+    sell_dt: Optional[datetime] = None
+
+    if not (buy_orders_url or "").strip():
+        errors.append("buy: URL não configurada")
+    else:
+        try:
+            buy_entries = load_snapshot_array(buy_orders_url, timeout=timeout)
+            result["buy_entries"] = len(buy_entries)
+            buy_dt = _summarise_snapshot_entries(buy_entries, prefer="min")
+            if buy_dt is not None:
+                result["buy_snapshot_ts"] = _ts_iso_z(buy_dt)
+        except Exception as exc:  # pragma: no cover - falhas de rede/IO
+            errors.append(f"buy: {exc}")
+
+    if not (auctions_url or "").strip():
+        errors.append("sell: URL não configurada")
+    else:
+        try:
+            sell_entries = load_snapshot_array(auctions_url, timeout=timeout)
+            result["sell_entries"] = len(sell_entries)
+            sell_dt = _summarise_snapshot_entries(sell_entries, prefer="min")
+            if sell_dt is not None:
+                result["sell_snapshot_ts"] = _ts_iso_z(sell_dt)
+        except Exception as exc:  # pragma: no cover - falhas de rede/IO
+            errors.append(f"sell: {exc}")
+
+    ts_candidates = [dt for dt in [buy_dt, sell_dt] if dt is not None]
+    if ts_candidates:
+        result["snapshot_ts"] = _ts_iso_z(min(ts_candidates))
+
+    if errors:
+        result["error"] = "; ".join(errors)
+
+    return result
+
+
+def probe_local_snapshot(
+    auctions_dir: str,
+    buy_orders_dir: str,
+) -> Dict[str, Any]:
+    """Collect metadata from local snapshot folders without mutating RAW."""
+
+    result: Dict[str, Any] = {
+        "source": "local",
+        "snapshot_ts": None,
+        "buy_entries": None,
+        "sell_entries": None,
+        "buy_snapshot_ts": None,
+        "sell_snapshot_ts": None,
+        "error": None,
+    }
+
+    errors: List[str] = []
+    buy_dt: Optional[datetime] = None
+    sell_dt: Optional[datetime] = None
+
+    try:
+        buy_entries = _load_local_snapshot_entries(Path(buy_orders_dir))
+        result["buy_entries"] = len(buy_entries)
+        buy_dt = _summarise_snapshot_entries(buy_entries, prefer="max")
+        if buy_dt is not None:
+            result["buy_snapshot_ts"] = _ts_iso_z(buy_dt)
+    except FileNotFoundError as exc:
+        errors.append(f"buy: {exc}")
+    except Exception as exc:  # pragma: no cover - leitura local
+        errors.append(f"buy: {exc}")
+
+    try:
+        sell_entries = _load_local_snapshot_entries(Path(auctions_dir))
+        result["sell_entries"] = len(sell_entries)
+        sell_dt = _summarise_snapshot_entries(sell_entries, prefer="max")
+        if sell_dt is not None:
+            result["sell_snapshot_ts"] = _ts_iso_z(sell_dt)
+    except FileNotFoundError as exc:
+        errors.append(f"sell: {exc}")
+    except Exception as exc:  # pragma: no cover - leitura local
+        errors.append(f"sell: {exc}")
+
+    ts_candidates = [dt for dt in [buy_dt, sell_dt] if dt is not None]
+    if ts_candidates:
+        result["snapshot_ts"] = _ts_iso_z(max(ts_candidates))
+
+    if errors:
+        result["error"] = "; ".join(errors)
+
+    return result
+
 def save_raw_snapshot_array(
     path_or_url: str, out_root_raw: str, label: str, timeout: int = 60
 ) -> Tuple[List[Dict[str, Any]], str, Path]:
