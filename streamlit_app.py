@@ -31,23 +31,6 @@ HISTORY_READ_CANDIDATES = [HISTORY_PATH, LEGACY_HISTORY_PATH, LEGACY_WATCHLIST]
 ITEMS_PATH = SCRIPT_DIR / "items.json"  # master data of items (cadastro)
 
 # --------------------------------------------------------------------------------------
-# Default sources for Devaloka snapshot sync
-# --------------------------------------------------------------------------------------
-DEFAULT_NWMP_SERVER = os.getenv("NWMP_SERVER", "devaloka")
-DEFAULT_NWMP_BUY_SRC = os.getenv(
-    "NWMP_BUY_SRC",
-    "https://nwmpdata.gaming.tools/buy-orders2/devaloka.json",
-)
-DEFAULT_NWMP_SELL_SRC = os.getenv(
-    "NWMP_SELL_SRC",
-    "https://nwmpdata.gaming.tools/auctions2/devaloka.json",
-)
-DEFAULT_NWMP_RAW_ROOT = os.getenv("NWMP_RAW_ROOT", "raw")
-DEFAULT_NWMP_BUY_CSV = os.getenv("NWMP_BUY_CSV_PATH", "data/history_devaloka_buy.csv")
-DEFAULT_NWMP_SELL_CSV = os.getenv("NWMP_SELL_CSV_PATH", "data/history_devaloka_sell.csv")
-DEFAULT_HISTORY_JSON = "history_local.json"
-
-# --------------------------------------------------------------------------------------
 # Helpers (I/O)
 # --------------------------------------------------------------------------------------
 def load_json_records(path: Path, cols=None):
@@ -308,13 +291,12 @@ with st.sidebar.expander("⚙️ Config (calibração & taxa) — clique para ex
 # --------------------------------------------------------------------------------------
 # Tabs
 # --------------------------------------------------------------------------------------
-tab_best, tab_hist, tab_import, tab_cad, tab_calc, tab_coletar = st.tabs([
+tab_best, tab_hist, tab_import, tab_cad, tab_calc = st.tabs([
     "Oportunidades",
     "Histórico",
     "Importar preços",
     "Cadastro",
     "Calculadora",
-    "Coletar",
 ])
 
 # --------------------------------------------------------------------------------------
@@ -1473,107 +1455,4 @@ with tab_calc:
     t1, t2 = st.columns(2)
     t1.success(f"Vender a **{S_for_target:,.4f}** para {target_roi*100:.0f}% de ROI")
     t2.info(f"Máx. comprar a **{B_max_for_target:,.4f}** para {target_roi*100:.0f}% de ROI")
-
-# --------------------------------------------------------------------------------------
-# Coletar (scraper Devaloka)
-# --------------------------------------------------------------------------------------
-with tab_coletar:
-    st.markdown("## Coletar histórico (Devaloka)")
-
-    # Parâmetros fixos (sem necessidade de entrada manual)
-    settings = {
-        "Buy orders": DEFAULT_NWMP_BUY_SRC,
-        "Auctions": DEFAULT_NWMP_SELL_SRC,
-        "Pasta RAW": DEFAULT_NWMP_RAW_ROOT,
-        "CSV Buy (NWMP)": DEFAULT_NWMP_BUY_CSV,
-        "CSV Sell (NWMP)": DEFAULT_NWMP_SELL_CSV,
-        "Servidor": DEFAULT_NWMP_SERVER,
-        "history_local.json": DEFAULT_HISTORY_JSON,
-    }
-
-    st.caption("Parâmetros usados automaticamente para coleta/processamento")
-    settings_df = pd.DataFrame(
-        {"Configuração": list(settings.keys()), "Valor": [str(v) for v in settings.values()]}
-    )
-    st.table(settings_df)
-
-    missing_settings = [name for name, value in settings.items() if not str(value).strip()]
-
-    # Importa o novo módulo do scraper
-    try:
-        import sys
-        from pathlib import Path  # ← usar Path diretamente
-        ROOT = Path.cwd()
-        if str(ROOT) not in sys.path:
-            sys.path.insert(0, str(ROOT))
-        import nwmp_sync
-    except Exception as e:
-        st.error(f"Falha ao importar nwmp_sync: {e}")
-    else:
-        a, b = st.columns(2)
-        if a.button("🔄 Sincronizar agora", use_container_width=True):
-            if missing_settings:
-                st.error(
-                    "Configurações obrigatórias ausentes: "
-                    + ", ".join(missing_settings)
-                    + ". Defina-as via variáveis de ambiente."
-                )
-            else:
-                try:
-                    with st.spinner("Baixando, salvando RAW e atualizando histórico..."):
-                        nwmp_sync.run_sync(
-                            DEFAULT_NWMP_BUY_SRC,
-                            DEFAULT_NWMP_SELL_SRC,
-                            raw_root=DEFAULT_NWMP_RAW_ROOT,
-                            buy_csv_path=DEFAULT_NWMP_BUY_CSV,
-                            sell_csv_path=DEFAULT_NWMP_SELL_CSV,
-                            history_json_path=DEFAULT_HISTORY_JSON,
-                            server=DEFAULT_NWMP_SERVER,
-                        )
-                    st.success("Sincronização concluída ✅")
-                except Exception as e:
-                    st.error(f"Falhou: {e}")
-
-        if b.button("🧱 Reprocessar tudo do RAW → CSV", use_container_width=True):
-            if missing_settings:
-                st.error(
-                    "Configurações obrigatórias ausentes: "
-                    + ", ".join(missing_settings)
-                    + ". Defina-as via variáveis de ambiente."
-                )
-            else:
-                try:
-                    with st.spinner("Reconstruindo CSV a partir de raw/buy.json + raw/sell.json..."):
-                        nwmp_sync.run_rebuild(
-                            raw_root=DEFAULT_NWMP_RAW_ROOT,
-                            buy_csv_path=DEFAULT_NWMP_BUY_CSV,
-                            sell_csv_path=DEFAULT_NWMP_SELL_CSV,
-                            history_json_path=DEFAULT_HISTORY_JSON,
-                            server=DEFAULT_NWMP_SERVER,
-                        )
-                    st.success("Rebuild concluído ✅")
-                except Exception as e:
-                    st.error(f"Falhou: {e}")
-
-        # Mostrar prévia do CSV NWMP e do history_local.json (se existirem)
-        import pandas as pd
-        prev1, prev2 = st.columns(2)
-        try:
-            for label, csv_path in (
-                ("Buy", DEFAULT_NWMP_BUY_CSV),
-                ("Sell", DEFAULT_NWMP_SELL_CSV),
-            ):
-                if Path(csv_path).exists():
-                    df_csv = pd.read_csv(csv_path)
-                    prev1.caption(f"Prévia CSV {label} NWMP: {csv_path}")
-                    prev1.dataframe(df_csv.tail(50), use_container_width=True)
-        except Exception:
-            pass
-        try:
-            if Path(DEFAULT_HISTORY_JSON).exists():
-                df_hist = pd.read_json(DEFAULT_HISTORY_JSON, orient="records")
-                prev2.caption(f"Prévia history_local.json (app): {DEFAULT_HISTORY_JSON}")
-                prev2.dataframe(df_hist.tail(50), use_container_width=True)
-        except Exception:
-            pass
 
