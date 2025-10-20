@@ -12,6 +12,9 @@ import streamlit.components.v1 as components
 
 st.set_page_config(page_title="New World Helper", page_icon="🪙", layout="wide")
 
+if "last_import_signature" not in st.session_state:
+    st.session_state["last_import_signature"] = None
+
 # --------------------------------------------------------------------------------------
 # Paths & persistence
 # --------------------------------------------------------------------------------------
@@ -819,6 +822,18 @@ Retorne **apenas** o JSON, sem comentários.
             preview = preview.sort_values("roi", ascending=False)
             preview["timestamp"] = pd.to_datetime(preview["timestamp"], utc=True, errors="coerce")
 
+        signature_df = preview[["timestamp", "item", "buy_market", "sell_market"]].copy()
+        if not signature_df.empty:
+            signature_df["timestamp"] = signature_df["timestamp"].apply(
+                lambda x: x.isoformat() if pd.notna(x) else ""
+            )
+            signature_df = signature_df.sort_values(
+                ["timestamp", "item", "buy_market", "sell_market"],
+                kind="mergesort",
+            )
+        preview_signature = signature_df.to_json(orient="records", date_format="iso") if not signature_df.empty else "[]"
+        already_added = st.session_state.get("last_import_signature") == preview_signature
+
         # Itens não cadastrados
         missing_mask = ~preview["item"].isin(items_df["item"])
         missing_items = preview.loc[missing_mask, "item"].unique().tolist()
@@ -908,8 +923,11 @@ Retorne **apenas** o JSON, sem comentários.
 
         c1, c2 = st.columns(2)
         with c1:
-            if st.button("Adicionar ao histórico (append)"):
+            if already_added:
+                st.info("Prévia já adicionada ao histórico nesta sessão.")
+            if st.button("Adicionar ao histórico (append)", disabled=already_added):
                 add_to_history(preview)
+                st.session_state["last_import_signature"] = preview_signature
                 st.success(f"{len(preview)} registro(s) adicionados ao histórico.")
                 st.rerun()
         with c2:
