@@ -460,26 +460,6 @@ with tab_hist:
                     st.success(f"Removidas {len(sel_row_ids)} linha(s) do histórico.")
                     st.rerun()
 
-        # Limpar tudo (com confirmação)
-        if "confirm_clear" not in st.session_state:
-            st.session_state.confirm_clear = False
-        if not st.session_state.confirm_clear:
-            if st.button("⚠️ Limpar histórico (todos)"):
-                st.session_state.confirm_clear = True
-                st.experimental_rerun()
-        else:
-            st.warning("Tem certeza que deseja **apagar TODO o histórico**? Essa ação não pode ser desfeita.")
-            b1, b2 = st.columns(2)
-            with b1:
-                if st.button("✅ Confirmar limpeza"):
-                    HISTORY_PATH.unlink(missing_ok=True)
-                    st.session_state.confirm_clear = False
-                    st.success("Histórico limpo.")
-                    st.rerun()
-            with b2:
-                if st.button("Cancelar"):
-                    st.session_state.confirm_clear = False
-                    st.info("Cancelado. Nada foi apagado.")
     else:
         st.info("Seu histórico está vazio. Vá na aba **Importar preços** para adicionar itens.")
 
