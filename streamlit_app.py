@@ -37,8 +37,13 @@ DEFAULT_NWMP_BUY_SRC = os.getenv(
     "NWMP_BUY_SRC",
     "https://nwmpdata.gaming.tools/buy-orders2/devaloka.json",
 )
+DEFAULT_NWMP_SELL_SRC = os.getenv(
+    "NWMP_SELL_SRC",
+    "https://nwmpdata.gaming.tools/auctions2/devaloka.json",
+)
 DEFAULT_NWMP_RAW_ROOT = os.getenv("NWMP_RAW_ROOT", "raw")
 DEFAULT_NWMP_BUY_CSV = os.getenv("NWMP_BUY_CSV_PATH", "data/history_devaloka_buy.csv")
+DEFAULT_NWMP_SELL_CSV = os.getenv("NWMP_SELL_CSV_PATH", "data/history_devaloka_sell.csv")
 DEFAULT_HISTORY_JSON = "history_local.json"
 
 
@@ -60,6 +65,12 @@ DEFAULT_LOCAL_BUYORDERS_DIR = _resolve_default_local_dir(
     "NWMP_LOCAL_BUYORDERS_DIR",
     r"C:\\Users\\Administrador\\AppData\\Local\\NWMPScanner2\\current\\buy-orders",
     SCRIPT_DIR / "example_snapshot" / "buy-orders",
+)
+
+DEFAULT_LOCAL_AUCTIONS_DIR = _resolve_default_local_dir(
+    "NWMP_LOCAL_AUCTIONS_DIR",
+    r"C:\\Users\\Administrador\\AppData\\Local\\NWMPScanner2\\current\\auctions",
+    SCRIPT_DIR / "example_snapshot" / "auctions",
 )
 
 # --------------------------------------------------------------------------------------
@@ -1098,14 +1109,17 @@ with tab_coletar:
     # Parâmetros fixos (sem necessidade de entrada manual)
     settings_remote = {
         "Buy orders": DEFAULT_NWMP_BUY_SRC,
+        "Sell orders": DEFAULT_NWMP_SELL_SRC,
         "Pasta RAW": DEFAULT_NWMP_RAW_ROOT,
         "CSV Buy (NWMP)": DEFAULT_NWMP_BUY_CSV,
+        "CSV Sell (NWMP)": DEFAULT_NWMP_SELL_CSV,
         "Servidor": DEFAULT_NWMP_SERVER,
         "history_local.json": DEFAULT_HISTORY_JSON,
     }
 
     settings_local = {
         "Snapshot local (buy-orders)": DEFAULT_LOCAL_BUYORDERS_DIR,
+        "Snapshot local (auctions)": DEFAULT_LOCAL_AUCTIONS_DIR,
     }
 
     st.caption("Parâmetros usados automaticamente para coleta/processamento")
@@ -1121,8 +1135,8 @@ with tab_coletar:
     missing_local = [name for name, value in settings_local.items() if not str(value).strip()]
 
     st.info(
-        "O CSV de sell agora deve ser gerado via `devaloka_price_scraper.py`. "
-        "Esta página atualiza apenas o CSV de buy orders."
+        "Esta página baixa snapshots de buy e sell orders, atualiza ambos os CSVs "
+        "e consolida o history_local.json."
     )
 
     # Importa o novo módulo do scraper
@@ -1167,6 +1181,7 @@ with tab_coletar:
             try:
                 remote_probe = nwmp_sync.probe_remote_snapshot(
                     DEFAULT_NWMP_BUY_SRC,
+                    DEFAULT_NWMP_SELL_SRC,
                     timeout=15,
                 )
             except Exception as exc:
@@ -1182,6 +1197,7 @@ with tab_coletar:
             try:
                 local_probe = nwmp_sync.probe_local_snapshot(
                     settings_local["Snapshot local (buy-orders)"],
+                    settings_local["Snapshot local (auctions)"],
                 )
             except Exception as exc:
                 local_probe = {"source": "local", "snapshot_ts": None, "error": str(exc)}
@@ -1191,9 +1207,12 @@ with tab_coletar:
                 return ""
             parts: List[str] = []
             buy_entries = info.get("buy_entries")
+            sell_entries = info.get("sell_entries")
             records = info.get("records")
             if isinstance(buy_entries, int):
                 parts.append(f"{buy_entries:,} ordens de compra")
+            if isinstance(sell_entries, int):
+                parts.append(f"{sell_entries:,} ordens de venda")
             if isinstance(records, int):
                 parts.append(f"{records:,} registros")
             return " • ".join(parts)
@@ -1286,8 +1305,10 @@ with tab_coletar:
                 with st.spinner("Baixando, salvando RAW e atualizando snapshot..."):
                     result = nwmp_sync.run_sync(
                         DEFAULT_NWMP_BUY_SRC,
+                        DEFAULT_NWMP_SELL_SRC,
                         raw_root=DEFAULT_NWMP_RAW_ROOT,
                         buy_csv_path=DEFAULT_NWMP_BUY_CSV,
+                        sell_csv_path=DEFAULT_NWMP_SELL_CSV,
                         history_json_path=DEFAULT_HISTORY_JSON,
                         server=DEFAULT_NWMP_SERVER,
                     )
@@ -1310,12 +1331,18 @@ with tab_coletar:
                 buy_path = Path(buy_dir)
                 if not buy_path.exists():
                     raise FileNotFoundError(str(buy_path))
+                auctions_dir = settings_local["Snapshot local (auctions)"]
+                auctions_path = Path(auctions_dir)
+                if not auctions_path.exists():
+                    raise FileNotFoundError(str(auctions_path))
 
                 with st.spinner("Processando snapshot local e atualizando snapshot consolidado..."):
                     result = nwmp_sync.run_sync_local_snapshot(
                         buy_orders_dir=str(buy_path),
+                        auctions_dir=str(auctions_path),
                         raw_root=DEFAULT_NWMP_RAW_ROOT,
                         buy_csv_path=DEFAULT_NWMP_BUY_CSV,
+                        sell_csv_path=DEFAULT_NWMP_SELL_CSV,
                         history_json_path=DEFAULT_HISTORY_JSON,
                         server=DEFAULT_NWMP_SERVER,
                     )
@@ -1344,6 +1371,7 @@ with tab_coletar:
                         nwmp_sync.run_rebuild(
                             raw_root=DEFAULT_NWMP_RAW_ROOT,
                             buy_csv_path=DEFAULT_NWMP_BUY_CSV,
+                            sell_csv_path=DEFAULT_NWMP_SELL_CSV,
                             history_json_path=DEFAULT_HISTORY_JSON,
                             server=DEFAULT_NWMP_SERVER,
                         )
