@@ -1,11 +1,13 @@
 # nwmp_sync.py
 from __future__ import annotations
-# Requisitos: pandas (obrigatório), requests (apenas para URLs)
+# Requisitos: pandas (obrigatório), numpy (para estatísticas), requests (apenas para URLs)
 import gzip
 import json
 from pathlib import Path
-from typing import Any, Dict, Iterable, List, Optional, Tuple
+from typing import Any, Dict, Iterable, List, Optional, Sequence, Tuple
 from datetime import datetime, timezone
+
+import numpy as np
 import pandas as pd
 
 # ------------------ Utils (I/O & time) ------------------
@@ -143,17 +145,6 @@ def save_raw_snapshot_array(
     merged_entries = _merge_history_entries(existing_entries, entries)
     _write_json_list(history_path, merged_entries)
 
-    combined_path = Path(out_root_raw) / "combined.json"
-    combined_existing = _load_json_list(combined_path)
-    combined_new = []
-    side_value = "buy" if label == "buy" else "sell"
-    for e in entries:
-        item = dict(e)
-        item["side"] = side_value
-        combined_new.append(item)
-    combined_merged = _merge_history_entries(combined_existing, combined_new)
-    _write_json_list(combined_path, combined_merged)
-
     return entries, snapshot_ts, history_path
 
 # ------------------ Transform to historical rows ------------------
@@ -234,6 +225,155 @@ def extract_records_from_snapshots(
             "source": "nwmp_snapshot",
         })
     return rows
+
+
+# ------------------ Aggregated metrics per side ------------------
+
+def _entries_to_price_df(entries: List[Dict[str, Any]]) -> pd.DataFrame:
+    """Convert snapshot entries into a tidy price DataFrame."""
+
+    rows: List[Dict[str, Any]] = []
+    for raw in entries:
+        price = _price_cents_to_float(raw.get("price"))
+        qty = raw.get("quantity")
+        ts = _normalise_timestamp(raw.get("timestamp"))
+        slug = (raw.get("item_id") or raw.get("slug") or raw.get("id") or "").strip()
+        server = (raw.get("server_id") or raw.get("server") or "devaloka").lower()
+        name = str(raw.get("item_name") or slug or "").strip()
+
+        if price is None or ts is None or not slug:
+            continue
+        if not isinstance(qty, (int, float)):
+            continue
+        if float(qty) <= 0:
+            continue
+
+        rows.append(
+            {
+                "price": float(price),
+                "quantity": float(qty),
+                "timestamp": ts,
+                "date": ts.astimezone(timezone.utc).replace(hour=0, minute=0, second=0, microsecond=0),
+                "server": server,
+                "slug": slug,
+                "item": name or slug,
+            }
+        )
+
+    if not rows:
+        return pd.DataFrame(columns=["price", "quantity", "timestamp", "date", "server", "slug", "item"])
+
+    df = pd.DataFrame(rows)
+    df["quantity"] = pd.to_numeric(df["quantity"], errors="coerce")
+    df = df.dropna(subset=["quantity"])
+    df = df[df["quantity"] > 0]
+    return df
+
+
+def _weighted_quantiles(values: Sequence[float], weights: Sequence[float], quantiles: Sequence[float]) -> List[float]:
+    vals = np.asarray(values, dtype=float)
+    w = np.asarray(weights, dtype=float)
+    qs = np.asarray(list(quantiles), dtype=float)
+    if vals.size == 0 or w.size == 0 or qs.size == 0:
+        return [float("nan")] * len(quantiles)
+    total = w.sum()
+    if not np.isfinite(total) or total <= 0:
+        return [float("nan")] * len(quantiles)
+    sorter = np.argsort(vals)
+    vals = vals[sorter]
+    w = w[sorter]
+    cum_weights = np.cumsum(w)
+    cum_weights /= cum_weights[-1]
+    qs = np.clip(qs, 0.0, 1.0)
+    return np.interp(qs, cum_weights, vals).tolist()
+
+
+def _aggregate_side(entries: List[Dict[str, Any]], side: str) -> pd.DataFrame:
+    df = _entries_to_price_df(entries)
+    if df.empty:
+        return pd.DataFrame()
+
+    percentiles = [0.10, 0.30, 0.50, 0.70, 0.90]
+    groups: List[Dict[str, Any]] = []
+
+    for (date, server, slug), grp in df.groupby(["date", "server", "slug"], sort=False):
+        qty_total = float(grp["quantity"].sum())
+        if qty_total <= 0 or not np.isfinite(qty_total):
+            continue
+
+        prices = grp["price"].to_numpy(dtype=float)
+        weights = grp["quantity"].to_numpy(dtype=float)
+        pct_values = _weighted_quantiles(prices, weights, percentiles)
+
+        price_min = float(np.nanmin(prices)) if prices.size else float("nan")
+        price_max = float(np.nanmax(prices)) if prices.size else float("nan")
+        weighted_mean = float(np.average(prices, weights=weights)) if weights.sum() else float("nan")
+
+        item_names = grp["item"].dropna().astype(str)
+        item_name = next((name.strip() for name in item_names if name.strip()), slug)
+
+        groups.append(
+            {
+                "date": date,
+                "server": server,
+                "slug": slug,
+                "item": item_name,
+                "side": side,
+                "price_min": price_min,
+                "price_max": price_max,
+                "price_weighted_mean": weighted_mean,
+                "price_weighted_median": pct_values[2] if len(pct_values) >= 3 else float("nan"),
+                "quantity_total": qty_total,
+                "pct_10": pct_values[0] if pct_values else float("nan"),
+                "pct_30": pct_values[1] if len(pct_values) >= 2 else float("nan"),
+                "pct_50": pct_values[2] if len(pct_values) >= 3 else float("nan"),
+                "pct_70": pct_values[3] if len(pct_values) >= 4 else float("nan"),
+                "pct_90": pct_values[4] if len(pct_values) >= 5 else float("nan"),
+            }
+        )
+
+    if not groups:
+        return pd.DataFrame()
+
+    agg = pd.DataFrame(groups)
+    agg["date"] = pd.to_datetime(agg["date"], utc=True, errors="coerce")
+    agg = agg.dropna(subset=["date", "slug", "server"])
+    return agg
+
+
+def update_side_csv(entries: List[Dict[str, Any]], csv_path: str, side: str) -> None:
+    agg = _aggregate_side(entries, side)
+    if agg.empty:
+        return
+
+    dest = Path(csv_path)
+    _ensure_dir(dest.parent)
+
+    if dest.exists():
+        try:
+            df_old = pd.read_csv(dest)
+        except Exception:
+            df_old = pd.DataFrame(columns=agg.columns)
+    else:
+        df_old = pd.DataFrame(columns=agg.columns)
+
+    for col in agg.columns:
+        if col not in df_old.columns:
+            df_old[col] = pd.NA
+
+    agg_out = agg.copy()
+    agg_out["date"] = agg_out["date"].dt.strftime("%Y-%m-%d")
+    agg_out["quantity_total"] = (
+        pd.to_numeric(agg_out["quantity_total"], errors="coerce").round().astype("Int64")
+    )
+
+    combined = pd.concat([df_old, agg_out], ignore_index=True)
+    combined["date"] = pd.to_datetime(combined["date"], utc=True, errors="coerce")
+    combined = combined.dropna(subset=["date", "slug", "server"])
+    combined = combined.drop_duplicates(subset=["date", "slug", "server"], keep="last")
+    combined = combined.sort_values(["slug", "date"])
+    combined["date"] = combined["date"].dt.strftime("%Y-%m-%d")
+    combined.to_csv(dest, index=False)
 
 # ------------------ CSV merge (historical) ------------------
 
@@ -323,18 +463,26 @@ def sync_sources_save_raw_and_update_csv(
     buy_orders_path_or_url: str,
     auctions_path_or_url: str,
     raw_root: str,
-    csv_path: str,
+    buy_csv_path: str,
+    sell_csv_path: str,
     history_json_path: str,
     server: str = "devaloka",
     timeout: int = 60,
 ) -> None:
     buy_entries, _, _ = save_raw_snapshot_array(buy_orders_path_or_url, raw_root, label="buy", timeout=timeout)
     sell_entries, _, _ = save_raw_snapshot_array(auctions_path_or_url, raw_root, label="sell", timeout=timeout)
+    update_side_csv(buy_entries, buy_csv_path, side="buy")
+    update_side_csv(sell_entries, sell_csv_path, side="sell")
     records = extract_records_from_snapshots(buy_entries, sell_entries, server=server)
-    update_csv(records, csv_path)
     append_history_json_from_records(records, history_json_path)
 
-def rebuild_csv_from_raw(raw_root: str, csv_path: str, server: str = "devaloka") -> None:
+def rebuild_csv_from_raw(
+    raw_root: str,
+    buy_csv_path: str,
+    sell_csv_path: str,
+    history_json_path: str,
+    server: str = "devaloka",
+) -> None:
     buy_path = Path(raw_root) / "buy.json"
     sell_path = Path(raw_root) / "sell.json"
 
@@ -344,16 +492,39 @@ def rebuild_csv_from_raw(raw_root: str, csv_path: str, server: str = "devaloka")
     buy_entries = _load_json_list(buy_path)
     sell_entries = _load_json_list(sell_path)
 
+    update_side_csv(buy_entries, buy_csv_path, side="buy")
+    update_side_csv(sell_entries, sell_csv_path, side="sell")
     records = extract_records_from_snapshots(buy_entries, sell_entries, server=server)
-    update_csv(records, csv_path)
+    append_history_json_from_records(records, history_json_path)
 
 # Conveniências simples para o app
-def run_sync(buy_url_or_path: str, sell_url_or_path: str, raw_root: str="raw",
-             csv_path: str="data/history_devaloka.csv", history_json_path: str="history.json",
-             server: str="devaloka", timeout: int=60) -> None:
+def run_sync(
+    buy_url_or_path: str,
+    sell_url_or_path: str,
+    raw_root: str = "raw",
+    buy_csv_path: str = "data/history_devaloka_buy.csv",
+    sell_csv_path: str = "data/history_devaloka_sell.csv",
+    history_json_path: str = "history.json",
+    server: str = "devaloka",
+    timeout: int = 60,
+) -> None:
     sync_sources_save_raw_and_update_csv(
-        buy_url_or_path, sell_url_or_path, raw_root, csv_path, history_json_path, server, timeout
+        buy_url_or_path,
+        sell_url_or_path,
+        raw_root,
+        buy_csv_path,
+        sell_csv_path,
+        history_json_path,
+        server,
+        timeout,
     )
 
-def run_rebuild(raw_root: str="raw", csv_path: str="data/history_devaloka.csv", server: str="devaloka") -> None:
-    rebuild_csv_from_raw(raw_root, csv_path, server=server)
+
+def run_rebuild(
+    raw_root: str = "raw",
+    buy_csv_path: str = "data/history_devaloka_buy.csv",
+    sell_csv_path: str = "data/history_devaloka_sell.csv",
+    history_json_path: str = "history.json",
+    server: str = "devaloka",
+) -> None:
+    rebuild_csv_from_raw(raw_root, buy_csv_path, sell_csv_path, history_json_path, server=server)

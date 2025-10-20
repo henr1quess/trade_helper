@@ -39,7 +39,8 @@ DEFAULT_NWMP_SELL_SRC = os.getenv(
     "https://nwmpdata.gaming.tools/auctions2/devaloka.json",
 )
 DEFAULT_NWMP_RAW_ROOT = os.getenv("NWMP_RAW_ROOT", "raw")
-DEFAULT_NWMP_CSV = os.getenv("NWMP_CSV_PATH", "data/history_devaloka.csv")
+DEFAULT_NWMP_BUY_CSV = os.getenv("NWMP_BUY_CSV_PATH", "data/history_devaloka_buy.csv")
+DEFAULT_NWMP_SELL_CSV = os.getenv("NWMP_SELL_CSV_PATH", "data/history_devaloka_sell.csv")
 DEFAULT_HISTORY_JSON = "history.json"
 
 # --------------------------------------------------------------------------------------
@@ -1361,9 +1362,9 @@ with tab_coletar:
         "Buy orders": DEFAULT_NWMP_BUY_SRC,
         "Auctions": DEFAULT_NWMP_SELL_SRC,
         "Pasta RAW": DEFAULT_NWMP_RAW_ROOT,
-        "CSV histórico (NWMP)": DEFAULT_NWMP_CSV,
+        "CSV Buy (NWMP)": DEFAULT_NWMP_BUY_CSV,
+        "CSV Sell (NWMP)": DEFAULT_NWMP_SELL_CSV,
         "Servidor": DEFAULT_NWMP_SERVER,
-        "history.json": DEFAULT_HISTORY_JSON,
     }
 
     st.caption("Parâmetros usados automaticamente para coleta/processamento")
@@ -1400,7 +1401,8 @@ with tab_coletar:
                             DEFAULT_NWMP_BUY_SRC,
                             DEFAULT_NWMP_SELL_SRC,
                             raw_root=DEFAULT_NWMP_RAW_ROOT,
-                            csv_path=DEFAULT_NWMP_CSV,
+                            buy_csv_path=DEFAULT_NWMP_BUY_CSV,
+                            sell_csv_path=DEFAULT_NWMP_SELL_CSV,
                             history_json_path=DEFAULT_HISTORY_JSON,
                             server=DEFAULT_NWMP_SERVER,
                         )
@@ -1420,28 +1422,34 @@ with tab_coletar:
                     with st.spinner("Reconstruindo CSV a partir de raw/buy.json + raw/sell.json..."):
                         nwmp_sync.run_rebuild(
                             raw_root=DEFAULT_NWMP_RAW_ROOT,
-                            csv_path=DEFAULT_NWMP_CSV,
+                            buy_csv_path=DEFAULT_NWMP_BUY_CSV,
+                            sell_csv_path=DEFAULT_NWMP_SELL_CSV,
+                            history_json_path=DEFAULT_HISTORY_JSON,
                             server=DEFAULT_NWMP_SERVER,
                         )
                     st.success("Rebuild concluído ✅")
                 except Exception as e:
                     st.error(f"Falhou: {e}")
 
-        # Mostrar prévia do CSV NWMP e do history.json (se existirem)
+        # Mostrar prévia do CSV NWMP (se existirem)
         import pandas as pd
-        prev1, prev2 = st.columns(2)
+        prev_buy, prev_sell = st.columns(2)
         try:
-            if Path(DEFAULT_NWMP_CSV).exists():
-                df_csv = pd.read_csv(DEFAULT_NWMP_CSV)
-                prev1.caption(f"Prévia CSV NWMP: {DEFAULT_NWMP_CSV}")
-                prev1.dataframe(df_csv.tail(50), use_container_width=True)
+            if Path(DEFAULT_NWMP_BUY_CSV).exists():
+                df_buy = pd.read_csv(DEFAULT_NWMP_BUY_CSV)
+                prev_buy.caption(
+                    f"Prévia CSV Buy NWMP: {DEFAULT_NWMP_BUY_CSV}"
+                )
+                prev_buy.dataframe(df_buy.tail(50), use_container_width=True)
         except Exception:
             pass
         try:
-            if Path(DEFAULT_HISTORY_JSON).exists():
-                df_hist = pd.read_json(DEFAULT_HISTORY_JSON, orient="records")
-                prev2.caption(f"Prévia history.json (app): {DEFAULT_HISTORY_JSON}")
-                prev2.dataframe(df_hist.tail(50), use_container_width=True)
+            if Path(DEFAULT_NWMP_SELL_CSV).exists():
+                df_sell = pd.read_csv(DEFAULT_NWMP_SELL_CSV)
+                prev_sell.caption(
+                    f"Prévia CSV Sell NWMP: {DEFAULT_NWMP_SELL_CSV}"
+                )
+                prev_sell.dataframe(df_sell.tail(50), use_container_width=True)
         except Exception:
             pass
 
