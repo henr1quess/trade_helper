@@ -138,11 +138,21 @@ def _write_json_object(path: Path, payload: Dict[str, Any]) -> None:
         json.dump(payload, f, ensure_ascii=False, indent=2)
 
 
-def _update_last_sync_metadata(meta_path: Path, source: str, payload: Dict[str, Any]) -> None:
+def _update_last_sync_metadata(
+    meta_path: Path,
+    source: str,
+    payload: Dict[str, Any],
+    snapshot_path: Optional[Path] = None,
+) -> None:
     if not source:
         return
     meta = _load_json_object(meta_path)
-    meta[source] = payload
+    payload_copy = dict(payload)
+    if snapshot_path is not None:
+        payload_copy["snapshot_path"] = str(snapshot_path)
+    elif isinstance(payload_copy.get("snapshot_path"), Path):
+        payload_copy["snapshot_path"] = str(payload_copy["snapshot_path"])
+    meta[source] = payload_copy
     _write_json_object(meta_path, meta)
 
 def _merge_history_entries(
@@ -725,8 +735,23 @@ def sync_sources_save_raw_and_update_csv(
         _normalise_timestamp(sell_snapshot_ts),
     ]
     ts_candidates = [ts for ts in ts_candidates if ts is not None]
-    latest_dt = max(ts_candidates) if ts_candidates else datetime.now(timezone.utc)
+    now_dt = datetime.now(timezone.utc)
+    latest_dt = max(ts_candidates) if ts_candidates else now_dt
     snapshot_iso = _ts_iso_z(latest_dt)
+
+    latest_snapshot_path = Path(raw_root) / "latest_snapshot.json"
+    latest_snapshot_payload = {
+        "source": "remote",
+        "snapshot_ts": snapshot_iso,
+        "records": records,
+        "record_count": len(records),
+        "generated_at": _ts_iso_z(now_dt),
+    }
+    _ensure_dir(latest_snapshot_path.parent)
+    with open(latest_snapshot_path, "w", encoding="utf-8") as f:
+        json.dump(latest_snapshot_payload, f, ensure_ascii=False, indent=2)
+
+    now_iso = _ts_iso_z(now_dt)
 
     meta_payload = {
         "source": "remote",
@@ -736,11 +761,12 @@ def sync_sources_save_raw_and_update_csv(
         "buy_entries": len(buy_entries),
         "sell_entries": len(sell_entries),
         "records": len(records),
-        "updated_at": _ts_iso_z(datetime.now(timezone.utc)),
+        "updated_at": now_iso,
+        "snapshot_path": str(latest_snapshot_path),
     }
 
     meta_path = Path(raw_root) / "last_sync_meta.json"
-    _update_last_sync_metadata(meta_path, "remote", meta_payload)
+    _update_last_sync_metadata(meta_path, "remote", meta_payload, latest_snapshot_path)
 
     return meta_payload
 
@@ -842,9 +868,32 @@ def run_sync_local_snapshot(
     records = extract_records_from_snapshots(buy_entries, sell_entries, server=server)
     append_history_json_from_records(records, history_json_path)
 
-    return {
-        "timestamp": _ts_iso_z(snapshot_dt),
+    snapshot_iso = _ts_iso_z(snapshot_dt)
+    now_dt = datetime.now(timezone.utc)
+
+    latest_snapshot_path = raw_root_path / "latest_snapshot.json"
+    latest_snapshot_payload = {
+        "source": "local",
+        "snapshot_ts": snapshot_iso,
+        "records": records,
+        "record_count": len(records),
+        "generated_at": _ts_iso_z(now_dt),
+    }
+    _ensure_dir(latest_snapshot_path.parent)
+    with open(latest_snapshot_path, "w", encoding="utf-8") as f:
+        json.dump(latest_snapshot_payload, f, ensure_ascii=False, indent=2)
+
+    meta_payload = {
+        "source": "local",
+        "snapshot_ts": snapshot_iso,
         "buy_entries": len(buy_entries),
         "sell_entries": len(sell_entries),
         "records": len(records),
+        "updated_at": _ts_iso_z(now_dt),
+        "snapshot_path": str(latest_snapshot_path),
     }
+
+    meta_path = raw_root_path / "last_sync_meta.json"
+    _update_last_sync_metadata(meta_path, "local", meta_payload, latest_snapshot_path)
+
+    return meta_payload
