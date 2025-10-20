@@ -47,6 +47,33 @@ DEFAULT_NWMP_BUY_CSV = os.getenv("NWMP_BUY_CSV_PATH", "data/history_devaloka_buy
 DEFAULT_NWMP_SELL_CSV = os.getenv("NWMP_SELL_CSV_PATH", "data/history_devaloka_sell.csv")
 DEFAULT_HISTORY_JSON = "history_local.json"
 
+
+def _resolve_default_local_dir(env_var: str, default_candidate: str, fallback: Path) -> str:
+    from pathlib import Path as _Path
+
+    env_val = os.getenv(env_var)
+    if env_val:
+        return env_val
+
+    candidate_path = _Path(default_candidate)
+    if candidate_path.exists():
+        return str(candidate_path)
+
+    return str(fallback)
+
+
+DEFAULT_LOCAL_AUCTIONS_DIR = _resolve_default_local_dir(
+    "NWMP_LOCAL_AUCTIONS_DIR",
+    r"C:\\Users\\Administrador\\AppData\\Local\\NWMPScanner2\\current\\auctions",
+    SCRIPT_DIR / "example_snapshot" / "auctions",
+)
+
+DEFAULT_LOCAL_BUYORDERS_DIR = _resolve_default_local_dir(
+    "NWMP_LOCAL_BUYORDERS_DIR",
+    r"C:\\Users\\Administrador\\AppData\\Local\\NWMPScanner2\\current\\buy-orders",
+    SCRIPT_DIR / "example_snapshot" / "buy-orders",
+)
+
 # --------------------------------------------------------------------------------------
 # Helpers (I/O)
 # --------------------------------------------------------------------------------------
@@ -1481,7 +1508,7 @@ with tab_coletar:
     st.markdown("## Coletar histórico (Devaloka)")
 
     # Parâmetros fixos (sem necessidade de entrada manual)
-    settings = {
+    settings_remote = {
         "Buy orders": DEFAULT_NWMP_BUY_SRC,
         "Auctions": DEFAULT_NWMP_SELL_SRC,
         "Pasta RAW": DEFAULT_NWMP_RAW_ROOT,
@@ -1491,13 +1518,22 @@ with tab_coletar:
         "history_local.json": DEFAULT_HISTORY_JSON,
     }
 
+    settings_local = {
+        "Snapshot local (auctions)": DEFAULT_LOCAL_AUCTIONS_DIR,
+        "Snapshot local (buy-orders)": DEFAULT_LOCAL_BUYORDERS_DIR,
+    }
+
     st.caption("Parâmetros usados automaticamente para coleta/processamento")
-    settings_df = pd.DataFrame(
-        {"Configuração": list(settings.keys()), "Valor": [str(v) for v in settings.values()]}
-    )
+    settings_rows = []
+    for name, value in settings_remote.items():
+        settings_rows.append({"Origem": "NWMP online", "Configuração": name, "Valor": str(value)})
+    for name, value in settings_local.items():
+        settings_rows.append({"Origem": "Snapshot local", "Configuração": name, "Valor": str(value)})
+    settings_df = pd.DataFrame(settings_rows)
     st.table(settings_df)
 
-    missing_settings = [name for name, value in settings.items() if not str(value).strip()]
+    missing_remote = [name for name, value in settings_remote.items() if not str(value).strip()]
+    missing_local = [name for name, value in settings_local.items() if not str(value).strip()]
 
     # Importa o novo módulo do scraper
     try:
@@ -1510,12 +1546,12 @@ with tab_coletar:
     except Exception as e:
         st.error(f"Falha ao importar nwmp_sync: {e}")
     else:
-        a, b = st.columns(2)
+        a, b, c = st.columns(3)
         if a.button("🔄 Sincronizar agora", use_container_width=True):
-            if missing_settings:
+            if missing_remote:
                 st.error(
                     "Configurações obrigatórias ausentes: "
-                    + ", ".join(missing_settings)
+                    + ", ".join(missing_remote)
                     + ". Defina-as via variáveis de ambiente."
                 )
             else:
@@ -1535,10 +1571,10 @@ with tab_coletar:
                     st.error(f"Falhou: {e}")
 
         if b.button("🧱 Reprocessar tudo do RAW → CSV", use_container_width=True):
-            if missing_settings:
+            if missing_remote:
                 st.error(
                     "Configurações obrigatórias ausentes: "
-                    + ", ".join(missing_settings)
+                    + ", ".join(missing_remote)
                     + ". Defina-as via variáveis de ambiente."
                 )
             else:
@@ -1552,6 +1588,43 @@ with tab_coletar:
                             server=DEFAULT_NWMP_SERVER,
                         )
                     st.success("Rebuild concluído ✅")
+                except Exception as e:
+                    st.error(f"Falhou: {e}")
+
+        if c.button("💾 Sincronizar snapshot local", use_container_width=True):
+            if missing_local:
+                st.error(
+                    "Configurações obrigatórias ausentes: "
+                    + ", ".join(missing_local)
+                    + ". Defina-as via variáveis de ambiente."
+                )
+            else:
+                try:
+                    auctions_dir = settings_local["Snapshot local (auctions)"]
+                    buy_dir = settings_local["Snapshot local (buy-orders)"]
+                    auctions_path = Path(auctions_dir)
+                    buy_path = Path(buy_dir)
+                    if not auctions_path.exists() or not buy_path.exists():
+                        raise FileNotFoundError(f"{auctions_path} | {buy_path}")
+
+                    with st.spinner("Processando snapshot local e atualizando histórico..."):
+                        result = nwmp_sync.run_sync_local_snapshot(
+                            auctions_dir=str(auctions_path),
+                            buy_orders_dir=str(buy_path),
+                            raw_root=DEFAULT_NWMP_RAW_ROOT,
+                            buy_csv_path=DEFAULT_NWMP_BUY_CSV,
+                            sell_csv_path=DEFAULT_NWMP_SELL_CSV,
+                            history_json_path=DEFAULT_HISTORY_JSON,
+                            server=DEFAULT_NWMP_SERVER,
+                        )
+                    st.success(
+                        "Snapshot local sincronizado ✅ "
+                        + f"({result.get('sell_entries', 0):,} vendas, "
+                        + f"{result.get('buy_entries', 0):,} ordens de compra, "
+                        + f"{result.get('records', 0):,} registros históricos)"
+                    )
+                except FileNotFoundError as exc:
+                    st.error(f"Pastas do snapshot local não encontradas: {exc}")
                 except Exception as e:
                     st.error(f"Falhou: {e}")
 
