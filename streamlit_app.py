@@ -427,7 +427,14 @@ with tab_best:
                                    help="0 = usar stack_max; se >0, limita a este máximo por ordem")
     min_roi = c2.slider("ROI mínimo", 0.0, 0.5, 0.15, 0.01)
 
-    hist_df, _ = load_history()
+    snapshot_records, _, _, _ = load_latest_snapshot_records(
+        Path(DEFAULT_NWMP_RAW_ROOT)
+    )
+    snapshot_df = pd.DataFrame(snapshot_records or [])
+    # Os preços instantâneos são carregados do snapshot consolidado gerado pelo sync.
+    # O histórico (history_local.json) continua sendo utilizado apenas para métricas
+    # que realmente dependem de séries temporais, como a liquidez calculada adiante.
+
     items_df = load_items()
 
     if not items_df.empty:
@@ -436,13 +443,31 @@ with tab_best:
         if "stack_max" in items_df.columns:
             items_df["stack_max"] = pd.to_numeric(items_df["stack_max"], errors="coerce").astype("Int64")
 
-    if hist_df.empty:
-        st.info("Ainda não há histórico suficiente. Importe alguns itens primeiro.")
+    if snapshot_df.empty:
+        st.info(
+            "Nenhum snapshot consolidado encontrado. Utilize a aba 'Coletar snapshot'"
+            " para sincronizar os dados mais recentes."
+        )
     else:
-        # últimos preços por item (de mercado)
-        tmp = hist_df.copy()
-        tmp["ts"] = pd.to_datetime(tmp["timestamp"], utc=True, errors="coerce")
-        tmp = tmp.sort_values("ts").groupby("item", as_index=False).tail(1)
+        exp_cols = [
+            "item",
+            "timestamp",
+            "top_buy",
+            "low_sell",
+            "avg_price",
+            "volume",
+            "slug",
+            "server",
+            "source",
+        ]
+        for c in exp_cols:
+            if c not in snapshot_df.columns:
+                snapshot_df[c] = None
+
+        tmp = snapshot_df.copy()
+        tmp["timestamp"] = tmp["timestamp"].astype(str)
+        tmp["top_buy"] = pd.to_numeric(tmp["top_buy"], errors="coerce")
+        tmp["low_sell"] = pd.to_numeric(tmp["low_sell"], errors="coerce")
 
         # controles para duração assumida dos flips
         c_d1, c_d2 = st.columns(2)
@@ -451,23 +476,14 @@ with tab_best:
 
         rows = []
         for _, r in tmp.iterrows():
-            buy_market_val = r.get("buy_market")
-            if (buy_market_val is None or pd.isna(buy_market_val)) and "buy_price" in tmp.columns:
-                raw = r.get("buy_price")
-                if pd.notna(raw):
-                    buy_market_val = float(raw) - 0.01
-            sell_market_val = r.get("sell_market")
-            if (sell_market_val is None or pd.isna(sell_market_val)) and "sell_price" in tmp.columns:
-                raw = r.get("sell_price")
-                if pd.notna(raw):
-                    sell_market_val = float(raw) + 0.01
-
             flip_buy_val = None
-            if buy_market_val is not None and pd.notna(buy_market_val):
-                flip_buy_val = max(float(buy_market_val) + 0.01, 0.0)
+            top_buy_val = r.get("top_buy")
+            if top_buy_val is not None and pd.notna(top_buy_val):
+                flip_buy_val = max(float(top_buy_val) + 0.01, 0.0)
             flip_sell_val = None
-            if sell_market_val is not None and pd.notna(sell_market_val):
-                flip_sell_val = max(float(sell_market_val) - 0.01, 0.0)
+            low_sell_val = r.get("low_sell")
+            if low_sell_val is not None and pd.notna(low_sell_val):
+                flip_sell_val = max(float(low_sell_val) - 0.01, 0.0)
 
             if flip_buy_val is not None and flip_sell_val is not None:
                 pp, roi, Fb, Fs = compute_metrics(flip_buy_val, flip_sell_val, assumed_buy, assumed_sell, st.session_state.tax_pct)
