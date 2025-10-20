@@ -3,6 +3,7 @@
 
 import json
 import os
+import re
 import subprocess
 import sys
 from datetime import datetime, timezone
@@ -46,6 +47,9 @@ DEFAULT_NWMP_SELL_SRC = os.getenv(
 DEFAULT_NWMP_RAW_ROOT = os.getenv("NWMP_RAW_ROOT", "raw")
 DEFAULT_NWMP_BUY_CSV = os.getenv("NWMP_BUY_CSV_PATH", "data/history_devaloka_buy.csv")
 DEFAULT_NWMP_SELL_CSV = os.getenv("NWMP_SELL_CSV_PATH", "data/history_devaloka_sell.csv")
+DEFAULT_NWMP_BUY_HISTORY_CSV = os.getenv(
+    "NWMP_BUY_HISTORY_LOCAL_CSV", "data/history_buy_local.csv"
+)
 DEFAULT_HISTORY_JSON = "history_local.json"
 
 
@@ -112,6 +116,33 @@ def ensure_list_tags(x):
 def stringify_tags(x):
     lst = ensure_list_tags(x)
     return ", ".join(lst)
+
+
+def extract_items_from_scraper_output(output: str) -> List[str]:
+    if not output:
+        return []
+
+    items: List[str] = []
+    for line in output.splitlines():
+        match = re.search(r"Processando\s+([\w\-:]+)", line)
+        if match:
+            candidate = match.group(1).strip()
+            if candidate and candidate not in items:
+                items.append(candidate)
+
+    if items:
+        return items
+
+    start_match = re.search(r"Iniciando a coleta para .*?:\s*(.+)", output)
+    if start_match:
+        trailing = start_match.group(1).strip()
+        if trailing:
+            split_items = [p.strip() for p in trailing.split(",") if p.strip()]
+            for candidate in split_items:
+                if candidate and candidate not in items:
+                    items.append(candidate)
+
+    return items
 
 
 def merge_patch_by_item(base: pd.DataFrame, patch: pd.DataFrame) -> pd.DataFrame:
@@ -1314,10 +1345,13 @@ with tab_coletar:
 
         st.session_state.confirm_scraper_run = False
         st.session_state.scraper_last_csv_path = str(resolved_csv_path)
-        st.session_state.scraper_last_stdout = result.stdout or ""
-        st.session_state.scraper_last_stderr = result.stderr or ""
+        stdout_text = result.stdout or ""
+        stderr_text = result.stderr or ""
+        st.session_state.scraper_last_stdout = stdout_text
+        st.session_state.scraper_last_stderr = stderr_text
         st.session_state.scraper_last_returncode = result.returncode
         st.session_state.scraper_last_run_ts = to_utc_iso()
+        st.session_state.scraper_last_items = extract_items_from_scraper_output(stdout_text)
 
         if result.returncode == 0:
             st.session_state.scraper_last_status = "success"
@@ -1338,8 +1372,14 @@ with tab_coletar:
         else:
             st.error(message)
 
+        items_processed = st.session_state.get("scraper_last_items") or []
+        info_parts: List[str] = []
         if run_ts:
-            st.caption(f"Última execução: {run_ts}")
+            info_parts.append(f"Última execução: `{run_ts}`")
+        if items_processed:
+            info_parts.append("Itens processados: " + ", ".join(items_processed))
+        if info_parts:
+            st.info(" | ".join(info_parts))
 
         st.markdown("#### Logs do scraper")
         log_cols = st.columns(2)
@@ -1375,6 +1415,7 @@ with tab_coletar:
     settings_local = {
         "Snapshot local (buy-orders)": DEFAULT_LOCAL_BUYORDERS_DIR,
         "Snapshot local (auctions)": DEFAULT_LOCAL_AUCTIONS_DIR,
+        "Histórico local (compras agregadas)": DEFAULT_NWMP_BUY_HISTORY_CSV,
     }
 
     st.caption("Parâmetros usados automaticamente para coleta/processamento")
@@ -1608,6 +1649,7 @@ with tab_coletar:
                         buy_csv_path=DEFAULT_NWMP_BUY_CSV,
                         sell_csv_path=DEFAULT_NWMP_SELL_CSV,
                         history_json_path=DEFAULT_HISTORY_JSON,
+                        buy_history_csv_path=DEFAULT_NWMP_BUY_HISTORY_CSV,
                         server=DEFAULT_NWMP_SERVER,
                     )
                 st.success(_format_result_message(source_labels["local"], result))
@@ -1642,6 +1684,24 @@ with tab_coletar:
                     st.success("Rebuild concluído ✅")
                 except Exception as exc:
                     st.error(f"Falhou: {exc}")
+
+        if actions_rebuild.button(
+            "📈 Recalcular histórico de compras", use_container_width=True
+        ):
+            try:
+                with st.spinner("Agregando histórico de compras a partir de raw/buy.json..."):
+                    rebuild_info = nwmp_sync.rebuild_buy_history_from_raw(
+                        raw_root=DEFAULT_NWMP_RAW_ROOT,
+                        buy_history_csv_path=DEFAULT_NWMP_BUY_HISTORY_CSV,
+                    )
+                snapshots = rebuild_info.get("snapshots", 0) if isinstance(rebuild_info, dict) else 0
+                rows = rebuild_info.get("rows", 0) if isinstance(rebuild_info, dict) else 0
+                st.success(
+                    f"Histórico recalculado ✅ — {rows} linha(s) consolidada(s)"
+                    + (f" a partir de {snapshots} snapshot(s)." if snapshots else ".")
+                )
+            except Exception as exc:
+                st.error(f"Falhou ao recalcular histórico: {exc}")
 
         if actions_local.button("💾 Sincronizar snapshot local", use_container_width=True):
             _run_local_sync()
@@ -1696,7 +1756,7 @@ with tab_coletar:
 
         # Mostrar prévia do CSV NWMP e do history_local.json (se existirem)
         import pandas as pd
-        prev1, prev2 = st.columns(2)
+        prev1, prev2, prev3 = st.columns(3)
         try:
             csv_path = DEFAULT_NWMP_BUY_CSV
             if Path(csv_path).exists():
@@ -1710,6 +1770,16 @@ with tab_coletar:
                 df_hist = pd.read_json(DEFAULT_HISTORY_JSON, orient="records")
                 prev2.caption(f"Prévia history_local.json (app): {DEFAULT_HISTORY_JSON}")
                 prev2.dataframe(df_hist.tail(50), use_container_width=True)
+        except Exception:
+            pass
+        try:
+            if Path(DEFAULT_NWMP_BUY_HISTORY_CSV).exists():
+                df_buy_hist = pd.read_csv(DEFAULT_NWMP_BUY_HISTORY_CSV)
+                prev3.caption(
+                    "Histórico local de compras (agregado): "
+                    f"{DEFAULT_NWMP_BUY_HISTORY_CSV}"
+                )
+                prev3.dataframe(df_buy_hist.tail(50), use_container_width=True)
         except Exception:
             pass
 
