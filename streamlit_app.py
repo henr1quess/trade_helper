@@ -20,9 +20,10 @@ HOME_CFG  = Path.home() / ".nw_flip_config.json"
 LOCAL_CFG = SCRIPT_DIR / "nw_flip_config.json"
 CFG_CANDIDATES = [LOCAL_CFG, HOME_CFG]
 
-HISTORY_PATH = SCRIPT_DIR / "history.json"
+HISTORY_PATH = SCRIPT_DIR / "history_local.json"
+LEGACY_HISTORY_PATH = SCRIPT_DIR / "history.json"
 LEGACY_WATCHLIST = SCRIPT_DIR / "watchlist.json"
-HISTORY_READ_CANDIDATES = [HISTORY_PATH, LEGACY_WATCHLIST]
+HISTORY_READ_CANDIDATES = [HISTORY_PATH, LEGACY_HISTORY_PATH, LEGACY_WATCHLIST]
 
 ITEMS_PATH = SCRIPT_DIR / "items.json"  # master data of items (cadastro)
 
@@ -41,7 +42,7 @@ DEFAULT_NWMP_SELL_SRC = os.getenv(
 DEFAULT_NWMP_RAW_ROOT = os.getenv("NWMP_RAW_ROOT", "raw")
 DEFAULT_NWMP_BUY_CSV = os.getenv("NWMP_BUY_CSV_PATH", "data/history_devaloka_buy.csv")
 DEFAULT_NWMP_SELL_CSV = os.getenv("NWMP_SELL_CSV_PATH", "data/history_devaloka_sell.csv")
-DEFAULT_HISTORY_JSON = "history.json"
+DEFAULT_HISTORY_JSON = "history_local.json"
 
 # --------------------------------------------------------------------------------------
 # Helpers (I/O)
@@ -1365,7 +1366,7 @@ with tab_coletar:
         "CSV Buy (NWMP)": DEFAULT_NWMP_BUY_CSV,
         "CSV Sell (NWMP)": DEFAULT_NWMP_SELL_CSV,
         "Servidor": DEFAULT_NWMP_SERVER,
-        "history.json": DEFAULT_HISTORY_JSON,
+        "history_local.json": DEFAULT_HISTORY_JSON,
     }
 
     st.caption("Parâmetros usados automaticamente para coleta/processamento")
@@ -1432,7 +1433,7 @@ with tab_coletar:
                 except Exception as e:
                     st.error(f"Falhou: {e}")
 
-        # Mostrar prévia do CSV NWMP e do history.json (se existirem)
+        # Mostrar prévia do CSV NWMP e do history_local.json (se existirem)
         import pandas as pd
         prev1, prev2 = st.columns(2)
         try:
@@ -1449,7 +1450,7 @@ with tab_coletar:
         try:
             if Path(DEFAULT_HISTORY_JSON).exists():
                 df_hist = pd.read_json(DEFAULT_HISTORY_JSON, orient="records")
-                prev2.caption(f"Prévia history.json (app): {DEFAULT_HISTORY_JSON}")
+                prev2.caption(f"Prévia history_local.json (app): {DEFAULT_HISTORY_JSON}")
                 prev2.dataframe(df_hist.tail(50), use_container_width=True)
         except Exception:
             pass
