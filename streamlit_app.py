@@ -339,7 +339,7 @@ tab_best, tab_hist, tab_cad, tab_calc, tab_coletar = st.tabs([
     "Histórico",
     "Cadastro",
     "Calculadora",
-    "Coletar",
+    "Coletar snapshot",
 ])
 
 # --------------------------------------------------------------------------------------
@@ -1258,7 +1258,7 @@ with tab_calc:
 # Coletar (scraper Devaloka)
 # --------------------------------------------------------------------------------------
 with tab_coletar:
-    st.markdown("## Coletar histórico (Devaloka)")
+    st.markdown("## Coletar snapshot (Devaloka)")
 
     # Parâmetros fixos (sem necessidade de entrada manual)
     settings_remote = {
@@ -1451,7 +1451,7 @@ with tab_coletar:
                 )
                 return None
             try:
-                with st.spinner("Baixando, salvando RAW e atualizando histórico..."):
+                with st.spinner("Baixando, salvando RAW e atualizando snapshot..."):
                     result = nwmp_sync.run_sync(
                         DEFAULT_NWMP_BUY_SRC,
                         DEFAULT_NWMP_SELL_SRC,
@@ -1483,7 +1483,7 @@ with tab_coletar:
                 if not auctions_path.exists() or not buy_path.exists():
                     raise FileNotFoundError(f"{auctions_path} | {buy_path}")
 
-                with st.spinner("Processando snapshot local e atualizando histórico..."):
+                with st.spinner("Processando snapshot local e atualizando snapshot consolidado..."):
                     result = nwmp_sync.run_sync_local_snapshot(
                         auctions_dir=str(auctions_path),
                         buy_orders_dir=str(buy_path),
