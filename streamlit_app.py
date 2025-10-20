@@ -37,8 +37,13 @@ DEFAULT_NWMP_BUY_SRC = os.getenv(
     "NWMP_BUY_SRC",
     "https://nwmpdata.gaming.tools/buy-orders2/devaloka.json",
 )
+DEFAULT_NWMP_SELL_SRC = os.getenv(
+    "NWMP_SELL_SRC",
+    "https://nwmpdata.gaming.tools/sell-orders2/devaloka.json",
+)
 DEFAULT_NWMP_RAW_ROOT = os.getenv("NWMP_RAW_ROOT", "raw")
 DEFAULT_NWMP_BUY_CSV = os.getenv("NWMP_BUY_CSV_PATH", "data/history_devaloka_buy.csv")
+DEFAULT_NWMP_SELL_CSV = os.getenv("NWMP_SELL_CSV_PATH", "data/history_devaloka_sell.csv")
 DEFAULT_HISTORY_JSON = "history_local.json"
 
 
@@ -60,6 +65,12 @@ DEFAULT_LOCAL_BUYORDERS_DIR = _resolve_default_local_dir(
     "NWMP_LOCAL_BUYORDERS_DIR",
     r"C:\\Users\\Administrador\\AppData\\Local\\NWMPScanner2\\current\\buy-orders",
     SCRIPT_DIR / "example_snapshot" / "buy-orders",
+)
+
+DEFAULT_LOCAL_AUCTIONS_DIR = _resolve_default_local_dir(
+    "NWMP_LOCAL_AUCTIONS_DIR",
+    r"C:\\Users\\Administrador\\AppData\\Local\\NWMPScanner2\\current\\auctions",
+    SCRIPT_DIR / "example_snapshot" / "auctions",
 )
 
 # --------------------------------------------------------------------------------------
@@ -1098,14 +1109,17 @@ with tab_coletar:
     # Parâmetros fixos (sem necessidade de entrada manual)
     settings_remote = {
         "Buy orders": DEFAULT_NWMP_BUY_SRC,
+        "Sell orders": DEFAULT_NWMP_SELL_SRC,
         "Pasta RAW": DEFAULT_NWMP_RAW_ROOT,
         "CSV Buy (NWMP)": DEFAULT_NWMP_BUY_CSV,
+        "CSV Sell (NWMP)": DEFAULT_NWMP_SELL_CSV,
         "Servidor": DEFAULT_NWMP_SERVER,
         "history_local.json": DEFAULT_HISTORY_JSON,
     }
 
     settings_local = {
         "Snapshot local (buy-orders)": DEFAULT_LOCAL_BUYORDERS_DIR,
+        "Snapshot local (auctions)": DEFAULT_LOCAL_AUCTIONS_DIR,
     }
 
     st.caption("Parâmetros usados automaticamente para coleta/processamento")
@@ -1117,13 +1131,12 @@ with tab_coletar:
     settings_df = pd.DataFrame(settings_rows)
     st.table(settings_df)
 
-    missing_remote = [name for name, value in settings_remote.items() if not str(value).strip()]
-    missing_local = [name for name, value in settings_local.items() if not str(value).strip()]
-
-    st.info(
-        "O CSV de sell agora deve ser gerado via `devaloka_price_scraper.py`. "
-        "Esta página atualiza apenas o CSV de buy orders."
-    )
+    missing_remote = [
+        name for name, value in settings_remote.items() if not str(value).strip()
+    ]
+    missing_local = [
+        name for name, value in settings_local.items() if not str(value).strip()
+    ]
 
     # Importa o novo módulo do scraper
     try:
@@ -1154,9 +1167,6 @@ with tab_coletar:
         processed_remote = last_meta.get("remote", {}) if isinstance(last_meta, dict) else {}
         processed_local = last_meta.get("local", {}) if isinstance(last_meta, dict) else {}
 
-        processed_remote_ts = processed_remote.get("snapshot_ts") or processed_remote.get("timestamp")
-        processed_local_ts = processed_local.get("timestamp") or processed_local.get("snapshot_ts")
-
         if missing_remote:
             remote_probe: Dict[str, Any] = {
                 "source": "remote",
@@ -1167,6 +1177,7 @@ with tab_coletar:
             try:
                 remote_probe = nwmp_sync.probe_remote_snapshot(
                     DEFAULT_NWMP_BUY_SRC,
+                    sell_orders_url=DEFAULT_NWMP_SELL_SRC,
                     timeout=15,
                 )
             except Exception as exc:
@@ -1182,6 +1193,7 @@ with tab_coletar:
             try:
                 local_probe = nwmp_sync.probe_local_snapshot(
                     settings_local["Snapshot local (buy-orders)"],
+                    auctions_dir=settings_local.get("Snapshot local (auctions)") or "",
                 )
             except Exception as exc:
                 local_probe = {"source": "local", "snapshot_ts": None, "error": str(exc)}
@@ -1191,18 +1203,47 @@ with tab_coletar:
                 return ""
             parts: List[str] = []
             buy_entries = info.get("buy_entries")
+            sell_entries = info.get("sell_entries")
             records = info.get("records")
             if isinstance(buy_entries, int):
                 parts.append(f"{buy_entries:,} ordens de compra")
+            if isinstance(sell_entries, int):
+                parts.append(f"{sell_entries:,} ordens de venda")
             if isinstance(records, int):
                 parts.append(f"{records:,} registros")
             return " • ".join(parts)
+
+        def _coerce_dt(value: Optional[str]):
+            if not value:
+                return None
+            ts = parse_iso(value)
+            if isinstance(ts, pd.Timestamp) and not pd.isna(ts):
+                return ts.to_pydatetime()
+            return None
+
+        def _best_snapshot_string(payload: Dict[str, Any]) -> Optional[str]:
+            if not isinstance(payload, dict):
+                return None
+            best_val: Optional[str] = None
+            best_dt = None
+            for key in ("snapshot_ts", "buy_snapshot_ts", "sell_snapshot_ts", "timestamp"):
+                raw_val = payload.get(key)
+                if not raw_val:
+                    continue
+                dt = _coerce_dt(str(raw_val))
+                if dt and (best_dt is None or dt > best_dt):
+                    best_dt = dt
+                    best_val = str(raw_val)
+            return best_val
+
+        processed_remote_ts = _best_snapshot_string(processed_remote)
+        processed_local_ts = _best_snapshot_string(processed_local)
 
         def _render_snapshot_status(
             col, title: str, probe: Dict[str, Any], processed: Dict[str, Any], processed_ts: Optional[str]
         ) -> None:
             col.markdown(f"### {title}")
-            probe_ts = probe.get("snapshot_ts") if isinstance(probe, dict) else None
+            probe_ts = _best_snapshot_string(probe)
             probe_counts = _format_counts(probe)
             if probe_ts:
                 col.metric(
@@ -1215,15 +1256,15 @@ with tab_coletar:
             else:
                 col.info("Não foi possível obter informações em tempo real.")
 
-            processed_ts = processed_ts or processed.get("snapshot_ts") or processed.get("timestamp")
+            processed_ts = processed_ts or _best_snapshot_string(processed)
             processed_counts = _format_counts(processed)
             caption = f"Último processado: {processed_ts or '—'}"
             if processed_counts:
                 caption += f"\n{processed_counts}"
             col.caption(caption)
 
-        live_remote_ts = remote_probe.get("snapshot_ts") if isinstance(remote_probe, dict) else None
-        live_local_ts = local_probe.get("snapshot_ts") if isinstance(local_probe, dict) else None
+        live_remote_ts = _best_snapshot_string(remote_probe)
+        live_local_ts = _best_snapshot_string(local_probe)
 
         status_remote = live_remote_ts or processed_remote_ts or "—"
         status_local = live_local_ts or processed_local_ts or "—"
@@ -1243,14 +1284,6 @@ with tab_coletar:
             processed_local,
             processed_local_ts,
         )
-
-        def _coerce_dt(value: Optional[str]):
-            if not value:
-                return None
-            ts = parse_iso(value)
-            if isinstance(ts, pd.Timestamp) and not pd.isna(ts):
-                return ts.to_pydatetime()
-            return None
 
         latest_source: Optional[str] = None
         latest_dt = None
@@ -1290,6 +1323,8 @@ with tab_coletar:
                         buy_csv_path=DEFAULT_NWMP_BUY_CSV,
                         history_json_path=DEFAULT_HISTORY_JSON,
                         server=DEFAULT_NWMP_SERVER,
+                        sell_url_or_path=DEFAULT_NWMP_SELL_SRC,
+                        sell_csv_path=DEFAULT_NWMP_SELL_CSV,
                     )
                 st.success(_format_result_message(source_labels["remote"], result))
                 return result
@@ -1318,6 +1353,8 @@ with tab_coletar:
                         buy_csv_path=DEFAULT_NWMP_BUY_CSV,
                         history_json_path=DEFAULT_HISTORY_JSON,
                         server=DEFAULT_NWMP_SERVER,
+                        auctions_dir=settings_local.get("Snapshot local (auctions)") or None,
+                        sell_csv_path=DEFAULT_NWMP_SELL_CSV,
                     )
                 st.success(_format_result_message(source_labels["local"], result))
                 return result
@@ -1340,12 +1377,13 @@ with tab_coletar:
                 )
             else:
                 try:
-                    with st.spinner("Reconstruindo CSV de buy orders a partir de raw/buy.json..."):
+                    with st.spinner("Reconstruindo CSVs (buy/sell) a partir de raw/*.json..."):
                         nwmp_sync.run_rebuild(
                             raw_root=DEFAULT_NWMP_RAW_ROOT,
                             buy_csv_path=DEFAULT_NWMP_BUY_CSV,
                             history_json_path=DEFAULT_HISTORY_JSON,
                             server=DEFAULT_NWMP_SERVER,
+                            sell_csv_path=DEFAULT_NWMP_SELL_CSV,
                         )
                     st.success("Rebuild concluído ✅")
                 except Exception as exc:
@@ -1375,20 +1413,28 @@ with tab_coletar:
 
         # Mostrar prévia do CSV NWMP e do history_local.json (se existirem)
         import pandas as pd
-        prev1, prev2 = st.columns(2)
+        prev_buy, prev_sell, prev_hist = st.columns(3)
         try:
             csv_path = DEFAULT_NWMP_BUY_CSV
             if Path(csv_path).exists():
                 df_csv = pd.read_csv(csv_path)
-                prev1.caption(f"Prévia CSV Buy NWMP: {csv_path}")
-                prev1.dataframe(df_csv.tail(50), use_container_width=True)
+                prev_buy.caption(f"Prévia CSV Buy NWMP: {csv_path}")
+                prev_buy.dataframe(df_csv.tail(50), use_container_width=True)
+        except Exception:
+            pass
+        try:
+            sell_csv = DEFAULT_NWMP_SELL_CSV
+            if Path(sell_csv).exists():
+                df_sell = pd.read_csv(sell_csv)
+                prev_sell.caption(f"Prévia CSV Sell NWMP: {sell_csv}")
+                prev_sell.dataframe(df_sell.tail(50), use_container_width=True)
         except Exception:
             pass
         try:
             if Path(DEFAULT_HISTORY_JSON).exists():
                 df_hist = pd.read_json(DEFAULT_HISTORY_JSON, orient="records")
-                prev2.caption(f"Prévia history_local.json (app): {DEFAULT_HISTORY_JSON}")
-                prev2.dataframe(df_hist.tail(50), use_container_width=True)
+                prev_hist.caption(f"Prévia history_local.json (app): {DEFAULT_HISTORY_JSON}")
+                prev_hist.dataframe(df_hist.tail(50), use_container_width=True)
         except Exception:
             pass
 

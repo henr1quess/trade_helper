@@ -255,6 +255,7 @@ def _summarise_snapshot_entries(
 def probe_remote_snapshot(
     buy_orders_url: str,
     *,
+    sell_orders_url: Optional[str] = None,
     timeout: int = 30,
 ) -> Dict[str, Any]:
     """Collect lightweight metadata about the remote snapshots without persisting."""
@@ -264,11 +265,14 @@ def probe_remote_snapshot(
         "snapshot_ts": None,
         "buy_entries": None,
         "buy_snapshot_ts": None,
+        "sell_entries": None,
+        "sell_snapshot_ts": None,
         "error": None,
     }
 
     errors: List[str] = []
     buy_dt: Optional[datetime] = None
+    sell_dt: Optional[datetime] = None
 
     if not (buy_orders_url or "").strip():
         errors.append("buy: URL não configurada")
@@ -282,8 +286,19 @@ def probe_remote_snapshot(
         except Exception as exc:  # pragma: no cover - falhas de rede/IO
             errors.append(f"buy: {exc}")
 
-    if buy_dt is not None:
-        result["snapshot_ts"] = _ts_iso_z(buy_dt)
+    if (sell_orders_url or "").strip():
+        try:
+            sell_entries = load_snapshot_array(sell_orders_url, timeout=timeout)
+            result["sell_entries"] = len(sell_entries)
+            sell_dt = _summarise_snapshot_entries(sell_entries, prefer="min")
+            if sell_dt is not None:
+                result["sell_snapshot_ts"] = _ts_iso_z(sell_dt)
+        except Exception as exc:  # pragma: no cover - falhas de rede/IO
+            errors.append(f"sell: {exc}")
+
+    ts_candidates = [dt for dt in (buy_dt, sell_dt) if dt is not None]
+    if ts_candidates:
+        result["snapshot_ts"] = _ts_iso_z(max(ts_candidates))
 
     if errors:
         result["error"] = "; ".join(errors)
@@ -293,6 +308,7 @@ def probe_remote_snapshot(
 
 def probe_local_snapshot(
     buy_orders_dir: str,
+    auctions_dir: Optional[str] = None,
 ) -> Dict[str, Any]:
     """Collect metadata from local snapshot folders without mutating RAW."""
 
@@ -301,11 +317,14 @@ def probe_local_snapshot(
         "snapshot_ts": None,
         "buy_entries": None,
         "buy_snapshot_ts": None,
+        "sell_entries": None,
+        "sell_snapshot_ts": None,
         "error": None,
     }
 
     errors: List[str] = []
     buy_dt: Optional[datetime] = None
+    sell_dt: Optional[datetime] = None
 
     try:
         buy_entries = _load_local_snapshot_entries(Path(buy_orders_dir))
@@ -318,8 +337,21 @@ def probe_local_snapshot(
     except Exception as exc:  # pragma: no cover - leitura local
         errors.append(f"buy: {exc}")
 
-    if buy_dt is not None:
-        result["snapshot_ts"] = _ts_iso_z(buy_dt)
+    if (auctions_dir or "").strip():
+        try:
+            sell_entries = _load_local_snapshot_entries(Path(auctions_dir))
+            result["sell_entries"] = len(sell_entries)
+            sell_dt = _summarise_snapshot_entries(sell_entries, prefer="max")
+            if sell_dt is not None:
+                result["sell_snapshot_ts"] = _ts_iso_z(sell_dt)
+        except FileNotFoundError as exc:
+            errors.append(f"sell: {exc}")
+        except Exception as exc:  # pragma: no cover - leitura local
+            errors.append(f"sell: {exc}")
+
+    ts_candidates = [dt for dt in (buy_dt, sell_dt) if dt is not None]
+    if ts_candidates:
+        result["snapshot_ts"] = _ts_iso_z(max(ts_candidates))
 
     if errors:
         result["error"] = "; ".join(errors)
@@ -659,28 +691,46 @@ def sync_sources_save_raw_and_update_csv(
     history_json_path: str,
     server: str = "devaloka",
     timeout: int = 60,
+    *,
+    sell_orders_path_or_url: Optional[str] = None,
+    sell_csv_path: Optional[str] = None,
 ) -> Dict[str, Any]:
-    """Baixa snapshot de buy orders, atualiza CSV e history_local.json.
+    """Baixa snapshots de buy/sell, atualiza CSVs e history_local.json."""
 
-    O CSV de sell deve ser produzido separadamente via ``devaloka_price_scraper.py``.
-    """
     buy_entries, buy_snapshot_ts, _ = save_raw_snapshot_array(
         buy_orders_path_or_url, raw_root, label="buy", timeout=timeout
     )
+
+    sell_entries: List[Dict[str, Any]] = []
+    sell_snapshot_ts: Optional[str] = None
+    if (sell_orders_path_or_url or "").strip():
+        sell_entries, sell_snapshot_ts, _ = save_raw_snapshot_array(
+            sell_orders_path_or_url, raw_root, label="sell", timeout=timeout
+        )
+
     update_side_csv(buy_entries, buy_csv_path, side="buy")
-    records = extract_records_from_snapshots(buy_entries, [], server=server)
+    if sell_entries and sell_csv_path:
+        update_side_csv(sell_entries, sell_csv_path, side="sell")
+
+    records = extract_records_from_snapshots(buy_entries, sell_entries, server=server)
     append_history_json_from_records(records, history_json_path)
 
-    ts_candidates = [_normalise_timestamp(buy_snapshot_ts)]
+    ts_candidates = [
+        _normalise_timestamp(ts)
+        for ts in (buy_snapshot_ts, sell_snapshot_ts)
+        if ts is not None
+    ]
     ts_candidates = [ts for ts in ts_candidates if ts is not None]
-    latest_dt = ts_candidates[0] if ts_candidates else datetime.now(timezone.utc)
+    latest_dt = max(ts_candidates) if ts_candidates else datetime.now(timezone.utc)
     snapshot_iso = _ts_iso_z(latest_dt)
 
     meta_payload = {
         "source": "remote",
         "snapshot_ts": snapshot_iso,
         "buy_snapshot_ts": buy_snapshot_ts,
+        "sell_snapshot_ts": sell_snapshot_ts,
         "buy_entries": len(buy_entries),
+        "sell_entries": len(sell_entries) if sell_entries else 0,
         "records": len(records),
         "updated_at": _ts_iso_z(datetime.now(timezone.utc)),
     }
@@ -695,6 +745,8 @@ def rebuild_csv_from_raw(
     buy_csv_path: str,
     history_json_path: str,
     server: str = "devaloka",
+    *,
+    sell_csv_path: Optional[str] = None,
 ) -> None:
     buy_path = Path(raw_root) / "buy.json"
 
@@ -703,8 +755,15 @@ def rebuild_csv_from_raw(
 
     buy_entries = _load_json_list(buy_path)
 
+    sell_entries: List[Dict[str, Any]] = []
+    sell_path = Path(raw_root) / "sell.json"
+    if sell_path.exists():
+        sell_entries = _load_json_list(sell_path)
+        if sell_entries and sell_csv_path:
+            update_side_csv(sell_entries, sell_csv_path, side="sell")
+
     update_side_csv(buy_entries, buy_csv_path, side="buy")
-    records = extract_records_from_snapshots(buy_entries, [], server=server)
+    records = extract_records_from_snapshots(buy_entries, sell_entries, server=server)
     append_history_json_from_records(records, history_json_path)
 
 # Conveniências simples para o app
@@ -715,6 +774,9 @@ def run_sync(
     history_json_path: str = "history_local.json",
     server: str = "devaloka",
     timeout: int = 60,
+    *,
+    sell_url_or_path: Optional[str] = None,
+    sell_csv_path: Optional[str] = None,
 ) -> Dict[str, Any]:
     return sync_sources_save_raw_and_update_csv(
         buy_url_or_path,
@@ -723,6 +785,8 @@ def run_sync(
         history_json_path,
         server,
         timeout,
+        sell_orders_path_or_url=sell_url_or_path,
+        sell_csv_path=sell_csv_path,
     )
 
 
@@ -731,8 +795,16 @@ def run_rebuild(
     buy_csv_path: str = "data/history_devaloka_buy.csv",
     history_json_path: str = "history_local.json",
     server: str = "devaloka",
+    *,
+    sell_csv_path: Optional[str] = None,
 ) -> None:
-    rebuild_csv_from_raw(raw_root, buy_csv_path, history_json_path, server=server)
+    rebuild_csv_from_raw(
+        raw_root,
+        buy_csv_path,
+        history_json_path,
+        server=server,
+        sell_csv_path=sell_csv_path,
+    )
 
 
 def run_sync_local_snapshot(
@@ -742,23 +814,35 @@ def run_sync_local_snapshot(
     history_json_path: str = "history_local.json",
     server: str = "devaloka",
     snapshot_time: Optional[datetime] = None,
+    *,
+    auctions_dir: Optional[str] = None,
+    sell_csv_path: Optional[str] = None,
 ) -> Dict[str, Any]:
     snapshot_dt = snapshot_time or datetime.now(timezone.utc)
 
     buy_entries_raw = _load_local_snapshot_entries(Path(buy_orders_dir))
+    auctions_entries_raw: List[Dict[str, Any]] = []
+    if (auctions_dir or "").strip():
+        auctions_entries_raw = _load_local_snapshot_entries(Path(auctions_dir))
 
     buy_entries = [_normalise_local_entry(e, snapshot_dt, server) for e in buy_entries_raw]
+    auctions_entries = [_normalise_local_entry(e, snapshot_dt, server) for e in auctions_entries_raw]
 
     raw_root_path = Path(raw_root)
     _append_raw_entries(raw_root_path / "buy.json", buy_entries)
+    if auctions_entries:
+        _append_raw_entries(raw_root_path / "sell.json", auctions_entries)
 
     update_side_csv(buy_entries, buy_csv_path, side="buy")
+    if auctions_entries and sell_csv_path:
+        update_side_csv(auctions_entries, sell_csv_path, side="sell")
 
-    records = extract_records_from_snapshots(buy_entries, [], server=server)
+    records = extract_records_from_snapshots(buy_entries, auctions_entries, server=server)
     append_history_json_from_records(records, history_json_path)
 
     return {
         "timestamp": _ts_iso_z(snapshot_dt),
         "buy_entries": len(buy_entries),
+        "sell_entries": len(auctions_entries),
         "records": len(records),
     }
