@@ -838,6 +838,14 @@ Retorne **apenas** o JSON, sem comentários.
     IMPORT_TEXT_KEY = "import_raw_input"
     IMPORT_UPLOAD_KEY = "import_file_uploader"
 
+    if st.session_state.pop("import_reset_inputs", False):
+        st.session_state.pop(IMPORT_TEXT_KEY, None)
+        st.session_state.pop(IMPORT_UPLOAD_KEY, None)
+
+    success_count = st.session_state.pop("import_success_count", None)
+    if success_count is not None:
+        st.success(f"{success_count} registro(s) adicionados ao histórico.")
+
     pasted = st.text_area(
         "Colar JSON/CSV",
         height=140,
@@ -1035,10 +1043,8 @@ Retorne **apenas** o JSON, sem comentários.
                 st.info("Prévia já adicionada ao histórico nesta sessão.")
             if st.button("Adicionar ao histórico (append)", disabled=already_added):
                 add_to_history(preview)
-                st.session_state["last_import_signature"] = preview_signature
-                st.success(f"{len(preview)} registro(s) adicionados ao histórico.")
-                st.session_state[IMPORT_TEXT_KEY] = ""
-                st.session_state.pop(IMPORT_UPLOAD_KEY, None)
+                st.session_state["import_success_count"] = len(preview)
+                st.session_state["import_reset_inputs"] = True
                 st.rerun()
         with c2:
             st.download_button("Baixar processado (JSON)",
