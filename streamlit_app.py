@@ -333,6 +333,17 @@ with tab_hist:
     if not hist_df.empty:
         hist_df["timestamp"] = pd.to_datetime(hist_df["timestamp"], utc=True, errors="coerce")
 
+        items_meta = {}
+        items_df = load_items()
+        if not items_df.empty and "item" in items_df.columns:
+            meta_cols = [c for c in ["categoria", "tags"] if c in items_df.columns]
+            if meta_cols:
+                items_meta = (
+                    items_df.drop_duplicates(subset=["item"])
+                    .set_index("item")[meta_cols]
+                    .to_dict("index")
+                )
+
         rows = []
         for idx, r in hist_df.reset_index().iterrows():
             buy_market_val = r.get("buy_market")
@@ -352,6 +363,10 @@ with tab_hist:
                 pp, roi, Fb, Fs = compute_metrics(flip_buy, flip_sell, dur_buy_hist, dur_sell_hist, st.session_state.tax_pct)
             else:
                 pp, roi = None, None
+            meta = items_meta.get(r["item"], {}) if items_meta else {}
+            categoria = meta.get("categoria") if meta else None
+            tags = ensure_list_tags(meta.get("tags")) if meta else []
+
             rows.append({
                 "row_id": int(r["index"]),
                 "timestamp": r["timestamp"],
@@ -361,13 +376,42 @@ with tab_hist:
                 "flip_buy": round(flip_buy, 2) if flip_buy is not None else None,
                 "flip_sell": round(flip_sell, 2) if flip_sell is not None else None,
                 "profit_per_unit_hist": pp,
-                "roi_hist_pct": (roi * 100.0) if roi is not None and pd.notna(roi) else None
+                "roi_hist_pct": (roi * 100.0) if roi is not None and pd.notna(roi) else None,
+                "categoria": categoria,
+                "tags": tags,
             })
         table = pd.DataFrame(rows).sort_values("timestamp", ascending=False)
 
+        if "tags" in table.columns:
+            table["tags"] = table["tags"].apply(ensure_list_tags)
+
+        col_f_nome, col_f_cat, col_f_tag = st.columns(3)
+        filtro_nome = col_f_nome.text_input("Filtrar por nome do item")
+        categoria_opts = (
+            sorted(table["categoria"].dropna().unique())
+            if "categoria" in table.columns
+            else []
+        )
+        filtro_categorias = col_f_cat.multiselect("Categorias", categoria_opts)
+
+        tag_opts = []
+        if "tags" in table.columns:
+            tag_opts = sorted({t for tags in table["tags"] for t in ensure_list_tags(tags)})
+        filtro_tags = col_f_tag.multiselect("Tags", tag_opts)
+
+        mask = pd.Series(True, index=table.index)
+        if filtro_nome:
+            mask &= table["item"].astype(str).str.contains(filtro_nome, case=False, na=False)
+        if filtro_categorias:
+            mask &= table["categoria"].isin(filtro_categorias)
+        if filtro_tags:
+            mask &= table["tags"].apply(lambda tags: all(tag in ensure_list_tags(tags) for tag in filtro_tags))
+
+        filtered_table = table.loc[mask].sort_values("timestamp", ascending=False)
+
         df_key = "hist_tbl_prices"
         st.dataframe(
-            table.set_index("row_id")[
+            filtered_table.set_index("row_id")[
                 [
                     "timestamp",
                     "item",
@@ -403,7 +447,7 @@ with tab_hist:
         with c1:
             st.download_button(
                 "Baixar histórico (JSON)",
-                data=table.to_json(orient="records", indent=2, date_format="iso"),
+                data=filtered_table.to_json(orient="records", indent=2, date_format="iso"),
                 file_name="history_prices.json",
                 mime="application/json",
             )
