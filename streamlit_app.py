@@ -1244,7 +1244,7 @@ with tab_calc:
     t2.info(f"Máx. comprar a **{B_max_for_target:,.4f}** para {target_roi*100:.0f}% de ROI")
 
 # --------------------------------------------------------------------------------------
-# Coletar (scraper Devaloka)
+# Coletar snapshot (scraper Devaloka)
 # --------------------------------------------------------------------------------------
 with tab_coletar:
     st.markdown("## Coletar snapshot (Devaloka)")
