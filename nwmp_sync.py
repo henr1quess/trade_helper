@@ -454,7 +454,7 @@ def append_history_json_from_records(records: List[Dict[str, Any]], history_json
         df["timestamp"] = df["timestamp"].dt.strftime("%Y-%m-%dT%H:%M:%SZ")
         df.to_json(p, orient="records", indent=2)
     except Exception:
-        # fallback: não quebrar pipeline caso history.json esteja corrompido
+        # fallback: não quebrar pipeline caso history_local.json esteja corrompido
         pass
 
 # ------------------ Orchestration ------------------
@@ -504,7 +504,7 @@ def run_sync(
     raw_root: str = "raw",
     buy_csv_path: str = "data/history_devaloka_buy.csv",
     sell_csv_path: str = "data/history_devaloka_sell.csv",
-    history_json_path: str = "history.json",
+    history_json_path: str = "history_local.json",
     server: str = "devaloka",
     timeout: int = 60,
 ) -> None:
@@ -524,7 +524,7 @@ def run_rebuild(
     raw_root: str = "raw",
     buy_csv_path: str = "data/history_devaloka_buy.csv",
     sell_csv_path: str = "data/history_devaloka_sell.csv",
-    history_json_path: str = "history.json",
+    history_json_path: str = "history_local.json",
     server: str = "devaloka",
 ) -> None:
     rebuild_csv_from_raw(raw_root, buy_csv_path, sell_csv_path, history_json_path, server=server)
