@@ -308,7 +308,12 @@ def load_latest_snapshot_records(
 
     snapshot_path = Path(snapshot_path_raw)
     if not snapshot_path.is_absolute():
-        snapshot_path = Path(raw_root) / snapshot_path
+        base_dir = meta_path.parent
+        parts = snapshot_path.parts
+        if parts and Path(parts[0]).name == base_dir.name:
+            snapshot_path = base_dir.parent.joinpath(*parts)
+        else:
+            snapshot_path = base_dir / snapshot_path
 
     if not snapshot_path.exists():
         return None, best_source, best_entry, meta_data
