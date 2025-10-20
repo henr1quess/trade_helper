@@ -685,19 +685,9 @@ def run_sync_local_snapshot(
     records = extract_records_from_snapshots(buy_entries, auctions_entries, server=server)
     append_history_json_from_records(records, history_json_path)
 
-    snapshot_iso = _ts_iso_z(snapshot_dt)
-    now_iso = _ts_iso_z(datetime.now(timezone.utc))
-    result = {
-        "source": "local",
-        "timestamp": snapshot_iso,
-        "snapshot_ts": snapshot_iso,
+    return {
+        "timestamp": _ts_iso_z(snapshot_dt),
         "buy_entries": len(buy_entries),
         "sell_entries": len(auctions_entries),
         "records": len(records),
-        "updated_at": now_iso,
     }
-
-    meta_path = raw_root_path / "last_sync_meta.json"
-    _update_last_sync_metadata(meta_path, "local", result)
-
-    return result
