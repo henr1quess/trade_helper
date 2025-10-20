@@ -569,13 +569,25 @@ with tab_best:
         items_df = items_df.drop_duplicates(subset=["item"])
         enriched = best.merge(items_df, on="item", how="left")
 
-        # Normaliza tags
+        # Normaliza campos usados para filtragem
         if "tags" not in enriched.columns:
             enriched["tags"] = [[] for _ in range(len(enriched))]
         else:
             enriched["tags"] = enriched["tags"].apply(ensure_list_tags)
         if "tier" not in enriched.columns:
             enriched["tier"] = None
+        if "categoria" not in enriched.columns:
+            enriched["categoria"] = ""
+        else:
+            enriched["categoria"] = enriched["categoria"].fillna("")
+        if "peso" in enriched.columns:
+            enriched["peso"] = pd.to_numeric(enriched["peso"], errors="coerce")
+        else:
+            enriched["peso"] = (
+                pd.Series([pd.NA] * len(enriched), index=enriched.index, dtype="Float64")
+                if len(enriched)
+                else pd.Series(dtype="Float64")
+            )
 
         # lucro/peso & lucro/100peso
         enriched["lucro_por_peso"] = None
@@ -626,8 +638,72 @@ with tab_best:
             else:
                 enriched["liquidez"] = enriched["liquidez"].fillna("—")
 
+        # Controles de filtragem
+        st.markdown("### Filtros")
+        col_itens, col_cats, col_tags = st.columns(3)
+        with col_itens:
+            item_options = sorted(enriched["item"].dropna().unique())
+            selected_items = st.multiselect("Itens", item_options, placeholder="Selecionar itens")
+        with col_cats:
+            categoria_options = sorted({c for c in enriched["categoria"].dropna().unique() if str(c).strip()})
+            selected_cats = st.multiselect("Categorias", categoria_options, placeholder="Selecionar categorias")
+        with col_tags:
+            tag_options = sorted({t for tags in enriched["tags"] for t in tags})
+            selected_tags = st.multiselect("Tags", tag_options, placeholder="Selecionar tags")
+
+        tier_range = None
+        peso_range = None
+        col_tier, col_peso = st.columns(2)
+        tier_values = [int(t) for t in enriched["tier"].dropna().unique() if str(t).strip()]
+        if tier_values:
+            tier_min, tier_max = int(min(tier_values)), int(max(tier_values))
+            with col_tier:
+                if tier_min == tier_max:
+                    tier_range = (tier_min, tier_max)
+                    st.caption(f"Tier disponível: T{tier_min}")
+                else:
+                    tier_range = st.slider(
+                        "Intervalo de tier",
+                        min_value=tier_min,
+                        max_value=tier_max,
+                        value=(tier_min, tier_max),
+                        step=1,
+                    )
+        peso_valid = enriched["peso"].dropna()
+        if not peso_valid.empty:
+            peso_min, peso_max = float(peso_valid.min()), float(peso_valid.max())
+            with col_peso:
+                if peso_min == peso_max:
+                    peso_range = (peso_min, peso_max)
+                    st.caption(f"Peso disponível: {peso_min:.3f}")
+                else:
+                    step_val = max(0.001, round((peso_max - peso_min) / 20, 3))
+                    peso_range = st.slider(
+                        "Intervalo de peso",
+                        min_value=float(peso_min),
+                        max_value=float(peso_max),
+                        value=(float(peso_min), float(peso_max)),
+                        step=float(step_val),
+                    )
+
         # Filtros e view
-        filt = (enriched["roi"] >= min_roi) & enriched["roi"].notna()
+        filt = enriched["roi"].notna() & (enriched["roi"] >= min_roi)
+        if selected_items:
+            filt &= enriched["item"].isin(selected_items)
+        if selected_cats:
+            filt &= enriched["categoria"].isin(selected_cats)
+        if selected_tags:
+            filt &= enriched["tags"].apply(lambda lst: any(tag in lst for tag in selected_tags))
+        if tier_range is not None:
+            tier_mask = enriched["tier"].isna()
+            tier_mask |= enriched["tier"].between(tier_range[0], tier_range[1])
+            filt &= tier_mask
+        if peso_range is not None:
+            peso_series = enriched["peso"].astype(float, errors="ignore")
+            peso_mask = peso_series.isna()
+            peso_mask |= (peso_series >= peso_range[0]) & (peso_series <= peso_range[1])
+            filt &= peso_mask
+
         view = enriched.loc[filt].copy().sort_values(["lucro_por_slot","roi"], ascending=[False, False])
 
         # Exibição
