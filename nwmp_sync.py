@@ -10,6 +10,17 @@ from datetime import datetime, timezone
 import numpy as np
 import pandas as pd
 
+BUY_HISTORY_COLUMNS = [
+    "snapshot_ts",
+    "item_id",
+    "item_name",
+    "min_price",
+    "median_price",
+    "max_price",
+    "total_quantity",
+    "order_count",
+]
+
 # ------------------ Utils (I/O & time) ------------------
 
 def _ensure_dir(p: Path) -> None:
@@ -210,6 +221,7 @@ def _normalise_local_entry(
     norm["timestamp"] = _ensure_iso_timestamp(norm.get("timestamp"), fallback=snapshot_dt)
     _maybe_iso_datetime_field(norm, "created_at", fallback=snapshot_dt)
     _maybe_iso_datetime_field(norm, "expires_at", fallback=snapshot_dt)
+    norm["snapshot_ts"] = _ts_iso_z(snapshot_dt)
 
     server_norm = (server or "devaloka").lower()
     norm["server_id"] = server_norm
@@ -241,6 +253,99 @@ def _append_raw_entries(raw_path: Path, entries: List[Dict[str, Any]]) -> None:
     existing = _load_json_list(raw_path)
     merged = _merge_history_entries(existing, entries)
     _write_json_list(raw_path, merged)
+
+
+def _prepare_buy_entries_dataframe(entries: List[Dict[str, Any]]) -> pd.DataFrame:
+    if not entries:
+        return pd.DataFrame(columns=["item_id", "item_name", "price", "quantity"])
+
+    df = pd.DataFrame(entries)
+    if "item_id" not in df.columns:
+        df["item_id"] = ""
+    if "item_name" not in df.columns:
+        df["item_name"] = ""
+
+    df["price"] = pd.to_numeric(df.get("price"), errors="coerce")
+    df["quantity"] = pd.to_numeric(df.get("quantity"), errors="coerce")
+    df["quantity"] = df["quantity"].fillna(0)
+
+    df = df.dropna(subset=["price"])
+    return df
+
+
+def _build_buy_snapshot_summary(
+    entries: List[Dict[str, Any]], snapshot_iso: str
+) -> pd.DataFrame:
+    df = _prepare_buy_entries_dataframe(entries)
+    if df.empty:
+        return pd.DataFrame(columns=BUY_HISTORY_COLUMNS)
+
+    grouped = df.groupby("item_id", dropna=False)
+    summary = grouped.agg(
+        item_name=("item_name", "first"),
+        min_price=("price", "min"),
+        median_price=("price", "median"),
+        max_price=("price", "max"),
+        total_quantity=("quantity", "sum"),
+        order_count=("price", "count"),
+    ).reset_index()
+
+    summary.insert(0, "snapshot_ts", snapshot_iso)
+
+    summary["total_quantity"] = (
+        pd.to_numeric(summary["total_quantity"], errors="coerce").fillna(0).astype(int)
+    )
+    summary["order_count"] = (
+        pd.to_numeric(summary["order_count"], errors="coerce").fillna(0).astype(int)
+    )
+
+    numeric_cols = ["min_price", "median_price", "max_price"]
+    for col in numeric_cols:
+        summary[col] = pd.to_numeric(summary[col], errors="coerce")
+
+    return summary[BUY_HISTORY_COLUMNS]
+
+
+def _load_buy_history_csv(path: Path) -> pd.DataFrame:
+    if not path.exists():
+        return pd.DataFrame(columns=BUY_HISTORY_COLUMNS)
+    try:
+        df = pd.read_csv(path)
+    except Exception:
+        return pd.DataFrame(columns=BUY_HISTORY_COLUMNS)
+
+    missing = [col for col in BUY_HISTORY_COLUMNS if col not in df.columns]
+    for col in missing:
+        df[col] = pd.NA
+    return df[BUY_HISTORY_COLUMNS]
+
+
+def _write_buy_history_csv(path: Path, df: pd.DataFrame) -> None:
+    _ensure_dir(path.parent)
+    df = df.copy()
+    df.sort_values(by=["snapshot_ts", "item_id"], inplace=True)
+    df.reset_index(drop=True, inplace=True)
+    df.to_csv(path, index=False)
+
+
+def _update_buy_history_csv(
+    path: Path, summary: pd.DataFrame, *, replace: bool = False
+) -> pd.DataFrame:
+    if summary.empty and not replace:
+        existing = _load_buy_history_csv(path)
+        if not path.exists():
+            _write_buy_history_csv(path, existing)
+        return existing
+
+    if replace:
+        combined = summary.copy()
+    else:
+        existing = _load_buy_history_csv(path)
+        combined = pd.concat([existing, summary], ignore_index=True)
+
+    combined = combined.drop_duplicates(subset=["snapshot_ts", "item_id"], keep="last")
+    _write_buy_history_csv(path, combined)
+    return combined
 
 
 # ------------------ Snapshot probes ------------------
@@ -833,6 +938,43 @@ def run_rebuild(
     )
 
 
+def rebuild_buy_history_from_raw(
+    raw_root: str = "raw",
+    buy_history_csv_path: str = "data/history_buy_local.csv",
+) -> Dict[str, Any]:
+    buy_path = Path(raw_root) / "buy.json"
+    entries = _load_json_list(buy_path)
+
+    grouped: Dict[str, List[Dict[str, Any]]] = {}
+    for entry in entries:
+        snapshot_dt = _normalise_timestamp(entry.get("snapshot_ts"))
+        if snapshot_dt is None:
+            snapshot_dt = _normalise_timestamp(entry.get("timestamp"))
+        if snapshot_dt is None:
+            continue
+        snapshot_iso = _ts_iso_z(snapshot_dt)
+        grouped.setdefault(snapshot_iso, []).append(entry)
+
+    frames: List[pd.DataFrame] = []
+    for snapshot_iso in sorted(grouped.keys()):
+        summary_df = _build_buy_snapshot_summary(grouped[snapshot_iso], snapshot_iso)
+        if summary_df.empty:
+            continue
+        frames.append(summary_df)
+
+    if frames:
+        combined = pd.concat(frames, ignore_index=True)
+    else:
+        combined = pd.DataFrame(columns=BUY_HISTORY_COLUMNS)
+
+    updated = _update_buy_history_csv(Path(buy_history_csv_path), combined, replace=True)
+    return {
+        "path": str(Path(buy_history_csv_path)),
+        "rows": int(len(updated)),
+        "snapshots": len(grouped),
+    }
+
+
 def run_sync_local_snapshot(
     buy_orders_dir: str,
     auctions_dir: Optional[str] = None,
@@ -840,10 +982,12 @@ def run_sync_local_snapshot(
     buy_csv_path: str = "data/history_devaloka_buy.csv",
     sell_csv_path: str = "data/history_devaloka_sell.csv",
     history_json_path: str = "history_local.json",
+    buy_history_csv_path: str = "data/history_buy_local.csv",
     server: str = "devaloka",
     snapshot_time: Optional[datetime] = None,
 ) -> Dict[str, Any]:
     snapshot_dt = snapshot_time or datetime.now(timezone.utc)
+    snapshot_iso = _ts_iso_z(snapshot_dt)
 
     buy_entries_raw = _load_local_snapshot_entries(Path(buy_orders_dir))
 
@@ -854,6 +998,13 @@ def run_sync_local_snapshot(
 
     if buy_csv_path:
         update_side_csv(buy_entries, buy_csv_path, side="buy")
+
+    buy_history_rows = 0
+    if buy_history_csv_path:
+        buy_history_path = Path(buy_history_csv_path)
+        summary_df = _build_buy_snapshot_summary(buy_entries, snapshot_iso)
+        _update_buy_history_csv(buy_history_path, summary_df)
+        buy_history_rows = int(len(summary_df))
 
     sell_entries: List[Dict[str, Any]] = []
     if auctions_dir:
@@ -868,7 +1019,6 @@ def run_sync_local_snapshot(
     records = extract_records_from_snapshots(buy_entries, sell_entries, server=server)
     append_history_json_from_records(records, history_json_path)
 
-    snapshot_iso = _ts_iso_z(snapshot_dt)
     now_dt = datetime.now(timezone.utc)
 
     latest_snapshot_path = raw_root_path / "latest_snapshot.json"
@@ -892,6 +1042,10 @@ def run_sync_local_snapshot(
         "updated_at": _ts_iso_z(now_dt),
         "snapshot_path": str(latest_snapshot_path),
     }
+
+    if buy_history_csv_path:
+        meta_payload["buy_history_path"] = str(Path(buy_history_csv_path))
+        meta_payload["buy_history_rows"] = buy_history_rows
 
     meta_path = raw_root_path / "last_sync_meta.json"
     _update_last_sync_metadata(meta_path, "local", meta_payload, latest_snapshot_path)
