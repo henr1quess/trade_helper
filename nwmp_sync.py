@@ -154,17 +154,29 @@ def _update_last_sync_metadata(
     source: str,
     payload: Dict[str, Any],
     snapshot_path: Optional[Path] = None,
-) -> None:
+) -> Dict[str, Any]:
     if not source:
-        return
+        return {}
+
     meta = _load_json_object(meta_path)
-    payload_copy = dict(payload)
+    existing = meta.get(source)
+    if not isinstance(existing, dict):
+        existing = {}
+
+    payload_copy = dict(existing)
+    payload_copy.update(payload)
+
     if snapshot_path is not None:
         payload_copy["snapshot_path"] = str(snapshot_path)
-    elif isinstance(payload_copy.get("snapshot_path"), Path):
-        payload_copy["snapshot_path"] = str(payload_copy["snapshot_path"])
+    else:
+        snapshot_value = payload_copy.get("snapshot_path")
+        if isinstance(snapshot_value, Path):
+            payload_copy["snapshot_path"] = str(snapshot_value)
+
     meta[source] = payload_copy
+    meta["_last_updated"] = _ts_iso_z(datetime.now(timezone.utc))
     _write_json_object(meta_path, meta)
+    return payload_copy
 
 def _merge_history_entries(
     existing: List[Dict[str, Any]], new_entries: Iterable[Dict[str, Any]]
@@ -875,6 +887,327 @@ def sync_sources_save_raw_and_update_csv(
 
     return meta_payload
 
+
+def _write_snapshot_bundle(
+    bundle_path: Path,
+    source: str,
+    snapshot_iso: str,
+    buy_entries: List[Dict[str, Any]],
+    sell_entries: List[Dict[str, Any]],
+    extra: Optional[Dict[str, Any]] = None,
+) -> None:
+    payload: Dict[str, Any] = {
+        "source": source,
+        "snapshot_ts": snapshot_iso,
+        "buy": buy_entries,
+        "sell": sell_entries,
+    }
+    if extra:
+        payload.update(extra)
+    _ensure_dir(bundle_path.parent)
+    with open(bundle_path, "w", encoding="utf-8") as f:
+        json.dump(payload, f, ensure_ascii=False)
+
+
+def collect_remote_snapshot(
+    buy_url_or_path: str,
+    sell_url_or_path: Optional[str] = None,
+    raw_root: str = "raw",
+    server: str = "devaloka",
+    timeout: int = 60,
+) -> Dict[str, Any]:
+    buy_entries: List[Dict[str, Any]] = []
+    sell_entries: List[Dict[str, Any]] = []
+    buy_snapshot_ts: Optional[str] = None
+    sell_snapshot_ts: Optional[str] = None
+
+    if buy_url_or_path:
+        buy_entries, buy_snapshot_ts, _ = save_raw_snapshot_array(
+            buy_url_or_path, raw_root, label="buy", timeout=timeout
+        )
+
+    if sell_url_or_path:
+        sell_entries, sell_snapshot_ts, _ = save_raw_snapshot_array(
+            sell_url_or_path, raw_root, label="sell", timeout=timeout
+        )
+
+    ts_candidates = [
+        _normalise_timestamp(buy_snapshot_ts),
+        _normalise_timestamp(sell_snapshot_ts),
+    ]
+    ts_candidates = [ts for ts in ts_candidates if ts is not None]
+    snapshot_dt = max(ts_candidates) if ts_candidates else datetime.now(timezone.utc)
+    snapshot_iso = _ts_iso_z(snapshot_dt)
+
+    bundle_path = Path(raw_root) / "collected" / "remote_latest.json"
+    _write_snapshot_bundle(
+        bundle_path,
+        source="remote",
+        snapshot_iso=snapshot_iso,
+        buy_entries=buy_entries,
+        sell_entries=sell_entries,
+        extra={
+            "buy_snapshot_ts": buy_snapshot_ts,
+            "sell_snapshot_ts": sell_snapshot_ts,
+        },
+    )
+
+    now_iso = _ts_iso_z(datetime.now(timezone.utc))
+    meta_payload: Dict[str, Any] = {
+        "source": "remote",
+        "collected_snapshot_ts": snapshot_iso,
+        "collected_at": now_iso,
+        "buy_snapshot_ts": buy_snapshot_ts,
+        "sell_snapshot_ts": sell_snapshot_ts,
+        "buy_entries": len(buy_entries),
+        "sell_entries": len(sell_entries),
+        "collected_payload_path": str(bundle_path),
+        "server": server,
+    }
+
+    meta_path = Path(raw_root) / "last_sync_meta.json"
+    updated_meta = _update_last_sync_metadata(meta_path, "remote", meta_payload)
+
+    return {
+        "meta": updated_meta,
+        "buy_entries": buy_entries,
+        "sell_entries": sell_entries,
+        "snapshot_iso": snapshot_iso,
+        "bundle_path": str(bundle_path),
+    }
+
+
+def collect_local_snapshot(
+    buy_orders_dir: str,
+    auctions_dir: Optional[str] = None,
+    raw_root: str = "raw",
+    server: str = "devaloka",
+    snapshot_time: Optional[datetime] = None,
+) -> Dict[str, Any]:
+    buy_entries_raw = _load_local_snapshot_entries(Path(buy_orders_dir))
+
+    sell_entries_raw: List[Dict[str, Any]] = []
+    if auctions_dir and str(auctions_dir).strip():
+        sell_entries_raw = _load_local_snapshot_entries(Path(auctions_dir))
+
+    timestamp_candidates: List[datetime] = []
+    buy_dt = _summarise_snapshot_entries(buy_entries_raw, prefer="max")
+    if buy_dt is not None:
+        timestamp_candidates.append(buy_dt)
+    sell_dt = None
+    if sell_entries_raw:
+        sell_dt = _summarise_snapshot_entries(sell_entries_raw, prefer="max")
+        if sell_dt is not None:
+            timestamp_candidates.append(sell_dt)
+
+    if timestamp_candidates:
+        snapshot_dt = max(timestamp_candidates).astimezone(timezone.utc)
+    else:
+        snapshot_dt = _normalise_timestamp(snapshot_time) if snapshot_time else None
+        if snapshot_dt is None:
+            snapshot_dt = datetime.now(timezone.utc)
+    snapshot_iso = _ts_iso_z(snapshot_dt)
+
+    buy_entries = [_normalise_local_entry(e, snapshot_dt, server) for e in buy_entries_raw]
+
+    raw_root_path = Path(raw_root)
+    _append_raw_entries(raw_root_path / "buy.json", buy_entries)
+
+    sell_entries: List[Dict[str, Any]] = []
+    if sell_entries_raw:
+        sell_entries = [
+            _normalise_local_entry(e, snapshot_dt, server) for e in sell_entries_raw
+        ]
+        _append_raw_entries(raw_root_path / "sell.json", sell_entries)
+
+    bundle_path = raw_root_path / "collected" / "local_latest.json"
+    _write_snapshot_bundle(
+        bundle_path,
+        source="local",
+        snapshot_iso=snapshot_iso,
+        buy_entries=buy_entries,
+        sell_entries=sell_entries,
+    )
+
+    now_iso = _ts_iso_z(datetime.now(timezone.utc))
+    meta_payload: Dict[str, Any] = {
+        "source": "local",
+        "collected_snapshot_ts": snapshot_iso,
+        "collected_at": now_iso,
+        "buy_entries": len(buy_entries),
+        "sell_entries": len(sell_entries),
+        "collected_payload_path": str(bundle_path),
+        "server": server,
+    }
+
+    meta_path = raw_root_path / "last_sync_meta.json"
+    updated_meta = _update_last_sync_metadata(meta_path, "local", meta_payload)
+
+    return {
+        "meta": updated_meta,
+        "buy_entries": buy_entries,
+        "sell_entries": sell_entries,
+        "snapshot_iso": snapshot_iso,
+        "bundle_path": str(bundle_path),
+    }
+
+
+def _process_snapshot_entries(
+    source: str,
+    snapshot_iso: str,
+    buy_entries: List[Dict[str, Any]],
+    sell_entries: List[Dict[str, Any]],
+    raw_root_path: Path,
+    buy_csv_path: Optional[str],
+    sell_csv_path: Optional[str],
+    history_json_path: str,
+    server: str,
+    buy_history_csv_path: Optional[str] = None,
+) -> Dict[str, Any]:
+    if buy_csv_path:
+        update_side_csv(buy_entries, buy_csv_path, side="buy")
+    if sell_csv_path:
+        update_side_csv(sell_entries, sell_csv_path, side="sell")
+
+    if source == "local" and buy_history_csv_path:
+        summary_df = _build_buy_snapshot_summary(buy_entries, snapshot_iso)
+        _update_buy_history_csv(Path(buy_history_csv_path), summary_df)
+
+    records = extract_records_from_snapshots(buy_entries, sell_entries, server=server)
+    append_history_json_from_records(records, history_json_path)
+
+    now_dt = datetime.now(timezone.utc)
+    latest_snapshot_path = raw_root_path / "latest_snapshot.json"
+    latest_snapshot_payload = {
+        "source": source,
+        "snapshot_ts": snapshot_iso,
+        "records": records,
+        "record_count": len(records),
+        "generated_at": _ts_iso_z(now_dt),
+    }
+    _ensure_dir(latest_snapshot_path.parent)
+    with open(latest_snapshot_path, "w", encoding="utf-8") as f:
+        json.dump(latest_snapshot_payload, f, ensure_ascii=False, indent=2)
+
+    meta_payload: Dict[str, Any] = {
+        "source": source,
+        "snapshot_ts": snapshot_iso,
+        "processed_snapshot_ts": snapshot_iso,
+        "processed_at": _ts_iso_z(now_dt),
+        "records": len(records),
+        "updated_at": _ts_iso_z(now_dt),
+        "buy_entries": len(buy_entries),
+        "sell_entries": len(sell_entries),
+    }
+
+    if buy_history_csv_path and source == "local":
+        meta_payload["buy_history_path"] = str(Path(buy_history_csv_path))
+
+    meta_path = raw_root_path / "last_sync_meta.json"
+    updated_meta = _update_last_sync_metadata(
+        meta_path, source, meta_payload, latest_snapshot_path
+    )
+
+    return updated_meta
+
+
+def _load_snapshot_bundle(path_value: Optional[str], raw_root: Path) -> Dict[str, Any]:
+    if not path_value:
+        return {}
+    path = Path(path_value)
+    if not path.is_absolute():
+        path = raw_root / path
+    if not path.exists():
+        return {}
+    try:
+        data = json.loads(path.read_text(encoding="utf-8"))
+    except Exception:
+        return {}
+    return data if isinstance(data, dict) else {}
+
+
+def process_latest_snapshot(
+    raw_root: str = "raw",
+    buy_csv_path: str = "data/history_devaloka_buy.csv",
+    sell_csv_path: str = "data/history_devaloka_sell.csv",
+    history_json_path: str = "history_local.json",
+    buy_history_csv_path: Optional[str] = "data/history_buy_local.csv",
+    server: str = "devaloka",
+    prefer_source: Optional[str] = None,
+) -> Dict[str, Any]:
+    raw_root_path = Path(raw_root)
+    meta_path = raw_root_path / "last_sync_meta.json"
+    meta = _load_json_object(meta_path)
+
+    def _candidate_from_meta(src: str) -> Optional[Tuple[datetime, str, Dict[str, Any]]]:
+        entry = meta.get(src)
+        if not isinstance(entry, dict):
+            return None
+        ts_value = entry.get("collected_snapshot_ts") or entry.get("snapshot_ts")
+        ts_dt = _normalise_timestamp(ts_value)
+        if ts_dt is None:
+            return None
+        return ts_dt, src, entry
+
+    candidates: List[Tuple[datetime, str, Dict[str, Any]]] = []
+    if prefer_source:
+        preferred = _candidate_from_meta(prefer_source)
+        if preferred:
+            candidates.append(preferred)
+    else:
+        for src in ("remote", "local"):
+            candidate = _candidate_from_meta(src)
+            if candidate:
+                candidates.append(candidate)
+
+    if not candidates:
+        raise RuntimeError("Nenhum snapshot coletado para processar")
+
+    chosen_dt, chosen_source, chosen_entry = max(candidates, key=lambda tup: tup[0])
+
+    bundle_data = _load_snapshot_bundle(
+        chosen_entry.get("collected_payload_path"), raw_root_path
+    )
+
+    buy_entries = bundle_data.get("buy") if isinstance(bundle_data, dict) else None
+    sell_entries = bundle_data.get("sell") if isinstance(bundle_data, dict) else None
+
+    if buy_entries is None:
+        buy_entries = []
+    if sell_entries is None:
+        sell_entries = []
+
+    snapshot_iso = chosen_entry.get("collected_snapshot_ts") or chosen_entry.get(
+        "snapshot_ts"
+    )
+    if not snapshot_iso:
+        snapshot_iso = _ts_iso_z(chosen_dt)
+
+    processed_meta = _process_snapshot_entries(
+        source=chosen_source,
+        snapshot_iso=snapshot_iso,
+        buy_entries=buy_entries,
+        sell_entries=sell_entries,
+        raw_root_path=raw_root_path,
+        buy_csv_path=buy_csv_path,
+        sell_csv_path=sell_csv_path,
+        history_json_path=history_json_path,
+        server=chosen_entry.get("server") or server,
+        buy_history_csv_path=buy_history_csv_path if chosen_source == "local" else None,
+    )
+
+    refreshed_meta = _load_json_object(meta_path)
+    if isinstance(refreshed_meta, dict):
+        refreshed_meta["_last_processed_source"] = chosen_source
+        _write_json_object(meta_path, refreshed_meta)
+
+    return {
+        "source": chosen_source,
+        "snapshot_ts": processed_meta.get("snapshot_ts"),
+        "records": processed_meta.get("records"),
+        "processed_meta": processed_meta,
+    }
+
 def rebuild_csv_from_raw(
     raw_root: str,
     buy_csv_path: str,
@@ -909,17 +1242,31 @@ def run_sync(
     history_json_path: str = "history_local.json",
     server: str = "devaloka",
     timeout: int = 60,
+    process: bool = True,
 ) -> Dict[str, Any]:
-    return sync_sources_save_raw_and_update_csv(
+    collected = collect_remote_snapshot(
         buy_url_or_path,
         sell_url_or_path,
-        raw_root,
-        buy_csv_path,
-        sell_csv_path,
-        history_json_path,
-        server,
-        timeout,
+        raw_root=raw_root,
+        server=server,
+        timeout=timeout,
     )
+
+    if not process:
+        return collected["meta"]
+
+    processed_meta = _process_snapshot_entries(
+        source="remote",
+        snapshot_iso=collected.get("snapshot_iso") or _ts_iso_z(datetime.now(timezone.utc)),
+        buy_entries=collected.get("buy_entries", []),
+        sell_entries=collected.get("sell_entries", []),
+        raw_root_path=Path(raw_root),
+        buy_csv_path=buy_csv_path,
+        sell_csv_path=sell_csv_path,
+        history_json_path=history_json_path,
+        server=server,
+    )
+    return processed_meta
 
 
 def run_rebuild(
@@ -985,87 +1332,39 @@ def run_sync_local_snapshot(
     buy_history_csv_path: str = "data/history_buy_local.csv",
     server: str = "devaloka",
     snapshot_time: Optional[datetime] = None,
+    process: bool = True,
 ) -> Dict[str, Any]:
-    buy_entries_raw = _load_local_snapshot_entries(Path(buy_orders_dir))
+    collected = collect_local_snapshot(
+        buy_orders_dir,
+        auctions_dir=auctions_dir,
+        raw_root=raw_root,
+        server=server,
+        snapshot_time=snapshot_time,
+    )
 
-    sell_entries_raw: List[Dict[str, Any]] = []
-    if auctions_dir:
-        sell_entries_raw = _load_local_snapshot_entries(Path(auctions_dir))
+    if not process:
+        return collected["meta"]
 
-    timestamp_candidates: List[datetime] = []
-    buy_dt = _summarise_snapshot_entries(buy_entries_raw, prefer="max")
-    if buy_dt is not None:
-        timestamp_candidates.append(buy_dt)
-    if sell_entries_raw:
-        sell_dt = _summarise_snapshot_entries(sell_entries_raw, prefer="max")
-        if sell_dt is not None:
-            timestamp_candidates.append(sell_dt)
+    snapshot_iso = collected.get("snapshot_iso")
+    if not snapshot_iso:
+        snapshot_iso = _ts_iso_z(
+            _normalise_timestamp(snapshot_time) or datetime.now(timezone.utc)
+        )
 
-    if timestamp_candidates:
-        snapshot_dt = max(timestamp_candidates).astimezone(timezone.utc)
-    else:
-        snapshot_dt = _normalise_timestamp(snapshot_time) if snapshot_time else None
-        if snapshot_dt is None:
-            snapshot_dt = datetime.now(timezone.utc)
-
-    snapshot_iso = _ts_iso_z(snapshot_dt)
-
-    buy_entries = [_normalise_local_entry(e, snapshot_dt, server) for e in buy_entries_raw]
-
-    raw_root_path = Path(raw_root)
-    _append_raw_entries(raw_root_path / "buy.json", buy_entries)
-
-    if buy_csv_path:
-        update_side_csv(buy_entries, buy_csv_path, side="buy")
-
-    buy_history_rows = 0
-    if buy_history_csv_path:
-        buy_history_path = Path(buy_history_csv_path)
-        summary_df = _build_buy_snapshot_summary(buy_entries, snapshot_iso)
-        _update_buy_history_csv(buy_history_path, summary_df)
-        buy_history_rows = int(len(summary_df))
-
-    sell_entries: List[Dict[str, Any]] = []
-    if sell_entries_raw:
-        sell_entries = [
-            _normalise_local_entry(e, snapshot_dt, server) for e in sell_entries_raw
-        ]
-        _append_raw_entries(raw_root_path / "sell.json", sell_entries)
-        if sell_csv_path:
-            update_side_csv(sell_entries, sell_csv_path, side="sell")
-
-    records = extract_records_from_snapshots(buy_entries, sell_entries, server=server)
-    append_history_json_from_records(records, history_json_path)
-
-    now_dt = datetime.now(timezone.utc)
-
-    latest_snapshot_path = raw_root_path / "latest_snapshot.json"
-    latest_snapshot_payload = {
-        "source": "local",
-        "snapshot_ts": snapshot_iso,
-        "records": records,
-        "record_count": len(records),
-        "generated_at": _ts_iso_z(now_dt),
-    }
-    _ensure_dir(latest_snapshot_path.parent)
-    with open(latest_snapshot_path, "w", encoding="utf-8") as f:
-        json.dump(latest_snapshot_payload, f, ensure_ascii=False, indent=2)
-
-    meta_payload = {
-        "source": "local",
-        "snapshot_ts": snapshot_iso,
-        "buy_entries": len(buy_entries),
-        "sell_entries": len(sell_entries),
-        "records": len(records),
-        "updated_at": _ts_iso_z(now_dt),
-        "snapshot_path": str(latest_snapshot_path),
-    }
+    processed_meta = _process_snapshot_entries(
+        source="local",
+        snapshot_iso=snapshot_iso,
+        buy_entries=collected.get("buy_entries", []),
+        sell_entries=collected.get("sell_entries", []),
+        raw_root_path=Path(raw_root),
+        buy_csv_path=buy_csv_path,
+        sell_csv_path=sell_csv_path,
+        history_json_path=history_json_path,
+        server=server,
+        buy_history_csv_path=buy_history_csv_path,
+    )
 
     if buy_history_csv_path:
-        meta_payload["buy_history_path"] = str(Path(buy_history_csv_path))
-        meta_payload["buy_history_rows"] = buy_history_rows
+        processed_meta.setdefault("buy_history_path", str(Path(buy_history_csv_path)))
 
-    meta_path = raw_root_path / "last_sync_meta.json"
-    _update_last_sync_metadata(meta_path, "local", meta_payload, latest_snapshot_path)
-
-    return meta_payload
+    return processed_meta
