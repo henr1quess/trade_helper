@@ -43,7 +43,6 @@ DEFAULT_NWMP_SELL_SRC = os.getenv(
 )
 DEFAULT_NWMP_RAW_ROOT = os.getenv("NWMP_RAW_ROOT", "raw")
 DEFAULT_NWMP_BUY_CSV = os.getenv("NWMP_BUY_CSV_PATH", "data/history_devaloka_buy.csv")
-DEFAULT_NWMP_SELL_CSV = os.getenv("NWMP_SELL_CSV_PATH", "data/history_devaloka_sell.csv")
 DEFAULT_HISTORY_JSON = "history_local.json"
 
 
@@ -1255,7 +1254,7 @@ with tab_calc:
     t2.info(f"Máx. comprar a **{B_max_for_target:,.4f}** para {target_roi*100:.0f}% de ROI")
 
 # --------------------------------------------------------------------------------------
-# Coletar (scraper Devaloka)
+# Coletar snapshot (scraper Devaloka)
 # --------------------------------------------------------------------------------------
 with tab_coletar:
     st.markdown("## Coletar snapshot (Devaloka)")
@@ -1266,7 +1265,6 @@ with tab_coletar:
         "Auctions": DEFAULT_NWMP_SELL_SRC,
         "Pasta RAW": DEFAULT_NWMP_RAW_ROOT,
         "CSV Buy (NWMP)": DEFAULT_NWMP_BUY_CSV,
-        "CSV Sell (NWMP)": DEFAULT_NWMP_SELL_CSV,
         "Servidor": DEFAULT_NWMP_SERVER,
         "history_local.json": DEFAULT_HISTORY_JSON,
     }
@@ -1457,7 +1455,6 @@ with tab_coletar:
                         DEFAULT_NWMP_SELL_SRC,
                         raw_root=DEFAULT_NWMP_RAW_ROOT,
                         buy_csv_path=DEFAULT_NWMP_BUY_CSV,
-                        sell_csv_path=DEFAULT_NWMP_SELL_CSV,
                         history_json_path=DEFAULT_HISTORY_JSON,
                         server=DEFAULT_NWMP_SERVER,
                     )
@@ -1489,7 +1486,6 @@ with tab_coletar:
                         buy_orders_dir=str(buy_path),
                         raw_root=DEFAULT_NWMP_RAW_ROOT,
                         buy_csv_path=DEFAULT_NWMP_BUY_CSV,
-                        sell_csv_path=DEFAULT_NWMP_SELL_CSV,
                         history_json_path=DEFAULT_HISTORY_JSON,
                         server=DEFAULT_NWMP_SERVER,
                     )
@@ -1518,7 +1514,6 @@ with tab_coletar:
                         nwmp_sync.run_rebuild(
                             raw_root=DEFAULT_NWMP_RAW_ROOT,
                             buy_csv_path=DEFAULT_NWMP_BUY_CSV,
-                            sell_csv_path=DEFAULT_NWMP_SELL_CSV,
                             history_json_path=DEFAULT_HISTORY_JSON,
                             server=DEFAULT_NWMP_SERVER,
                         )
@@ -1552,14 +1547,11 @@ with tab_coletar:
         import pandas as pd
         prev1, prev2 = st.columns(2)
         try:
-            for label, csv_path in (
-                ("Buy", DEFAULT_NWMP_BUY_CSV),
-                ("Sell", DEFAULT_NWMP_SELL_CSV),
-            ):
-                if Path(csv_path).exists():
-                    df_csv = pd.read_csv(csv_path)
-                    prev1.caption(f"Prévia CSV {label} NWMP: {csv_path}")
-                    prev1.dataframe(df_csv.tail(50), use_container_width=True)
+            csv_path = DEFAULT_NWMP_BUY_CSV
+            if Path(csv_path).exists():
+                df_csv = pd.read_csv(csv_path)
+                prev1.caption(f"Prévia CSV Buy NWMP: {csv_path}")
+                prev1.dataframe(df_csv.tail(50), use_container_width=True)
         except Exception:
             pass
         try:
