@@ -12,6 +12,9 @@ import streamlit.components.v1 as components
 
 st.set_page_config(page_title="New World Helper", page_icon="🪙", layout="wide")
 
+if "last_import_signature" not in st.session_state:
+    st.session_state["last_import_signature"] = None
+
 # --------------------------------------------------------------------------------------
 # Paths & persistence
 # --------------------------------------------------------------------------------------
@@ -819,6 +822,18 @@ Retorne **apenas** o JSON, sem comentários.
             preview = preview.sort_values("roi", ascending=False)
             preview["timestamp"] = pd.to_datetime(preview["timestamp"], utc=True, errors="coerce")
 
+        signature_df = preview[["timestamp", "item", "buy_market", "sell_market"]].copy()
+        if not signature_df.empty:
+            signature_df["timestamp"] = signature_df["timestamp"].apply(
+                lambda x: x.isoformat() if pd.notna(x) else ""
+            )
+            signature_df = signature_df.sort_values(
+                ["timestamp", "item", "buy_market", "sell_market"],
+                kind="mergesort",
+            )
+        preview_signature = signature_df.to_json(orient="records", date_format="iso") if not signature_df.empty else "[]"
+        already_added = st.session_state.get("last_import_signature") == preview_signature
+
         # Itens não cadastrados
         missing_mask = ~preview["item"].isin(items_df["item"])
         missing_items = preview.loc[missing_mask, "item"].unique().tolist()
@@ -908,8 +923,11 @@ Retorne **apenas** o JSON, sem comentários.
 
         c1, c2 = st.columns(2)
         with c1:
-            if st.button("Adicionar ao histórico (append)"):
+            if already_added:
+                st.info("Prévia já adicionada ao histórico nesta sessão.")
+            if st.button("Adicionar ao histórico (append)", disabled=already_added):
                 add_to_history(preview)
+                st.session_state["last_import_signature"] = preview_signature
                 st.success(f"{len(preview)} registro(s) adicionados ao histórico.")
                 st.rerun()
         with c2:
@@ -1249,24 +1267,73 @@ Retorne **apenas** o JSON (sem comentários).
                     dfu = pd.read_csv(StringIO(raw))
                 except Exception:
                     dfu = pd.DataFrame()
-            needed = ["item","categoria","peso"]
-            if dfu.empty or any(c not in dfu.columns for c in needed):
-                st.error("Arquivo inválido. É preciso ao menos: item, categoria, peso.")
+
+            if dfu.empty or "item" not in dfu.columns:
+                st.error("Arquivo inválido. É preciso pelo menos a coluna `item`.")
             else:
-                if "tags" in dfu.columns:
-                    dfu["tags"] = dfu["tags"].apply(ensure_list_tags)
-                else:
-                    dfu["tags"] = [[] for _ in range(len(dfu))]
+                dfu = dfu.dropna(subset=["item"]).copy()
+
+                if "peso" in dfu.columns:
+                    dfu["peso"] = pd.to_numeric(dfu["peso"], errors="coerce")
+                if "stack_max" in dfu.columns:
+                    dfu["stack_max"] = pd.to_numeric(dfu["stack_max"], errors="coerce").astype("Int64")
                 if "tier" in dfu.columns:
                     dfu["tier"] = dfu["tier"].apply(_to_tier_int).astype("Int64")
-                else:
-                    dfu["tier"] = pd.Series([pd.NA] * len(dfu), dtype="Int64")
+                if "tags" in dfu.columns:
+                    dfu["tags"] = dfu["tags"].apply(ensure_list_tags)
+
                 base = load_items()
-                mask = ~base["item"].isin(dfu["item"])
-                merged = pd.concat([base[mask], dfu], ignore_index=True)
-                save_items(merged)
-                st.success(f"Cadastro importado: {len(dfu)} item(ns) atualizados/adicionados.")
-                st.rerun()
+                exists_mask = dfu["item"].isin(base["item"])
+                df_patch = dfu.loc[exists_mask].copy()
+                df_new = dfu.loc[~exists_mask].copy()
+
+                if not df_new.empty:
+                    valid_new_mask = pd.Series(True, index=df_new.index)
+                    if "categoria" in df_new.columns:
+                        valid_new_mask &= df_new["categoria"].notna() & (
+                            df_new["categoria"].astype(str).str.strip() != ""
+                        )
+                    else:
+                        valid_new_mask &= False
+
+                    if "peso" in df_new.columns:
+                        valid_new_mask &= df_new["peso"].notna() & (df_new["peso"] > 0)
+                    else:
+                        valid_new_mask &= False
+
+                    invalid_count = (~valid_new_mask).sum()
+                    if invalid_count:
+                        st.warning(
+                            "Itens novos precisam informar `categoria` e `peso` (>0). "
+                            "Linhas ignoradas: "
+                            f"{int(invalid_count)}"
+                        )
+                        df_new = df_new.loc[valid_new_mask].copy()
+
+                if not df_patch.empty:
+                    base = merge_patch_by_item(base, df_patch)
+
+                inserted = 0
+                if not df_new.empty:
+                    if "tags" not in df_new.columns:
+                        df_new["tags"] = [[] for _ in range(len(df_new))]
+                    if "tier" not in df_new.columns:
+                        df_new["tier"] = pd.Series([pd.NA] * len(df_new), dtype="Int64")
+                    if "stack_max" not in df_new.columns:
+                        df_new["stack_max"] = pd.Series([pd.NA] * len(df_new), dtype="Int64")
+                    inserted = len(df_new)
+                    mask = ~base["item"].isin(df_new["item"])
+                    base = pd.concat([base[mask], df_new], ignore_index=True)
+
+                if df_patch.empty and df_new.empty:
+                    st.info("Nenhuma atualização aplicada.")
+                else:
+                    save_items(base)
+                    st.success(
+                        "Cadastro importado: "
+                        f"{inserted} novo(s), {len(df_patch)} atualizado(s)."
+                    )
+                    st.rerun()
 
 # --------------------------------------------------------------------------------------
 # Calculadora
