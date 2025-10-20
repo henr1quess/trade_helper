@@ -1259,11 +1259,6 @@ with tab_calc:
 with tab_coletar:
     st.markdown("## Coletar snapshot (Devaloka)")
 
-    st.info(
-        "O CSV de histórico de **sell orders** deve ser atualizado via "
-        "`devaloka_price_scraper.py`, que coleta os percentis diretamente do site."
-    )
-
     # Parâmetros fixos (sem necessidade de entrada manual)
     settings_remote = {
         "Buy orders": DEFAULT_NWMP_BUY_SRC,
@@ -1454,7 +1449,7 @@ with tab_coletar:
                 )
                 return None
             try:
-                with st.spinner("Baixando, salvando RAW e atualizando histórico..."):
+                with st.spinner("Baixando, salvando RAW e atualizando snapshot..."):
                     result = nwmp_sync.run_sync(
                         DEFAULT_NWMP_BUY_SRC,
                         DEFAULT_NWMP_SELL_SRC,
@@ -1485,7 +1480,7 @@ with tab_coletar:
                 if not auctions_path.exists() or not buy_path.exists():
                     raise FileNotFoundError(f"{auctions_path} | {buy_path}")
 
-                with st.spinner("Processando snapshot local e atualizando histórico..."):
+                with st.spinner("Processando snapshot local e atualizando snapshot consolidado..."):
                     result = nwmp_sync.run_sync_local_snapshot(
                         auctions_dir=str(auctions_path),
                         buy_orders_dir=str(buy_path),
