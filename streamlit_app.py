@@ -148,6 +148,88 @@ def load_items():
         df["slug_nwmp"] = df["slug_nwmp"].fillna("").astype(str)
     return df
 
+def _normalise_item_key(value):
+    if value is None:
+        return ""
+    if isinstance(value, float) and pd.isna(value):
+        return ""
+    return str(value).strip().casefold()
+
+def _load_nwmp_slug_map():
+    mapping = {}
+
+    def _register(name, slug):
+        key = _normalise_item_key(name)
+        if not key:
+            return
+        if slug is None:
+            return
+        if isinstance(slug, float) and pd.isna(slug):
+            return
+        val = str(slug).strip()
+        if not val:
+            return
+        mapping.setdefault(key, val)
+
+    raw_root = Path(DEFAULT_NWMP_RAW_ROOT)
+    for fname in ("buy.json", "sell.json"):
+        path = raw_root / fname
+        if not path.exists():
+            continue
+        try:
+            data = json.loads(path.read_text(encoding="utf-8"))
+        except Exception:
+            continue
+        if isinstance(data, list):
+            for entry in data:
+                if isinstance(entry, dict):
+                    slug = entry.get("item_id") or entry.get("slug") or entry.get("id")
+                    _register(entry.get("item_name"), slug)
+
+    for csv_candidate in (DEFAULT_NWMP_BUY_CSV, DEFAULT_NWMP_SELL_CSV):
+        path = Path(csv_candidate)
+        if not path.exists():
+            continue
+        try:
+            df_csv = pd.read_csv(path)
+        except Exception:
+            continue
+        if df_csv.empty or "item" not in df_csv.columns:
+            continue
+        slug_col = None
+        for candidate in ("slug", "item_id", "id"):
+            if candidate in df_csv.columns:
+                slug_col = candidate
+                break
+        if slug_col is None:
+            continue
+        subset = df_csv[["item", slug_col]].dropna()
+        for _, row in subset.iterrows():
+            _register(row.get("item"), row.get(slug_col))
+
+    history_paths = list(dict.fromkeys([Path(p) for p in HISTORY_READ_CANDIDATES] + [HISTORY_PATH, Path(DEFAULT_HISTORY_JSON)]))
+    for hpath in history_paths:
+        if not hpath.exists():
+            continue
+        try:
+            df_hist = pd.read_json(hpath, orient="records")
+        except Exception:
+            continue
+        if df_hist.empty or "item" not in df_hist.columns:
+            continue
+        slug_col = None
+        for candidate in ("slug", "item_id", "id"):
+            if candidate in df_hist.columns:
+                slug_col = candidate
+                break
+        if slug_col is None:
+            continue
+        subset = df_hist[["item", slug_col]].dropna()
+        for _, row in subset.iterrows():
+            _register(row.get("item"), row.get(slug_col))
+
+    return mapping
+
 def save_items(df: pd.DataFrame):
     ITEMS_PATH.parent.mkdir(parents=True, exist_ok=True)
     keep = ["item","categoria","peso","stack_max","tags","tier","slug_nwmp"]
@@ -168,6 +250,12 @@ def save_items(df: pd.DataFrame):
         return "" if s.lower() == "nan" else s
 
     df["slug_nwmp"] = df["slug_nwmp"].apply(_clean_slug)
+    slug_map = _load_nwmp_slug_map()
+    if slug_map:
+        normalized_items = df["item"].apply(_normalise_item_key)
+        inferred = normalized_items.map(slug_map).fillna("")
+        mask = df["slug_nwmp"] == ""
+        df.loc[mask, "slug_nwmp"] = inferred[mask]
     df.to_json(ITEMS_PATH, orient="records", indent=2, force_ascii=False)
 
 def load_first_existing(paths):
@@ -880,7 +968,6 @@ Retorne **apenas** o JSON, sem comentários.
                 "stack_max": pd.Series([None]*len(missing_items), dtype="Int64"),
                 "tags": [[] for _ in missing_items],
                 "tier": pd.Series([pd.NA]*len(missing_items), dtype="Int64"),
-                "slug_nwmp": "",
             })
             if not LIST_COL_AVAILABLE:
                 stub["tags"] = [""]*len(stub)
@@ -895,12 +982,9 @@ Retorne **apenas** o JSON, sem comentários.
             else:
                 colcfg["tags"] = st.column_config.TextColumn("tags", help="Separadas por vírgula")
             colcfg["tier"] = st.column_config.NumberColumn("tier", help="Opcional (ex.: 1–5)", min_value=1, step=1)
-            colcfg["slug_nwmp"] = st.column_config.TextColumn(
-                "slug_nwmp",
-                help="Slug usado no NWMP (ex.: runewood). Opcional, mas necessário para coletar preços.",
-            )
 
             quick = st.data_editor(stub, num_rows="dynamic", column_config=colcfg, hide_index=True, use_container_width=True)
+            st.caption("O slug NWMP é preenchido automaticamente ao salvar, quando o item existir nos dados coletados.")
             if st.button("💾 Salvar cadastro rápido"):
                 quick = quick.dropna(subset=["item"]).copy()
                 if not LIST_COL_AVAILABLE:
@@ -996,7 +1080,8 @@ Retorne **apenas** o JSON (sem comentários).
     st.subheader("Importar cadastro (JSON/CSV)")
     st.caption(
         "Campos: `item` (obrig.), `categoria` (obrig. p/ novos), `peso` (obrig. p/ novos), "
-        "`stack_max` (opcional), `tags` (opcional), `tier` (opcional), `slug_nwmp` (opcional)."
+        "`stack_max` (opcional), `tags` (opcional), `tier` (opcional). "
+        "O campo `slug_nwmp` é preenchido automaticamente quando houver correspondência no NWMP."
     )
 
     # ✅ Novo: modo atualização (patch)
@@ -1010,7 +1095,7 @@ Retorne **apenas** o JSON (sem comentários).
     pasted_items = st.text_area(
         "Colar JSON/CSV do cadastro",
         height=140,
-        placeholder='[\n  {"item":"Green Wood","slug_nwmp":"woodt1"}\n]'
+        placeholder='[\n  {"item":"Green Wood"}\n]'
     )
     upload_items = st.file_uploader("...ou enviar arquivo", type=["json","csv"], key="items_upload")
 
@@ -1215,7 +1300,7 @@ Retorne **apenas** o JSON (sem comentários).
             "tier": st.column_config.NumberColumn("tier", help="Opcional (ex.: 1–5)", min_value=1, step=1),
             "slug_nwmp": st.column_config.TextColumn(
                 "slug_nwmp",
-                help="Slug usado no NWMP (ex.: runewood). Necessário para coletar preços automaticamente.",
+                help="Slug usado no NWMP (ex.: runewood). Preenchido automaticamente quando disponível, mas pode ser ajustado manualmente.",
             ),
         }
     else:
@@ -1229,7 +1314,7 @@ Retorne **apenas** o JSON (sem comentários).
             "tier": st.column_config.NumberColumn("tier", help="Opcional (ex.: 1–5)", min_value=1, step=1),
             "slug_nwmp": st.column_config.TextColumn(
                 "slug_nwmp",
-                help="Slug usado no NWMP (ex.: runewood). Necessário para coletar preços automaticamente.",
+                help="Slug usado no NWMP (ex.: runewood). Preenchido automaticamente quando disponível, mas pode ser ajustado manualmente.",
             ),
         }
 
