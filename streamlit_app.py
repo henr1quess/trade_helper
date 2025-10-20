@@ -1,4 +1,4 @@
-# New World Helper — Histórico | Oportunidades | Cadastro | Calculadora
+# New World Helper — Oportunidades | Cadastro | Calculadora
 # Run: streamlit run streamlit_app.py
 
 import json
@@ -323,166 +323,12 @@ with st.sidebar.expander("⚙️ Config (calibração & taxa) — clique para ex
 # --------------------------------------------------------------------------------------
 # Tabs
 # --------------------------------------------------------------------------------------
-tab_best, tab_hist, tab_cad, tab_calc, tab_coletar = st.tabs([
+tab_best, tab_cad, tab_calc, tab_coletar = st.tabs([
     "Oportunidades",
-    "Histórico",
     "Cadastro",
     "Calculadora",
     "Coletar snapshot",
 ])
-
-# --------------------------------------------------------------------------------------
-# Histórico
-# --------------------------------------------------------------------------------------
-with tab_hist:
-    st.markdown("## Histórico")
-    hist_df, src_path = load_history()
-    st.caption(f"Lendo de: `{(src_path or HISTORY_PATH).resolve()}` (salva em `{HISTORY_PATH.resolve()}`)")
-
-    # Durações assumidas para avaliar ROI histórico
-    colA, colB = st.columns(2)
-    dur_buy_hist = colA.selectbox("Duração assumida (compra) p/ ROI histórico", [1, 3, 7, 14], index=1)
-    dur_sell_hist = colB.selectbox("Duração assumida (venda) p/ ROI histórico", [1, 3, 7, 14], index=1)
-
-    if not hist_df.empty:
-        hist_df["timestamp"] = pd.to_datetime(hist_df["timestamp"], utc=True, errors="coerce")
-
-        items_meta = {}
-        items_df = load_items()
-        if not items_df.empty and "item" in items_df.columns:
-            meta_cols = [c for c in ["categoria", "tags", "peso"] if c in items_df.columns]
-            if meta_cols:
-                items_meta = (
-                    items_df.drop_duplicates(subset=["item"])
-                    .set_index("item")[meta_cols]
-                    .to_dict("index")
-                )
-
-        rows = []
-        for idx, r in hist_df.reset_index().iterrows():
-            buy_market_val = r.get("buy_market")
-            if (buy_market_val is None or pd.isna(buy_market_val)) and "buy_price" in hist_df.columns:
-                raw = r.get("buy_price")
-                if pd.notna(raw):
-                    buy_market_val = round(float(raw) - 0.01, 2)
-            sell_market_val = r.get("sell_market")
-            if (sell_market_val is None or pd.isna(sell_market_val)) and "sell_price" in hist_df.columns:
-                raw = r.get("sell_price")
-                if pd.notna(raw):
-                    sell_market_val = round(float(raw) + 0.01, 2)
-
-            flip_buy = (float(buy_market_val) + 0.01) if buy_market_val is not None and pd.notna(buy_market_val) else None
-            flip_sell = (float(sell_market_val) - 0.01) if sell_market_val is not None and pd.notna(sell_market_val) else None
-            if flip_buy is not None and flip_sell is not None:
-                pp, roi, Fb, Fs = compute_metrics(flip_buy, flip_sell, dur_buy_hist, dur_sell_hist, st.session_state.tax_pct)
-            else:
-                pp, roi = None, None
-            meta = items_meta.get(r["item"], {}) if items_meta else {}
-            categoria = meta.get("categoria") if meta else None
-            tags = ensure_list_tags(meta.get("tags")) if meta else []
-            peso = meta.get("peso") if meta else None
-
-            rows.append({
-                "row_id": int(r["index"]),
-                "timestamp": r["timestamp"],
-                "item": r["item"],
-                "buy_market": buy_market_val,
-                "sell_market": sell_market_val,
-                "flip_buy": round(flip_buy, 2) if flip_buy is not None else None,
-                "flip_sell": round(flip_sell, 2) if flip_sell is not None else None,
-                "profit_per_unit_hist": pp,
-                "roi_hist_pct": (roi * 100.0) if roi is not None and pd.notna(roi) else None,
-                "categoria": categoria,
-                "tags": tags,
-                "peso": peso,
-            })
-        table = pd.DataFrame(rows).sort_values("timestamp", ascending=False)
-
-        if "tags" in table.columns:
-            table["tags"] = table["tags"].apply(ensure_list_tags)
-
-        col_f_nome, col_f_cat, col_f_tag = st.columns(3)
-        filtro_nome = col_f_nome.text_input("Filtrar por nome do item")
-        categoria_opts = (
-            sorted(table["categoria"].dropna().unique())
-            if "categoria" in table.columns
-            else []
-        )
-        filtro_categorias = col_f_cat.multiselect("Categorias", categoria_opts)
-
-        tag_opts = []
-        if "tags" in table.columns:
-            tag_opts = sorted({t for tags in table["tags"] for t in ensure_list_tags(tags)})
-        filtro_tags = col_f_tag.multiselect("Tags", tag_opts)
-
-        mask = pd.Series(True, index=table.index)
-        if filtro_nome:
-            mask &= table["item"].astype(str).str.contains(filtro_nome, case=False, na=False)
-        if filtro_categorias:
-            mask &= table["categoria"].isin(filtro_categorias)
-        if filtro_tags:
-            mask &= table["tags"].apply(lambda tags: all(tag in ensure_list_tags(tags) for tag in filtro_tags))
-
-        filtered_table = table.loc[mask].sort_values("timestamp", ascending=False)
-
-        display_table = filtered_table.copy()
-        if "tags" in display_table.columns:
-            display_table["tags"] = display_table["tags"].apply(stringify_tags)
-
-        df_key = "hist_tbl_prices"
-        st.dataframe(
-            display_table.set_index("row_id")[
-                [
-                    "timestamp",
-                    "item",
-                    "flip_buy",
-                    "flip_sell",
-                    "profit_per_unit_hist",
-                    "roi_hist_pct",
-                    "categoria",
-                    "tags",
-                    "peso",
-                ]
-            ],
-            use_container_width=True,
-            on_select="rerun",
-            selection_mode="multi-row",
-            key=df_key,
-        )
-
-        # Seleção e ações
-        sel_row_ids = []
-        state = st.session_state.get(df_key, {})
-        sel = state.get("selection", {})
-        rows_sel = sel.get("rows", sel.get("indices", []))
-        for r in rows_sel or []:
-            if isinstance(r, dict):
-                if "row" in r:
-                    sel_row_ids.append(int(r["row"]))
-                elif "index" in r:
-                    sel_row_ids.append(int(r["index"]))
-            elif isinstance(r, int):
-                sel_row_ids.append(int(r))
-
-        c1, c2 = st.columns(2)
-        with c1:
-            st.download_button(
-                "Baixar histórico (JSON)",
-                data=filtered_table.to_json(orient="records", indent=2, date_format="iso"),
-                file_name="history_prices.json",
-                mime="application/json",
-            )
-        with c2:
-            disabled = len(sel_row_ids) == 0
-            if st.button(f"🗑️ Apagar selecionados ({len(sel_row_ids)})", disabled=disabled):
-                if sel_row_ids:
-                    new_df = hist_df.drop(index=sel_row_ids, errors="ignore")
-                    save_history(new_df)
-                    st.success(f"Removidas {len(sel_row_ids)} linha(s) do histórico.")
-                    st.rerun()
-
-    else:
-        st.info("Seu histórico está vazio.")
 
 # --------------------------------------------------------------------------------------
 # Oportunidades
