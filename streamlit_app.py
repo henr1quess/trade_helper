@@ -1006,51 +1006,6 @@ Retorne **apenas** o JSON, sem comentários.
             disabled=True,
         )
 
-        # Cadastro rápido inline
-        if missing_items:
-            st.markdown("### Cadastro rápido (itens não cadastrados)")
-            stub = pd.DataFrame({
-                "item": missing_items,
-                "categoria": "",
-                "peso": 0.0,
-                "stack_max": pd.Series([None]*len(missing_items), dtype="Int64"),
-                "tags": [[] for _ in missing_items],
-                "tier": pd.Series([pd.NA]*len(missing_items), dtype="Int64"),
-            })
-            if not LIST_COL_AVAILABLE:
-                stub["tags"] = [""]*len(stub)
-            colcfg = {
-                "item": st.column_config.TextColumn("item", help="Nome do item", required=True),
-                "categoria": st.column_config.TextColumn("categoria", help="Ex.: Wood, Ore, Hide..."),
-                "peso": st.column_config.NumberColumn("peso", format="%.3f", help="Peso por unidade", required=True),
-                "stack_max": st.column_config.NumberColumn("stack_max", help="Opcional", min_value=1, step=1)
-            }
-            if LIST_COL_AVAILABLE:
-                colcfg["tags"] = st.column_config.ListColumn("tags", help="Tags livres", default=[])
-            else:
-                colcfg["tags"] = st.column_config.TextColumn("tags", help="Separadas por vírgula")
-            colcfg["tier"] = st.column_config.NumberColumn("tier", help="Opcional (ex.: 1–5)", min_value=1, step=1)
-
-            quick = st.data_editor(stub, num_rows="dynamic", column_config=colcfg, hide_index=True, use_container_width=True)
-            if st.button("💾 Salvar cadastro rápido"):
-                quick = quick.dropna(subset=["item"]).copy()
-                if not LIST_COL_AVAILABLE:
-                    quick["tags"] = quick["tags"].apply(ensure_list_tags)
-                try:
-                    quick["peso"] = pd.to_numeric(quick["peso"], errors="coerce")
-                    if "stack_max" in quick.columns:
-                        quick["stack_max"] = pd.to_numeric(quick["stack_max"], errors="coerce").astype("Int64")
-                    if "tier" in quick.columns:
-                        quick["tier"] = quick["tier"].apply(_to_tier_int).astype("Int64")
-                except Exception:
-                    pass
-                base = load_items()
-                mask_new = ~base["item"].isin(quick["item"])
-                merged = pd.concat([base[mask_new], quick], ignore_index=True)
-                save_items(merged)
-                st.success(f"{len(quick)} item(ns) cadastrados. Recarregando prévia…")
-                st.rerun()
-
         c1, c2 = st.columns(2)
         with c1:
             if already_added:
