@@ -1,288 +1,210 @@
 [
   {
-    "item":"Runewood",
-    "categoria":"Wood",
-    "peso":0.2,
-    "stack_max":10000,
-    "tags":[
-
-    ],
-    "tier":null,
-    "slug_nwmp":""
+    "item": "Runewood",
+    "categoria": "Wood",
+    "peso": 0.2,
+    "stack_max": 10000,
+    "tags": [],
+    "tier": null
   },
   {
-    "item":"Powerful Oakflesh Balm",
-    "categoria":"Consumables",
-    "peso":0.5,
-    "stack_max":100,
-    "tags":[
-
-    ],
-    "tier":null,
-    "slug_nwmp":""
+    "item": "Powerful Oakflesh Balm",
+    "categoria": "Consumables",
+    "peso": 0.5,
+    "stack_max": 100,
+    "tags": [],
+    "tier": null
   },
   {
-    "item":"Tostones",
-    "categoria":"Attribute Bonus Foods",
-    "peso":0.3,
-    "stack_max":100,
-    "tags":[
-
-    ],
-    "tier":null,
-    "slug_nwmp":""
+    "item": "Tostones",
+    "categoria": "Attribute Bonus Foods",
+    "peso": 0.3,
+    "stack_max": 100,
+    "tags": [],
+    "tier": null
   },
   {
-    "item":"Blackened Lava Barb with Corn Succotash",
-    "categoria":"Attribute Bonus Foods",
-    "peso":0.3,
-    "stack_max":100,
-    "tags":[
-
-    ],
-    "tier":null,
-    "slug_nwmp":""
+    "item": "Blackened Lava Barb with Corn Succotash",
+    "categoria": "Attribute Bonus Foods",
+    "peso": 0.3,
+    "stack_max": 100,
+    "tags": [],
+    "tier": null
   },
   {
-    "item":"Desert Sunrise",
-    "categoria":"Attribute Bonus Foods",
-    "peso":0.3,
-    "stack_max":100,
-    "tags":[
-
-    ],
-    "tier":null,
-    "slug_nwmp":""
+    "item": "Desert Sunrise",
+    "categoria": "Attribute Bonus Foods",
+    "peso": 0.3,
+    "stack_max": 100,
+    "tags": [],
+    "tier": null
   },
   {
-    "item":"Roasted Prismatic Filet",
-    "categoria":"Attribute Bonus Foods",
-    "peso":0.3,
-    "stack_max":100,
-    "tags":[
-
-    ],
-    "tier":null,
-    "slug_nwmp":""
+    "item": "Roasted Prismatic Filet",
+    "categoria": "Attribute Bonus Foods",
+    "peso": 0.3,
+    "stack_max": 100,
+    "tags": [],
+    "tier": null
   },
   {
-    "item":"Banana Bread",
-    "categoria":"Attribute Bonus Foods",
-    "peso":0.3,
-    "stack_max":100,
-    "tags":[
-
-    ],
-    "tier":null,
-    "slug_nwmp":""
+    "item": "Banana Bread",
+    "categoria": "Attribute Bonus Foods",
+    "peso": 0.3,
+    "stack_max": 100,
+    "tags": [],
+    "tier": null
   },
   {
-    "item":"Roasted Gnufish",
-    "categoria":"Attribute Bonus Foods",
-    "peso":0.3,
-    "stack_max":100,
-    "tags":[
-
-    ],
-    "tier":null,
-    "slug_nwmp":""
+    "item": "Roasted Gnufish",
+    "categoria": "Attribute Bonus Foods",
+    "peso": 0.3,
+    "stack_max": 100,
+    "tags": [],
+    "tier": null
   },
   {
-    "item":"Banana Pudding",
-    "categoria":"Attribute Bonus Foods",
-    "peso":0.3,
-    "stack_max":100,
-    "tags":[
-
-    ],
-    "tier":null,
-    "slug_nwmp":""
+    "item": "Banana Pudding",
+    "categoria": "Attribute Bonus Foods",
+    "peso": 0.3,
+    "stack_max": 100,
+    "tags": [],
+    "tier": null
   },
   {
-    "item":"Fried Albenaja",
-    "categoria":"Attribute Bonus Foods",
-    "peso":0.3,
-    "stack_max":100,
-    "tags":[
-
-    ],
-    "tier":null,
-    "slug_nwmp":""
+    "item": "Fried Albenaja",
+    "categoria": "Attribute Bonus Foods",
+    "peso": 0.3,
+    "stack_max": 100,
+    "tags": [],
+    "tier": null
   },
   {
-    "item":"Chili con Armadillo",
-    "categoria":"Attribute Bonus Foods",
-    "peso":0.3,
-    "stack_max":100,
-    "tags":[
-
-    ],
-    "tier":null,
-    "slug_nwmp":""
+    "item": "Chili con Armadillo",
+    "categoria": "Attribute Bonus Foods",
+    "peso": 0.3,
+    "stack_max": 100,
+    "tags": [],
+    "tier": null
   },
   {
-    "item":"Fruit Salad",
-    "categoria":"Attribute Bonus Foods",
-    "peso":0.3,
-    "stack_max":100,
-    "tags":[
-
-    ],
-    "tier":null,
-    "slug_nwmp":""
+    "item": "Fruit Salad",
+    "categoria": "Attribute Bonus Foods",
+    "peso": 0.3,
+    "stack_max": 100,
+    "tags": [],
+    "tier": null
   },
   {
-    "item":"Steamed Abaia Serpe",
-    "categoria":"Attribute Bonus Foods",
-    "peso":0.3,
-    "stack_max":100,
-    "tags":[
-
-    ],
-    "tier":null,
-    "slug_nwmp":""
+    "item": "Steamed Abaia Serpe",
+    "categoria": "Attribute Bonus Foods",
+    "peso": 0.3,
+    "stack_max": 100,
+    "tags": [],
+    "tier": null
   },
   {
-    "item":"Banana Parfait",
-    "categoria":"Attribute Bonus Foods",
-    "peso":0.3,
-    "stack_max":100,
-    "tags":[
-
-    ],
-    "tier":null,
-    "slug_nwmp":""
+    "item": "Banana Parfait",
+    "categoria": "Attribute Bonus Foods",
+    "peso": 0.3,
+    "stack_max": 100,
+    "tags": [],
+    "tier": null
   },
   {
-    "item":"Roasted Rabbit with Seasoned Vegetables",
-    "categoria":"Attribute Bonus Foods",
-    "peso":0.3,
-    "stack_max":100,
-    "tags":[
-
-    ],
-    "tier":null,
-    "slug_nwmp":""
+    "item": "Roasted Rabbit with Seasoned Vegetables",
+    "categoria": "Attribute Bonus Foods",
+    "peso": 0.3,
+    "stack_max": 100,
+    "tags": [],
+    "tier": null
   },
   {
-    "item":"Hyssop",
-    "categoria":"Alchemy",
-    "peso":0.1,
-    "stack_max":10000,
-    "tags":[
-
-    ],
-    "tier":null,
-    "slug_nwmp":""
+    "item": "Hyssop",
+    "categoria": "Alchemy",
+    "peso": 0.1,
+    "stack_max": 10000,
+    "tags": [],
+    "tier": null
   },
   {
-    "item":"Infused Weapon Fragment",
-    "categoria":"Resources",
-    "peso":0.2,
-    "stack_max":10000,
-    "tags":[
-
-    ],
-    "tier":null,
-    "slug_nwmp":""
+    "item": "Infused Weapon Fragment",
+    "categoria": "Resources",
+    "peso": 0.2,
+    "stack_max": 10000,
+    "tags": [],
+    "tier": null
   },
   {
-    "item":"Green Wood",
-    "categoria":"Wood",
-    "peso":0.2,
-    "stack_max":10000,
-    "tags":[
-
-    ],
-    "tier":null,
-    "slug_nwmp":""
+    "item": "Green Wood",
+    "categoria": "Wood",
+    "peso": 0.2,
+    "stack_max": 10000,
+    "tags": [],
+    "tier": null
   },
   {
-    "item":"Voidmetal",
-    "categoria":"Ingot",
-    "peso":0.3,
-    "stack_max":10000,
-    "tags":[
-
-    ],
-    "tier":null,
-    "slug_nwmp":""
+    "item": "Voidmetal",
+    "categoria": "Ingot",
+    "peso": 0.3,
+    "stack_max": 10000,
+    "tags": [],
+    "tier": null
   },
   {
-    "item":"Charged Sand",
-    "categoria":"Alchemy",
-    "peso":0.1,
-    "stack_max":10000,
-    "tags":[
-
-    ],
-    "tier":null,
-    "slug_nwmp":""
+    "item": "Charged Sand",
+    "categoria": "Alchemy",
+    "peso": 0.1,
+    "stack_max": 10000,
+    "tags": [],
+    "tier": null
   },
   {
-    "item":"Anima Quartz",
-    "categoria":"Ore",
-    "peso":0.2,
-    "stack_max":10000,
-    "tags":[
-
-    ],
-    "tier":null,
-    "slug_nwmp":""
+    "item": "Anima Quartz",
+    "categoria": "Ore",
+    "peso": 0.2,
+    "stack_max": 10000,
+    "tags": [],
+    "tier": null
   },
   {
-    "item":"Starmetal Ore",
-    "categoria":"Ore",
-    "peso":0.2,
-    "stack_max":10000,
-    "tags":[
-
-    ],
-    "tier":null,
-    "slug_nwmp":""
+    "item": "Starmetal Ore",
+    "categoria": "Ore",
+    "peso": 0.2,
+    "stack_max": 10000,
+    "tags": [],
+    "tier": null
   },
   {
-    "item":"Iron Ore",
-    "categoria":"Ore",
-    "peso":0.2,
-    "stack_max":10000,
-    "tags":[
-
-    ],
-    "tier":null,
-    "slug_nwmp":""
+    "item": "Iron Ore",
+    "categoria": "Ore",
+    "peso": 0.2,
+    "stack_max": 10000,
+    "tags": [],
+    "tier": null
   },
   {
-    "item":"Cinnabar",
-    "categoria":"Ore",
-    "peso":0.3,
-    "stack_max":10000,
-    "tags":[
-
-    ],
-    "tier":null,
-    "slug_nwmp":""
+    "item": "Cinnabar",
+    "categoria": "Ore",
+    "peso": 0.3,
+    "stack_max": 10000,
+    "tags": [],
+    "tier": null
   },
   {
-    "item":"Wyrdwood",
-    "categoria":"Wood",
-    "peso":0.2,
-    "stack_max":10000,
-    "tags":[
-
-    ],
-    "tier":null,
-    "slug_nwmp":""
+    "item": "Wyrdwood",
+    "categoria": "Wood",
+    "peso": 0.2,
+    "stack_max": 10000,
+    "tags": [],
+    "tier": null
   },
   {
-    "item":"Ironwood",
-    "categoria":"Wood",
-    "peso":0.2,
-    "stack_max":10000,
-    "tags":[
-
-    ],
-    "tier":null,
-    "slug_nwmp":""
+    "item": "Ironwood",
+    "categoria": "Wood",
+    "peso": 0.2,
+    "stack_max": 10000,
+    "tags": [],
+    "tier": null
   }
 ]
