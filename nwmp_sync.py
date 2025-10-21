@@ -158,16 +158,17 @@ def _load_from_file_or_folder(src: Optional[str]) -> List[Dict[str, Any]]:
 # --- item_name mapping ---
 def _load_item_name_map(path: Path = ITEM_NAME_MAP_PATH) -> Dict[str, str]:
     """
-    raw/item_name_map.json:
-      - preferido: { "StoneT4": "Lodestone", ... }
-      - aceita lista de objetos com (item_id/item_name) ou (id/name)
+    Lê raw/item_name_map.json e normaliza as CHAVES para minúsculas.
+    Aceita:
+      - dict: { "perkcharm_healing": "Anointed Lifesteal II Charm", ... }
+      - lista de objetos com (item_id/item_name) ou (id/name)
     """
     try:
         if not path.exists():
             return {}
         data = _read_json(path)
         if isinstance(data, dict):
-            return {str(k): str(v) for k, v in data.items() if k and v}
+            return {str(k).strip().lower(): str(v) for k, v in data.items() if k and v}
         if isinstance(data, list):
             out: Dict[str, str] = {}
             for row in data:
@@ -176,7 +177,7 @@ def _load_item_name_map(path: Path = ITEM_NAME_MAP_PATH) -> Dict[str, str]:
                 iid = row.get("item_id") or row.get("id")
                 nm  = row.get("item_name") or row.get("name")
                 if iid and nm:
-                    out[str(iid)] = str(nm)
+                    out[str(iid).strip().lower()] = str(nm)
             return out
     except Exception:
         pass
@@ -191,8 +192,11 @@ def _enrich_with_names(rows: List[Dict[str, Any]], name_map: Dict[str, str]) -> 
         if isinstance(r, dict):
             if not r.get("item_name"):
                 iid = r.get("item_id")
-                if iid and iid in name_map:
-                    r = {**r, "item_name": name_map[iid]}
+                if iid:
+                    key = str(iid).strip().lower()
+                    nm = name_map.get(key)
+                    if nm:
+                        r = {**r, "item_name": nm}
         out.append(r)
     return out
 
@@ -362,11 +366,15 @@ def process_latest_snapshot(prefer_buy: str = "auto", prefer_sell: str = "auto")
 
     # fallback de nomes via mapa também no processamento
     item_name_map = _load_item_name_map(ITEM_NAME_MAP_PATH)
-    if not merged.empty and ("item_name" not in merged.columns or merged["item_name"].isna().any()):
+    if not merged.empty:
         if "item_name" not in merged.columns:
             merged["item_name"] = None
-        merged["item_name"] = merged["item_name"].where(merged["item_name"].notna(),
-                                                        merged["item_id"].map(item_name_map))
+        merged["iid_norm"] = merged["item_id"].astype(str).str.strip().str.lower()
+        merged["item_name"] = merged["item_name"].where(
+            merged["item_name"].notna(),
+            merged["iid_norm"].map(item_name_map)
+        )
+        merged = merged.drop(columns=["iid_norm"])
 
     # timestamp de referência
     ref_ts = buy_ts or sell_ts
