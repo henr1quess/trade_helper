@@ -6222,56 +6222,56 @@
           {
             "item_id": "chitinhidet5",
             "item_name": "Chitin Parts",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.300,
+            "stack_max": 10000
           },
           {
             "item_id": "rawhidet52",
             "item_name": "Dark Hide",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.300,
+            "stack_max": 10000
           },
           {
             "item_id": "rawhidet5",
             "item_name": "Iron Hide",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.300,
+            "stack_max": 10000
           },
           {
             "item_id": "ragehidet1",
             "item_name": "Ragehide",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.300,
+            "stack_max": 10000
           },
           {
             "item_id": "rawhidet1",
             "item_name": "Rawhide",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.200,
+            "stack_max": 10000
           },
           {
             "item_id": "scarhidet1",
             "item_name": "Scarhide",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.300,
+            "stack_max": 10000
           },
           {
             "item_id": "shadowfurt1",
             "item_name": "Shadowfur",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.300,
+            "stack_max": 10000
           },
           {
             "item_id": "shifthidet1",
             "item_name": "Shifthide",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.300,
+            "stack_max": 10000
           },
           {
             "item_id": "rawhidet4",
             "item_name": "Thick Hide",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.200,
+            "stack_max": 10000
           }
         ]
       },
@@ -6283,32 +6283,32 @@
           {
             "item_id": "perfectsalvagearcanet51",
             "item_name": "Infused Arcane Fragment",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.200,
+            "stack_max": 10000
           },
           {
             "item_id": "perfectsalvagearmort51",
             "item_name": "Infused Armor Fragment",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.200,
+            "stack_max": 10000
           },
           {
             "item_id": "perfectsalvageengineert51",
             "item_name": "Infused Engineering Fragment",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.200,
+            "stack_max": 10000
           },
           {
             "item_id": "perfectsalvagejewelryt51",
             "item_name": "Infused Jewelry Fragment",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.200,
+            "stack_max": 10000
           },
           {
             "item_id": "perfectsalvageweaponst51",
             "item_name": "Infused Weapon Fragment",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.200,
+            "stack_max": 10000
           }
         ]
       },
@@ -6459,14 +6459,14 @@
           {
             "item_id": "woodt1",
             "item_name": "Green Wood",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.200,
+            "stack_max": 10000
           },
           {
             "item_id": "woodt5",
             "item_name": "Ironwood",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.200,
+            "stack_max": 10000
           },
           {
             "item_id": "petrifiedwoodt1",
@@ -6477,8 +6477,8 @@
           {
             "item_id": "woodt52",
             "item_name": "Runewood",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.200,
+            "stack_max": 10000
           },
           {
             "item_id": "whisperwoodt1",
@@ -6495,8 +6495,8 @@
           {
             "item_id": "woodt4",
             "item_name": "Wyrdwood",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.200,
+            "stack_max": 10000
           }
         ]
       },
@@ -6508,44 +6508,44 @@
           {
             "item_id": "blockt4",
             "item_name": "Lodestone Brick",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.300,
+            "stack_max": 10000
           },
           {
             "item_id": "blockt5",
             "item_name": "Obsidian Voidstone",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.300,
+            "stack_max": 10000
           },
           {
             "item_id": "blockt53",
             "item_name": "Prismatic Block",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.300,
+            "stack_max": 10000
           },
           {
             "item_id": "blockt51",
             "item_name": "Runestone",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.300,
+            "stack_max": 10000
           },
           {
             "item_id": "blockt52",
             "item_name": "Runic Voidstone",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.300,
+            "stack_max": 10000
           },
           {
             "item_id": "blockt2",
             "item_name": "Stone Block",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.300,
+            "stack_max": 10000
           },
           {
             "item_id": "blockt3",
             "item_name": "Stone Brick",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.300,
+            "stack_max": 10000
           }
         ]
       }
@@ -6576,44 +6576,44 @@
           {
             "item_id": "clotht5",
             "item_name": "Infused Silk",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 10000
           },
           {
             "item_id": "clotht2",
             "item_name": "Linen",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 10000
           },
           {
             "item_id": "clotht51",
             "item_name": "Phoenixweave",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 10000
           },
           {
             "item_id": "clotht53",
             "item_name": "Prismatic Cloth",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 10000
           },
           {
             "item_id": "clotht3",
             "item_name": "Sateen",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 10000
           },
           {
             "item_id": "clotht4",
             "item_name": "Silk",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 10000
           },
           {
             "item_id": "clotht52",
             "item_name": "Spinweave Cloth",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 10000
           }
         ]
       }
@@ -6637,374 +6637,374 @@
           {
             "item_id": "ambercutt2",
             "item_name": "Cut Amber",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 50
           },
           {
             "item_id": "amethystcutt2",
             "item_name": "Cut Amethyst",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 50
           },
           {
             "item_id": "aquamarinecutt2",
             "item_name": "Cut Aquamarine",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 50
           },
           {
             "item_id": "ambercutt3",
             "item_name": "Cut Brilliant Amber",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 50
           },
           {
             "item_id": "amethystcutt3",
             "item_name": "Cut Brilliant Amethyst",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 50
           },
           {
             "item_id": "aquamarinecutt3",
             "item_name": "Cut Brilliant Aquamarine",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 50
           },
           {
             "item_id": "carneliancutt3",
             "item_name": "Cut Brilliant Carnelian",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 50
           },
           {
             "item_id": "diamondcutt3",
             "item_name": "Cut Brilliant Diamond",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 50
           },
           {
             "item_id": "emeraldcutt3",
             "item_name": "Cut Brilliant Emerald",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 50
           },
           {
             "item_id": "jadecutt3",
             "item_name": "Cut Brilliant Jade",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 50
           },
           {
             "item_id": "jaspercutt3",
             "item_name": "Cut Brilliant Jasper",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 50
           },
           {
             "item_id": "malachitecutt3",
             "item_name": "Cut Brilliant Malachite",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 50
           },
           {
             "item_id": "moonstonecutt3",
             "item_name": "Cut Brilliant Moonstone",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 50
           },
           {
             "item_id": "onyxcutt3",
             "item_name": "Cut Brilliant Onyx",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 50
           },
           {
             "item_id": "opalcutt3",
             "item_name": "Cut Brilliant Opal",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 50
           },
           {
             "item_id": "rubycutt3",
             "item_name": "Cut Brilliant Ruby",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 50
           },
           {
             "item_id": "sapphirecutt3",
             "item_name": "Cut Brilliant Sapphire",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 50
           },
           {
             "item_id": "topazcutt3",
             "item_name": "Cut Brilliant Topaz",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 50
           },
           {
             "item_id": "carneliancutt2",
             "item_name": "Cut Carnelian",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 50
           },
           {
             "item_id": "diamondcutt2",
             "item_name": "Cut Diamond",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 50
           },
           {
             "item_id": "emeraldcutt2",
             "item_name": "Cut Emerald",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 50
           },
           {
             "item_id": "ambercutt1",
             "item_name": "Cut Flawed Amber",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 50
           },
           {
             "item_id": "amethystcutt1",
             "item_name": "Cut Flawed Amethyst",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 50
           },
           {
             "item_id": "aquamarinecutt1",
             "item_name": "Cut Flawed Aquamarine",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 50
           },
           {
             "item_id": "carneliancutt1",
             "item_name": "Cut Flawed Carnelian",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 50
           },
           {
             "item_id": "diamondcutt1",
             "item_name": "Cut Flawed Diamond",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 50
           },
           {
             "item_id": "emeraldcutt1",
             "item_name": "Cut Flawed Emerald",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 50
           },
           {
             "item_id": "jadecutt1",
             "item_name": "Cut Flawed Jade",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 50
           },
           {
             "item_id": "jaspercutt1",
             "item_name": "Cut Flawed Jasper",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 50
           },
           {
             "item_id": "malachitecutt1",
             "item_name": "Cut Flawed Malachite",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 50
           },
           {
             "item_id": "moonstonecutt1",
             "item_name": "Cut Flawed Moonstone",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 50
           },
           {
             "item_id": "onyxcutt1",
             "item_name": "Cut Flawed Onyx",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 50
           },
           {
             "item_id": "opalcutt1",
             "item_name": "Cut Flawed Opal",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 50
           },
           {
             "item_id": "rubycutt1",
             "item_name": "Cut Flawed Ruby",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 50
           },
           {
             "item_id": "sapphirecutt1",
             "item_name": "Cut Flawed Sapphire",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 50
           },
           {
             "item_id": "topazcutt1",
             "item_name": "Cut Flawed Topaz",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 50
           },
           {
             "item_id": "turquoisecutt1",
             "item_name": "Cut Flawed Turquoise",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 50
           },
           {
             "item_id": "jadecutt2",
             "item_name": "Cut Jade",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 50
           },
           {
             "item_id": "jaspercutt2",
             "item_name": "Cut Jasper",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 50
           },
           {
             "item_id": "malachitecutt2",
             "item_name": "Cut Malachite",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 50
           },
           {
             "item_id": "moonstonecutt2",
             "item_name": "Cut Moonstone",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 50
           },
           {
             "item_id": "onyxcutt2",
             "item_name": "Cut Onyx",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 50
           },
           {
             "item_id": "opalcutt2",
             "item_name": "Cut Opal",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 50
           },
           {
             "item_id": "ambercutt4",
             "item_name": "Cut Pristine Amber",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 50
           },
           {
             "item_id": "amethystcutt4",
             "item_name": "Cut Pristine Amethyst",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 50
           },
           {
             "item_id": "aquamarinecutt4",
             "item_name": "Cut Pristine Aquamarine",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 50
           },
           {
             "item_id": "carneliancutt4",
             "item_name": "Cut Pristine Carnelian",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 50
           },
           {
             "item_id": "diamondcutt4",
             "item_name": "Cut Pristine Diamond",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 50
           },
           {
             "item_id": "emeraldcutt4",
             "item_name": "Cut Pristine Emerald",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 50
           },
           {
             "item_id": "jadecutt4",
             "item_name": "Cut Pristine Jade",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 50
           },
           {
             "item_id": "jaspercutt4",
             "item_name": "Cut Pristine Jasper",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 50
           },
           {
             "item_id": "malachitecutt4",
             "item_name": "Cut Pristine Malachite",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 50
           },
           {
             "item_id": "moonstonecutt4",
             "item_name": "Cut Pristine Moonstone",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 50
           },
           {
             "item_id": "onyxcutt4",
             "item_name": "Cut Pristine Onyx",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 50
           },
           {
             "item_id": "opalcutt4",
             "item_name": "Cut Pristine Opal",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 50
           },
           {
             "item_id": "rubycutt4",
             "item_name": "Cut Pristine Ruby",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 50
           },
           {
             "item_id": "sapphirecutt4",
             "item_name": "Cut Pristine Sapphire",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 50
           },
           {
             "item_id": "topazcutt4",
             "item_name": "Cut Pristine Topaz",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 50
           },
           {
             "item_id": "turquoisecutt4",
             "item_name": "Cut Pristine Turquoise",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 50
           },
           {
             "item_id": "rubycutt2",
             "item_name": "Cut Ruby",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 50
           },
           {
             "item_id": "sapphirecutt2",
             "item_name": "Cut Sapphire",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 50
           },
           {
             "item_id": "topazcutt2",
             "item_name": "Cut Topaz",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 50
           }
         ]
       }
@@ -7022,8 +7022,8 @@
           {
             "item_id": "gunpowdert2",
             "item_name": "Gunpowder",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 1000
           }
         ]
       },
@@ -7035,44 +7035,44 @@
           {
             "item_id": "ingott51",
             "item_name": "Asmodeum",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.300,
+            "stack_max": 10000
           },
           {
             "item_id": "ingott2",
             "item_name": "Iron Ingot",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.300,
+            "stack_max": 10000
           },
           {
             "item_id": "ingott52",
             "item_name": "Mythril Ingot",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.300,
+            "stack_max": 10000
           },
           {
             "item_id": "ingott5",
             "item_name": "Orichalcum Ingot",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.300,
+            "stack_max": 10000
           },
           {
             "item_id": "ingott53",
             "item_name": "Prismatic Ingot",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.300,
+            "stack_max": 10000
           },
           {
             "item_id": "ingott4",
             "item_name": "Starmetal Ingot",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.300,
+            "stack_max": 10000
           },
           {
             "item_id": "ingott3",
             "item_name": "Steel Ingot",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.300,
+            "stack_max": 10000
           }
         ]
       },
@@ -7084,20 +7084,20 @@
           {
             "item_id": "ingotprecioust2",
             "item_name": "Gold Ingot",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.300,
+            "stack_max": 10000
           },
           {
             "item_id": "ingotprecioust3",
             "item_name": "Platinum Ingot",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.300,
+            "stack_max": 10000
           },
           {
             "item_id": "ingotprecioust1",
             "item_name": "Silver Ingot",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.300,
+            "stack_max": 10000
           }
         ]
       },
@@ -7115,44 +7115,44 @@
           {
             "item_id": "leathert2",
             "item_name": "Coarse Leather",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.300,
+            "stack_max": 10000
           },
           {
             "item_id": "leathert52",
             "item_name": "Dark Leather",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.300,
+            "stack_max": 10000
           },
           {
             "item_id": "leathert5",
             "item_name": "Infused Leather",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.300,
+            "stack_max": 10000
           },
           {
             "item_id": "leathert4",
             "item_name": "Layered Leather",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.300,
+            "stack_max": 10000
           },
           {
             "item_id": "leathert53",
             "item_name": "Prismatic Leather",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.300,
+            "stack_max": 10000
           },
           {
             "item_id": "leathert3",
             "item_name": "Rugged Leather",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.300,
+            "stack_max": 10000
           },
           {
             "item_id": "leathert51",
             "item_name": "Runic Leather",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.300,
+            "stack_max": 10000
           }
         ]
       },
@@ -7164,44 +7164,44 @@
           {
             "item_id": "timbert51",
             "item_name": "Glittering Ebony",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.200,
+            "stack_max": 10000
           },
           {
             "item_id": "timbert5",
             "item_name": "Ironwood Planks",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.200,
+            "stack_max": 10000
           },
           {
             "item_id": "timbert3",
             "item_name": "Lumber",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.200,
+            "stack_max": 10000
           },
           {
             "item_id": "timbert53",
             "item_name": "Prismatic Planks",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.200,
+            "stack_max": 10000
           },
           {
             "item_id": "timbert52",
             "item_name": "Runewood Planks",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.200,
+            "stack_max": 10000
           },
           {
             "item_id": "timbert2",
             "item_name": "Timber",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.200,
+            "stack_max": 10000
           },
           {
             "item_id": "timbert4",
             "item_name": "Wyrdwood Planks",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.200,
+            "stack_max": 10000
           }
         ]
       },
@@ -7213,56 +7213,56 @@
           {
             "item_id": "runeglass_gem_amber_void",
             "item_name": "Runeglass of Abyssal Amber",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 50
           },
           {
             "item_id": "runeglass_gem_amber_nature",
             "item_name": "Runeglass of Arboreal Amber",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 50
           },
           {
             "item_id": "runeglass_gem_amber_lightning",
             "item_name": "Runeglass of Electrified Amber",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 50
           },
           {
             "item_id": "runeglass_gem_amber_stamina",
             "item_name": "Runeglass of Energizing Amber",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 50
           },
           {
             "item_id": "runeglass_gem_amber_ice",
             "item_name": "Runeglass of Frozen Amber",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 50
           },
           {
             "item_id": "runeglass_gem_amber_fire",
             "item_name": "Runeglass of Ignited Amber",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 50
           },
           {
             "item_id": "runeglass_gem_amber_heal",
             "item_name": "Runeglass of Leeching Amber",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 50
           },
           {
             "item_id": "runeglass_gem_amber_melee",
             "item_name": "Runeglass of Punishing Amber",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 50
           },
           {
             "item_id": "runeglass_gem_amber_ranged",
             "item_name": "Runeglass of Sighted Amber",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 50
           }
         ]
       },
@@ -7274,44 +7274,44 @@
           {
             "item_id": "runeglass_gem_amethyst_void",
             "item_name": "Runeglass of Abyssal Amethyst",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 50
           },
           {
             "item_id": "runeglass_gem_amethyst_nature",
             "item_name": "Runeglass of Arboreal Amethyst",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 50
           },
           {
             "item_id": "runeglass_gem_amethyst_arcane",
             "item_name": "Runeglass of Empowered Amethyst",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 50
           },
           {
             "item_id": "runeglass_gem_amethyst_fire",
             "item_name": "Runeglass of Ignited Amethyst",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 50
           },
           {
             "item_id": "runeglass_gem_amethyst_heal",
             "item_name": "Runeglass of Leeching Amethyst",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 50
           },
           {
             "item_id": "runeglass_gem_amethyst_melee",
             "item_name": "Runeglass of Punishing Amethyst",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 50
           },
           {
             "item_id": "runeglass_gem_amethyst_ranged",
             "item_name": "Runeglass of Sighted Amethyst",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 50
           }
         ]
       },
@@ -7323,38 +7323,38 @@
           {
             "item_id": "runeglass_gem_aquamarine_arcane",
             "item_name": "Runeglass of Empowered Aquamarine",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 50
           },
           {
             "item_id": "runeglass_gem_aquamarine_ice",
             "item_name": "Runeglass of Frozen Aquamarine",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 50
           },
           {
             "item_id": "runeglass_gem_aquamarine_fire",
             "item_name": "Runeglass of Ignited Aquamarine",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 50
           },
           {
             "item_id": "runeglass_gem_aquamarine_heal",
             "item_name": "Runeglass of Leeching Aquamarine",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 50
           },
           {
             "item_id": "runeglass_gem_aquamarine_melee",
             "item_name": "Runeglass of Punishing Aquamarine",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 50
           },
           {
             "item_id": "runeglass_gem_aquamarine_ranged",
             "item_name": "Runeglass of Sighted Aquamarine",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 50
           }
         ]
       }
