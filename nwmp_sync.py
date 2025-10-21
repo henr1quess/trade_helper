@@ -329,6 +329,10 @@ def _group_buy(df: pd.DataFrame) -> pd.DataFrame:
         return pd.DataFrame(columns=["item_id","top_buy","buy_qty"])
     x = df.copy()
     x["price"] = pd.to_numeric(x["price"], errors="coerce")
+    # Os preços retornados pelo NWMP vêm em centavos (inteiro). Convertemos
+    # para moedas (duas casas decimais) antes de agregar para manter
+    # consistência com o restante da aplicação.
+    x["price"] = x["price"] / 100.0
     x["quantity"] = pd.to_numeric(x["quantity"], errors="coerce").fillna(0)
     return x.groupby("item_id", as_index=False).agg(top_buy=("price", "max"),
                                                     buy_qty=("quantity", "sum"))
@@ -339,6 +343,7 @@ def _group_sell(df: pd.DataFrame) -> pd.DataFrame:
         return pd.DataFrame(columns=["item_id","low_sell","sell_qty"])
     x = df.copy()
     x["price"] = pd.to_numeric(x["price"], errors="coerce")
+    x["price"] = x["price"] / 100.0
     x["quantity"] = pd.to_numeric(x["quantity"], errors="coerce").fillna(0)
     return x.groupby("item_id", as_index=False).agg(low_sell=("price", "min"),
                                                     sell_qty=("quantity", "sum"))
@@ -442,6 +447,7 @@ def process_latest_snapshot(prefer_buy: str = "auto", prefer_sell: str = "auto")
         "snapshot_ts": ref_ts,
         "buy_source_path": str(buy_path) if buy_path else None,
         "sell_source_path": str(sell_path) if sell_path else None,
+        "price_scale": "coins",
         "records": records,
     }
     _write_json(PROCESSED_SNAPSHOT_PATH, snapshot)
