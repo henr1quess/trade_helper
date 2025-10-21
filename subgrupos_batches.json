@@ -2478,32 +2478,32 @@
           {
             "item_id": "instrument_ebonyfingerboardt3",
             "item_name": "Ebony Fingerboard",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 100
           },
           {
             "item_id": "instrument_harmoniusreedt3",
             "item_name": "Harmonious Reed",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 100
           },
           {
             "item_id": "instrument_iridescentinlayt3",
             "item_name": "Iridescent Inlay",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 100
           },
           {
             "item_id": "instrument_pearlplectrumt3",
             "item_name": "Pearl Plectrum",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 100
           },
           {
             "item_id": "instrument_resonanthidet3",
             "item_name": "Resonant Hide",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 100
           }
         ]
       },
@@ -2515,32 +2515,32 @@
           {
             "item_id": "tannint5",
             "item_name": "Aged Tannin",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 1000
           },
           {
             "item_id": "fluxt5",
             "item_name": "Obsidian Flux",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 1000
           },
           {
             "item_id": "sandpapert5",
             "item_name": "Obsidian Sandpaper",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 1000
           },
           {
             "item_id": "solventt5",
             "item_name": "Pure Solvent",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 1000
           },
           {
             "item_id": "clothweavet5",
             "item_name": "Wireweave",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 1000
           }
         ]
       },
@@ -2552,104 +2552,104 @@
           {
             "item_id": "trinket_bandt51",
             "item_name": "Asmodeum Band",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 100
           },
           {
             "item_id": "trinket_bandt3",
             "item_name": "Gold Band",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 100
           },
           {
             "item_id": "trinket_chaint3",
             "item_name": "Gold Chain",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 100
           },
           {
             "item_id": "trinket_settingt3",
             "item_name": "Gold Setting",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 100
           },
           {
             "item_id": "trinket_chaint52",
             "item_name": "Mythril Chain",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 100
           },
           {
             "item_id": "trinket_settingt52",
             "item_name": "Mythril Setting",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 100
           },
           {
             "item_id": "trinket_chaint5",
             "item_name": "Orichalcum Chain",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 100
           },
           {
             "item_id": "trinket_bandt4",
             "item_name": "Platinum Band",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 100
           },
           {
             "item_id": "trinket_chaint4",
             "item_name": "Platinum Chain",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 100
           },
           {
             "item_id": "trinket_hookt4",
             "item_name": "Platinum Hook",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 100
           },
           {
             "item_id": "trinket_settingt4",
             "item_name": "Platinum Setting",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 100
           },
           {
             "item_id": "trinket_bandt53",
             "item_name": "Prismatic Band",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 100
           },
           {
             "item_id": "trinket_settingt53",
             "item_name": "Prismatic Setting",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 100
           },
           {
             "item_id": "trinket_bandt2",
             "item_name": "Silver Band",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 100
           },
           {
             "item_id": "trinket_chaint2",
             "item_name": "Silver Chain",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 100
           },
           {
             "item_id": "trinket_hookt2",
             "item_name": "Silver Hook",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 100
           },
           {
             "item_id": "trinket_settingt2",
             "item_name": "Silver Setting",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 100
           }
         ]
       },
@@ -2661,20 +2661,20 @@
           {
             "item_id": "berryt1",
             "item_name": "Berry",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 100
           },
           {
             "item_id": "blueberryt1",
             "item_name": "Blueberry",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 100
           },
           {
             "item_id": "juniperberryt5",
             "item_name": "Juniper Berry",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 100
           }
         ]
       }
@@ -2692,140 +2692,140 @@
           {
             "item_id": "vinegart1",
             "item_name": "Apple Cider Vinegar",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 100
           },
           {
             "item_id": "mountitem_vitamins_t1",
             "item_name": "Basic Mount Vitamins",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 100
           },
           {
             "item_id": "mountconsum_gruelt0",
             "item_name": "Basic Mount Vittles",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 100
           },
           {
             "item_id": "breadt1",
             "item_name": "Bread",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 100
           },
           {
             "item_id": "buttert1",
             "item_name": "Butter",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 100
           },
           {
             "item_id": "cheeset1",
             "item_name": "Cheese",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 100
           },
           {
             "item_id": "mountitem_vitamins_t2",
             "item_name": "Complex Mount Vitamins",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 100
           },
           {
             "item_id": "sporejellyt2",
             "item_name": "Enriched Spore Jelly",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 100
           },
           {
             "item_id": "flourt1",
             "item_name": "Flour",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 100
           },
           {
             "item_id": "sporejellyt3",
             "item_name": "Fortified Spore Jelly",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 100
           },
           {
             "item_id": "mountconsum_gruelt2",
             "item_name": "Hearty Mount Vittles",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 100
           },
           {
             "item_id": "sporejellyt5",
             "item_name": "Infused Spore Jelly",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 100
           },
           {
             "item_id": "mountconsum_gruelt3",
             "item_name": "Luxury Mount Vittles",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 100
           },
           {
             "item_id": "milkt1",
             "item_name": "Milk",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 100
           },
           {
             "item_id": "mountconsum_gruelt1",
             "item_name": "Mount Vittles",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 100
           },
           {
             "item_id": "pastat1",
             "item_name": "Pasta",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 100
           },
           {
             "item_id": "pastrycrustt1",
             "item_name": "Pastry Crust",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 100
           },
           {
             "item_id": "mountitem_vitamins_t3",
             "item_name": "Potent Mount Vitamins",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 100
           },
           {
             "item_id": "sporejellyt4",
             "item_name": "Powerful Spore Jelly",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 100
           },
           {
             "item_id": "sporejellyt1",
             "item_name": "Spore Jelly",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 100
           },
           {
             "item_id": "sunfloweroilt1",
             "item_name": "Sunflower Oil",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 100
           },
           {
             "item_id": "unpetrifiedflesht1",
             "item_name": "Unpetrified Flesh",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 100
           },
           {
             "item_id": "yeastt1",
             "item_name": "Yeast",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 100
           }
         ]
       },
@@ -2837,14 +2837,14 @@
           {
             "item_id": "eggt1",
             "item_name": "Egg",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 100
           },
           {
             "item_id": "eggt5",
             "item_name": "Giant Lizard Egg",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 100
           }
         ]
       }
