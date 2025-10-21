@@ -28,8 +28,8 @@
           {
             "item_id": "briarbudst1",
             "item_name": "Briar Buds",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 10000
           },
           {
             "item_id": "catfishwhiskerst1",
@@ -94,14 +94,14 @@
           {
             "item_id": "sorrowthorn",
             "item_name": "Sorrowthorn",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 10000
           },
           {
             "item_id": "soulsproutt3",
             "item_name": "Soulsprout Flower",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 10000
           },
           {
             "item_id": "soulwyrmtonguet1",
@@ -119,8 +119,8 @@
           {
             "item_id": "aloegelt1",
             "item_name": "Aloe Gel",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 10000
           },
           {
             "item_id": "azothwatert1",
@@ -131,8 +131,8 @@
           {
             "item_id": "bulrushcobt1",
             "item_name": "Bulrush Cob",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 10000
           },
           {
             "item_id": "alkahestt2",
@@ -155,8 +155,8 @@
           {
             "item_id": "herbt1",
             "item_name": "Hyssop",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 10000
           },
           {
             "item_id": "alkahestt5",
@@ -167,8 +167,8 @@
           {
             "item_id": "lifebloomt3",
             "item_name": "Lifebloom Flower",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 10000
           },
           {
             "item_id": "lifemotheyest1",
@@ -234,8 +234,8 @@
           {
             "item_id": "dragongloryt3",
             "item_name": "Dragonglory Flower",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 10000
           },
           {
             "item_id": "lightningbeetlewingst1",
@@ -276,8 +276,8 @@
           {
             "item_id": "shockbulbt3",
             "item_name": "Shockbulb Flower",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 10000
           },
           {
             "item_id": "lodestoneairt1",
@@ -300,8 +300,8 @@
           {
             "item_id": "thornyvinet1",
             "item_name": "Thorny Vine",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 10000
           }
         ]
       }
@@ -337,8 +337,8 @@
           {
             "item_id": "earthspinet3",
             "item_name": "Earthspine Flower",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 10000
           },
           {
             "item_id": "lodestonewatert1",
@@ -355,14 +355,14 @@
           {
             "item_id": "reedt1",
             "item_name": "Reeds",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 10000
           },
           {
             "item_id": "rivercresst3",
             "item_name": "Rivercress Flower",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 10000
           },
           {
             "item_id": "spinefishfinst1",
@@ -380,26 +380,26 @@
           {
             "item_id": "alchemyairt3",
             "item_name": "Air Essence",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 1000
           },
           {
             "item_id": "alchemyairt1",
             "item_name": "Air Mote",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 1000
           },
           {
             "item_id": "essenceairt1",
             "item_name": "Air Quintessence",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 1000
           },
           {
             "item_id": "alchemyairt2",
             "item_name": "Air Wisp",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 1000
           }
         ]
       },
@@ -411,26 +411,26 @@
           {
             "item_id": "alchemydeatht3",
             "item_name": "Death Essence",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 1000
           },
           {
             "item_id": "alchemydeatht1",
             "item_name": "Death Mote",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 1000
           },
           {
             "item_id": "essencedeatht1",
             "item_name": "Death Quintessence",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 1000
           },
           {
             "item_id": "alchemydeatht2",
             "item_name": "Death Wisp",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 1000
           }
         ]
       },
@@ -442,26 +442,26 @@
           {
             "item_id": "alchemyeartht3",
             "item_name": "Earth Essence",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 1000
           },
           {
             "item_id": "alchemyeartht1",
             "item_name": "Earth Mote",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 1000
           },
           {
             "item_id": "essenceeartht1",
             "item_name": "Earth Quintessence",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 1000
           },
           {
             "item_id": "alchemyeartht2",
             "item_name": "Earth Wisp",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 1000
           }
         ]
       },
@@ -473,26 +473,26 @@
           {
             "item_id": "alchemyfiret3",
             "item_name": "Fire Essence",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 1000
           },
           {
             "item_id": "alchemyfiret1",
             "item_name": "Fire Mote",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 1000
           },
           {
             "item_id": "essencefiret1",
             "item_name": "Fire Quintessence",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 1000
           },
           {
             "item_id": "alchemyfiret2",
             "item_name": "Fire Wisp",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 1000
           }
         ]
       },
@@ -504,26 +504,26 @@
           {
             "item_id": "alchemylifet3",
             "item_name": "Life Essence",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 1000
           },
           {
             "item_id": "alchemylifet1",
             "item_name": "Life Mote",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 1000
           },
           {
             "item_id": "essencelifet1",
             "item_name": "Life Quintessence",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 1000
           },
           {
             "item_id": "alchemylifet2",
             "item_name": "Life Wisp",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 1000
           }
         ]
       },
@@ -535,26 +535,26 @@
           {
             "item_id": "alchemyspiritt3",
             "item_name": "Soul Essence",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 1000
           },
           {
             "item_id": "alchemyspiritt1",
             "item_name": "Soul Mote",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 1000
           },
           {
             "item_id": "essencespiritt1",
             "item_name": "Soul Quintessence",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 1000
           },
           {
             "item_id": "alchemyspiritt2",
             "item_name": "Soul Wisp",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 1000
           }
         ]
       },
@@ -566,26 +566,26 @@
           {
             "item_id": "alchemywatert3",
             "item_name": "Water Essence",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 1000
           },
           {
             "item_id": "alchemywatert1",
             "item_name": "Water Mote",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 1000
           },
           {
             "item_id": "essencewatert1",
             "item_name": "Water Quintessence",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 1000
           },
           {
             "item_id": "alchemywatert2",
             "item_name": "Water Wisp",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 1000
           }
         ]
       },
