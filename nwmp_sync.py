@@ -302,6 +302,27 @@ def _names_df(df: pd.DataFrame) -> pd.DataFrame:
         return out.drop_duplicates("item_id")
     return pd.DataFrame(columns=["item_id", "item_name"])
 
+def _meta_df(df: pd.DataFrame) -> pd.DataFrame:
+    """Extrai meta por item_id: trading_category/family/group."""
+    if df is None or df.empty or "item_id" not in df.columns:
+        return pd.DataFrame(columns=["item_id", "trading_category", "trading_family", "trading_group"])
+    keep = ["item_id"]
+    for c in ["trading_category", "trading_family", "trading_group"]:
+        if c in df.columns:
+            keep.append(c)
+    out = df.loc[:, keep].copy()
+    # garantir todas as colunas
+    for c in ["trading_category", "trading_family", "trading_group"]:
+        if c not in out.columns:
+            out[c] = None
+    # 1 linha por item_id (pega o primeiro valor disponível)
+    out = (out
+           .groupby("item_id", as_index=False)
+           .agg(trading_category=("trading_category", "first"),
+                trading_family=("trading_family", "first"),
+                trading_group=("trading_group", "first")))
+    return out
+
 def _group_buy(df: pd.DataFrame) -> pd.DataFrame:
     needed = {"item_id", "price", "quantity"}
     if not needed.issubset(set(df.columns)):
@@ -357,12 +378,29 @@ def process_latest_snapshot(prefer_buy: str = "auto", prefer_sell: str = "auto")
     name_buy  = _names_df(buy_df)
     name_sell = _names_df(sell_df)
 
+    # meta (trading_*)
+    meta_buy  = _meta_df(buy_df)
+    meta_sell = _meta_df(sell_df)
+    if not meta_buy.empty or not meta_sell.empty:
+        meta = pd.concat([meta_sell, meta_buy], ignore_index=True)
+        # garantir colunas
+        for c in ["trading_category", "trading_family", "trading_group"]:
+            if c not in meta.columns:
+                meta[c] = None
+        meta = (meta.groupby("item_id", as_index=False)
+                     .agg(trading_category=("trading_category","first"),
+                          trading_family=("trading_family","first"),
+                          trading_group=("trading_group","first")))
+    else:
+        meta = pd.DataFrame(columns=["item_id","trading_category","trading_family","trading_group"])
+
     merged = top_buy.merge(low_sell, on="item_id", how="outer")
     if not name_buy.empty or not name_sell.empty:
         names = pd.concat([name_sell, name_buy], ignore_index=True).drop_duplicates("item_id")
     else:
         names = pd.DataFrame(columns=["item_id","item_name"])
     merged = merged.merge(names, on="item_id", how="left")
+    merged = merged.merge(meta, on="item_id", how="left")
 
     # fallback de nomes via mapa também no processamento
     item_name_map = _load_item_name_map(ITEM_NAME_MAP_PATH)
@@ -389,6 +427,9 @@ def process_latest_snapshot(prefer_buy: str = "auto", prefer_sell: str = "auto")
             "timestamp": ref_ts,
             "item_id": row.item_id,
             "item_name": getattr(row, "item_name", None),
+            "trading_category": getattr(row, "trading_category", None),
+            "trading_family": getattr(row, "trading_family", None),
+            "trading_group": getattr(row, "trading_group", None),
             "top_buy":  float(row.top_buy)  if hasattr(row, "top_buy")  and pd.notna(row.top_buy)  else None,
             "low_sell": float(row.low_sell) if hasattr(row, "low_sell") and pd.notna(row.low_sell) else None,
             "buy_qty":  int(row.buy_qty)    if hasattr(row, "buy_qty")  and pd.notna(row.buy_qty)  else 0,
