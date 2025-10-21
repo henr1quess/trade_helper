@@ -25,11 +25,6 @@ HOME_CFG  = Path.home() / ".nw_flip_config.json"
 LOCAL_CFG = SCRIPT_DIR / "nw_flip_config.json"
 CFG_CANDIDATES = [LOCAL_CFG, HOME_CFG]
 
-HISTORY_PATH = SCRIPT_DIR / "history_local.json"
-LEGACY_HISTORY_PATH = SCRIPT_DIR / "history.json"
-LEGACY_WATCHLIST = SCRIPT_DIR / "watchlist.json"
-HISTORY_READ_CANDIDATES = [HISTORY_PATH, LEGACY_HISTORY_PATH, LEGACY_WATCHLIST]
-
 ITEMS_PATH = SCRIPT_DIR / "items.json"  # master data of items (cadastro)
 
 # --------------------------------------------------------------------------------------
@@ -84,18 +79,6 @@ def load_json_records(path: Path, cols=None):
         return df
     except Exception:
         return pd.DataFrame(columns=cols or [])
-
-def load_history():
-    # Histórico agora guarda apenas os preços de mercado (sem fills/durações)
-    base_cols = ["timestamp", "item", "buy_market", "sell_market"]
-    for p in HISTORY_READ_CANDIDATES:
-        if p.exists():
-            return load_json_records(p, base_cols), p
-    return pd.DataFrame(columns=base_cols), None
-
-def save_history(df: pd.DataFrame):
-    HISTORY_PATH.parent.mkdir(parents=True, exist_ok=True)
-    df.to_json(HISTORY_PATH, orient="records", indent=2)
 
 # Tags helpers
 def ensure_list_tags(x):
@@ -580,30 +563,8 @@ with tab_best:
             return (row["profit_per_unit"] * row["qty_por_ordem"]) / slots_por_ordem
         enriched["lucro_por_slot"] = enriched.apply(lucro_slot, axis=1)
 
-        # Liquidez (dos seus fills) — se disponível no histórico legado
+        # Liquidez — placeholder até que uma nova fonte seja integrada
         enriched["liquidez"] = "—"
-        full_hist, _ = load_history()
-        liq_cols = {"buy_placed_ts", "sell_filled_ts"}
-        if liq_cols.issubset(set(full_hist.columns)):
-            for col in liq_cols.union({"buy_filled_ts"}):
-                if col in full_hist.columns:
-                    full_hist[col] = pd.to_datetime(full_hist[col], utc=True, errors="coerce")
-            liq = []
-            for it, g in full_hist.groupby("item"):
-                g = g.copy()
-                if {"buy_placed_ts", "sell_filled_ts"}.issubset(g.columns):
-                    mask_rt = g["buy_placed_ts"].notna() & g["sell_filled_ts"].notna()
-                    rt = (g.loc[mask_rt, "sell_filled_ts"] - g.loc[mask_rt, "buy_placed_ts"]).dropna()
-                    med_h = median_timedelta_hours(rt) if not rt.empty else None
-                else:
-                    med_h = None
-                liq.append({"item": it, "median_hours": med_h, "liquidez": liquidity_label(med_h)})
-            liq_df = pd.DataFrame(liq)
-            enriched = enriched.drop(columns=["liquidez"], errors="ignore").merge(liq_df, on="item", how="left")
-            if "liquidez" not in enriched.columns:
-                enriched["liquidez"] = "—"
-            else:
-                enriched["liquidez"] = enriched["liquidez"].fillna("—")
 
         # Controles de filtragem
         st.markdown("### Filtros")
