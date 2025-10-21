@@ -10375,56 +10375,56 @@
           {
             "item_id": "dyeb110",
             "item_name": "Dark Tan Dye",
-            "weight": null,
-            "stack_max": null
+            "weight": "0.100",
+            "stack_max": 100
           },
           {
             "item_id": "dyeb114",
             "item_name": "Delicate Silver Dye",
-            "weight": null,
-            "stack_max": null
+            "weight": "0.100",
+            "stack_max": 100
           },
           {
             "item_id": "dyeb107",
             "item_name": "Detritus Dye",
-            "weight": null,
-            "stack_max": null
+            "weight": "0.100",
+            "stack_max": 100
           },
           {
             "item_id": "dyeb113",
             "item_name": "Dust Dye",
-            "weight": null,
-            "stack_max": null
+            "weight": "0.100",
+            "stack_max": 100
           },
           {
             "item_id": "dyeb111",
             "item_name": "Forest Lichen Dye",
-            "weight": null,
-            "stack_max": null
+            "weight": "0.100",
+            "stack_max": 100
           },
           {
             "item_id": "dyeb115",
             "item_name": "Rough Almond Dye",
-            "weight": null,
-            "stack_max": null
+            "weight": "0.100",
+            "stack_max": 100
           },
           {
             "item_id": "dyeb112",
             "item_name": "Russet Brown Dye",
-            "weight": null,
-            "stack_max": null
+            "weight": "0.100",
+            "stack_max": 100
           },
           {
             "item_id": "dyeb108",
             "item_name": "Saddle Brown Dye",
-            "weight": null,
-            "stack_max": null
+            "weight": "0.100",
+            "stack_max": 100
           },
           {
             "item_id": "dyeb109",
             "item_name": "Tarnished Obsidian Dye",
-            "weight": null,
-            "stack_max": null
+            "weight": "0.100",
+            "stack_max": 100
           }
         ]
       },
@@ -10436,44 +10436,44 @@
           {
             "item_id": "dyeb154",
             "item_name": "Castle Aquamarine Dye",
-            "weight": null,
-            "stack_max": null
+            "weight": "0.100",
+            "stack_max": 100
           },
           {
             "item_id": "dyeb152",
             "item_name": "Deep Sea Green Dye",
-            "weight": null,
-            "stack_max": null
+            "weight": "0.100",
+            "stack_max": 100
           },
           {
             "item_id": "dyeb157",
             "item_name": "Juniper Dye",
-            "weight": null,
-            "stack_max": null
+            "weight": "0.100",
+            "stack_max": 100
           },
           {
             "item_id": "dyeb153",
             "item_name": "Mineral Green Dye",
-            "weight": null,
-            "stack_max": null
+            "weight": "0.100",
+            "stack_max": 100
           },
           {
             "item_id": "dyeb156",
             "item_name": "Pale Cobalt Dye",
-            "weight": null,
-            "stack_max": null
+            "weight": "0.100",
+            "stack_max": 100
           },
           {
             "item_id": "dyeb155",
             "item_name": "Soft Cyan Dye",
-            "weight": null,
-            "stack_max": null
+            "weight": "0.100",
+            "stack_max": 100
           },
           {
             "item_id": "dyeb173",
             "item_name": "Turquoise Oasis Dye",
-            "weight": null,
-            "stack_max": null
+            "weight": "0.100",
+            "stack_max": 100
           }
         ]
       },
@@ -10485,62 +10485,62 @@
           {
             "item_id": "dyeb142",
             "item_name": "Autumn Moss Dye",
-            "weight": null,
-            "stack_max": null
+            "weight": "0.100",
+            "stack_max": 100
           },
           {
             "item_id": "dyeb144",
             "item_name": "Avocado Dye",
-            "weight": null,
-            "stack_max": null
+            "weight": "0.100",
+            "stack_max": 100
           },
           {
             "item_id": "dyeb174",
             "item_name": "Cactus Sage Dye",
-            "weight": null,
-            "stack_max": null
+            "weight": "0.100",
+            "stack_max": 100
           },
           {
             "item_id": "dyeb180",
             "item_name": "Marauder Camouflage Green Dye",
-            "weight": null,
-            "stack_max": null
+            "weight": "0.100",
+            "stack_max": 100
           },
           {
             "item_id": "dyeb179",
             "item_name": "Marauder Greenhorn Dye",
-            "weight": null,
-            "stack_max": null
+            "weight": "0.100",
+            "stack_max": 100
           },
           {
             "item_id": "dyeb141",
             "item_name": "Swamp Grass Dye",
-            "weight": null,
-            "stack_max": null
+            "weight": "0.100",
+            "stack_max": 100
           },
           {
             "item_id": "dyeb146",
             "item_name": "Tarnished Jade Dye",
-            "weight": null,
-            "stack_max": null
+            "weight": "0.100",
+            "stack_max": 100
           },
           {
             "item_id": "dyeb145",
             "item_name": "Tropical Mist Dye",
-            "weight": null,
-            "stack_max": null
+            "weight": "0.100",
+            "stack_max": 100
           },
           {
             "item_id": "dyeb140",
             "item_name": "Verdun Green Dye",
-            "weight": null,
-            "stack_max": null
+            "weight": "0.100",
+            "stack_max": 100
           },
           {
             "item_id": "dyeb143",
             "item_name": "Warm Slime Dye",
-            "weight": null,
-            "stack_max": null
+            "weight": "0.100",
+            "stack_max": 100
           }
         ]
       },
@@ -10552,32 +10552,32 @@
           {
             "item_id": "dyeb103",
             "item_name": "Corduroy Dye",
-            "weight": null,
-            "stack_max": null
+            "weight": "0.100",
+            "stack_max": 100
           },
           {
             "item_id": "dyeb102",
             "item_name": "Dove Gray Dye",
-            "weight": null,
-            "stack_max": null
+            "weight": "0.100",
+            "stack_max": 100
           },
           {
             "item_id": "dyeb100",
             "item_name": "Frozen Basalt Dye",
-            "weight": null,
-            "stack_max": null
+            "weight": "0.100",
+            "stack_max": 100
           },
           {
             "item_id": "dyeb106",
             "item_name": "Gunsmoke Dye",
-            "weight": null,
-            "stack_max": null
+            "weight": "0.100",
+            "stack_max": 100
           },
           {
             "item_id": "dyeb104",
             "item_name": "Murky Water Dye",
-            "weight": null,
-            "stack_max": null
+            "weight": "0.100",
+            "stack_max": 100
           }
         ]
       },
@@ -10589,38 +10589,38 @@
           {
             "item_id": "dyeb170",
             "item_name": "Daisy Pink Dye",
-            "weight": null,
-            "stack_max": null
+            "weight": "0.100",
+            "stack_max": 100
           },
           {
             "item_id": "dyeb168",
             "item_name": "Harsh Violet Dye",
-            "weight": null,
-            "stack_max": null
+            "weight": "0.100",
+            "stack_max": 100
           },
           {
             "item_id": "dyeb169",
             "item_name": "Putrid Plum Dye",
-            "weight": null,
-            "stack_max": null
+            "weight": "0.100",
+            "stack_max": 100
           },
           {
             "item_id": "dyeb177",
             "item_name": "Royal Azalea Dye",
-            "weight": null,
-            "stack_max": null
+            "weight": "0.100",
+            "stack_max": 100
           },
           {
             "item_id": "dyeb171",
             "item_name": "Sublime Velvet Dye",
-            "weight": null,
-            "stack_max": null
+            "weight": "0.100",
+            "stack_max": 100
           },
           {
             "item_id": "dyeb172",
             "item_name": "Summer Raspberry Dye",
-            "weight": null,
-            "stack_max": null
+            "weight": "0.100",
+            "stack_max": 100
           }
         ]
       },
@@ -10632,50 +10632,50 @@
           {
             "item_id": "dyeb123",
             "item_name": "Deep Chocolate Dye",
-            "weight": null,
-            "stack_max": null
+            "weight": "0.100",
+            "stack_max": 100
           },
           {
             "item_id": "dyeb129",
             "item_name": "Desert Dye",
-            "weight": null,
-            "stack_max": null
+            "weight": "0.100",
+            "stack_max": 100
           },
           {
             "item_id": "dyeb128",
             "item_name": "Medium Carmine Dye",
-            "weight": null,
-            "stack_max": null
+            "weight": "0.100",
+            "stack_max": 100
           },
           {
             "item_id": "dyeb124",
             "item_name": "Rich Vanilla Dye",
-            "weight": null,
-            "stack_max": null
+            "weight": "0.100",
+            "stack_max": 100
           },
           {
             "item_id": "dyeb127",
             "item_name": "Rusty Cream Dye",
-            "weight": null,
-            "stack_max": null
+            "weight": "0.100",
+            "stack_max": 100
           },
           {
             "item_id": "dyeb125",
             "item_name": "Seasoned Leather Dye",
-            "weight": null,
-            "stack_max": null
+            "weight": "0.100",
+            "stack_max": 100
           },
           {
             "item_id": "dyeb126",
             "item_name": "Spicy Pepper Dye",
-            "weight": null,
-            "stack_max": null
+            "weight": "0.100",
+            "stack_max": 100
           },
           {
             "item_id": "dyeb130",
             "item_name": "Sunset Slate Dye",
-            "weight": null,
-            "stack_max": null
+            "weight": "0.100",
+            "stack_max": 100
           }
         ]
       }
@@ -10693,44 +10693,44 @@
           {
             "item_id": "dyeb163",
             "item_name": "Berry Pit Dye",
-            "weight": null,
-            "stack_max": null
+            "weight": "0.100",
+            "stack_max": 100
           },
           {
             "item_id": "dyeb167",
             "item_name": "Burnished Lilac Dye",
-            "weight": null,
-            "stack_max": null
+            "weight": "0.100",
+            "stack_max": 100
           },
           {
             "item_id": "dyeb164",
             "item_name": "Coarse Amethyst Dye",
-            "weight": null,
-            "stack_max": null
+            "weight": "0.100",
+            "stack_max": 100
           },
           {
             "item_id": "dyeb166",
             "item_name": "Cool Violet Dye",
-            "weight": null,
-            "stack_max": null
+            "weight": "0.100",
+            "stack_max": 100
           },
           {
             "item_id": "dyeb165",
             "item_name": "Sovereign Purple Dye",
-            "weight": null,
-            "stack_max": null
+            "weight": "0.100",
+            "stack_max": 100
           },
           {
             "item_id": "dyeb182",
             "item_name": "Syndicate Aged Wine Dye",
-            "weight": null,
-            "stack_max": null
+            "weight": "0.100",
+            "stack_max": 100
           },
           {
             "item_id": "dyeb181",
             "item_name": "Syndicate Violaceous Ink Dye",
-            "weight": null,
-            "stack_max": null
+            "weight": "0.100",
+            "stack_max": 100
           }
         ]
       },
@@ -10742,50 +10742,50 @@
           {
             "item_id": "dyeb119",
             "item_name": "Amaranth Dye",
-            "weight": null,
-            "stack_max": null
+            "weight": "0.100",
+            "stack_max": 100
           },
           {
             "item_id": "dyeb175",
             "item_name": "Baked Red Clay Dye",
-            "weight": null,
-            "stack_max": null
+            "weight": "0.100",
+            "stack_max": 100
           },
           {
             "item_id": "dyeb116",
             "item_name": "Copper Dye",
-            "weight": null,
-            "stack_max": null
+            "weight": "0.100",
+            "stack_max": 100
           },
           {
             "item_id": "dyeb117",
             "item_name": "Dazzling Coral Dye",
-            "weight": null,
-            "stack_max": null
+            "weight": "0.100",
+            "stack_max": 100
           },
           {
             "item_id": "dyeb121",
             "item_name": "Field Peach Dye",
-            "weight": null,
-            "stack_max": null
+            "weight": "0.100",
+            "stack_max": 100
           },
           {
             "item_id": "dyeb118",
             "item_name": "Paradise Vermilion Dye",
-            "weight": null,
-            "stack_max": null
+            "weight": "0.100",
+            "stack_max": 100
           },
           {
             "item_id": "dyeb120",
             "item_name": "Rose Stone Dye",
-            "weight": null,
-            "stack_max": null
+            "weight": "0.100",
+            "stack_max": 100
           },
           {
             "item_id": "dyeb122",
             "item_name": "Sea Clam Dye",
-            "weight": null,
-            "stack_max": null
+            "weight": "0.100",
+            "stack_max": 100
           }
         ]
       },
@@ -10797,32 +10797,32 @@
           {
             "item_id": "dyeb147",
             "item_name": "Pesto Dye",
-            "weight": null,
-            "stack_max": null
+            "weight": "0.100",
+            "stack_max": 100
           },
           {
             "item_id": "dyeb149",
             "item_name": "Smokey Malachite Dye",
-            "weight": null,
-            "stack_max": null
+            "weight": "0.100",
+            "stack_max": 100
           },
           {
             "item_id": "dyeb151",
             "item_name": "Tranquil Willow Dye",
-            "weight": null,
-            "stack_max": null
+            "weight": "0.100",
+            "stack_max": 100
           },
           {
             "item_id": "dyeb150",
             "item_name": "Viridian Green Dye",
-            "weight": null,
-            "stack_max": null
+            "weight": "0.100",
+            "stack_max": 100
           },
           {
             "item_id": "dyeb148",
             "item_name": "Wedgewood Dye",
-            "weight": null,
-            "stack_max": null
+            "weight": "0.100",
+            "stack_max": 100
           }
         ]
       },
@@ -10834,68 +10834,68 @@
           {
             "item_id": "dyeb134",
             "item_name": "Buttered Rum Dye",
-            "weight": null,
-            "stack_max": null
+            "weight": "0.100",
+            "stack_max": 100
           },
           {
             "item_id": "dyeb132",
             "item_name": "Cinnamon Dye",
-            "weight": null,
-            "stack_max": null
+            "weight": "0.100",
+            "stack_max": 100
           },
           {
             "item_id": "dyeb184",
             "item_name": "Covenant Illustrious Yellow Dye",
-            "weight": null,
-            "stack_max": null
+            "weight": "0.100",
+            "stack_max": 100
           },
           {
             "item_id": "dyeb183",
             "item_name": "Covenant Young Fawn Dye",
-            "weight": null,
-            "stack_max": null
+            "weight": "0.100",
+            "stack_max": 100
           },
           {
             "item_id": "dyeb136",
             "item_name": "Delicate Sand Dye",
-            "weight": null,
-            "stack_max": null
+            "weight": "0.100",
+            "stack_max": 100
           },
           {
             "item_id": "dyeb131",
             "item_name": "Distorted Amber Dye",
-            "weight": null,
-            "stack_max": null
+            "weight": "0.100",
+            "stack_max": 100
           },
           {
             "item_id": "dyeb138",
             "item_name": "Grit Dye",
-            "weight": null,
-            "stack_max": null
+            "weight": "0.100",
+            "stack_max": 100
           },
           {
             "item_id": "dyeb137",
             "item_name": "Harvest Barley Dye",
-            "weight": null,
-            "stack_max": null
+            "weight": "0.100",
+            "stack_max": 100
           },
           {
             "item_id": "dyeb135",
             "item_name": "Raw Sienna Dye",
-            "weight": null,
-            "stack_max": null
+            "weight": "0.100",
+            "stack_max": 100
           },
           {
             "item_id": "dyeb133",
             "item_name": "Shadow Moss Dye",
-            "weight": null,
-            "stack_max": null
+            "weight": "0.100",
+            "stack_max": 100
           },
           {
             "item_id": "dyeb139",
             "item_name": "Twine Dye",
-            "weight": null,
-            "stack_max": null
+            "weight": "0.100",
+            "stack_max": 100
           }
         ]
       },
@@ -10907,98 +10907,98 @@
           {
             "item_id": "gemstonedustt3",
             "item_name": "Common Gemstone Dust",
-            "weight": null,
-            "stack_max": null
+            "weight": "0.500",
+            "stack_max": 100
           },
           {
             "item_id": "honingstonet3",
             "item_name": "Common Honing Stone",
-            "weight": null,
-            "stack_max": null
+            "weight": "0.500",
+            "stack_max": 100
           },
           {
             "item_id": "oakfleshbalmt3",
             "item_name": "Common Oakflesh Balm",
-            "weight": null,
-            "stack_max": null
+            "weight": "0.500",
+            "stack_max": 100
           },
           {
             "item_id": "gemstonedustt5",
             "item_name": "Powerful Gemstone Dust",
-            "weight": null,
-            "stack_max": null
+            "weight": "0.500",
+            "stack_max": 100
           },
           {
             "item_id": "honingstonet5",
             "item_name": "Powerful Honing Stone",
-            "weight": null,
-            "stack_max": null
+            "weight": "0.500",
+            "stack_max": 100
           },
           {
             "item_id": "incenset5",
             "item_name": "Powerful Incense",
-            "weight": null,
-            "stack_max": null
+            "weight": "0.500",
+            "stack_max": 100
           },
           {
             "item_id": "oakfleshbalmt5",
             "item_name": "Powerful Oakflesh Balm",
-            "weight": null,
-            "stack_max": null
+            "weight": "0.500",
+            "stack_max": 100
           },
           {
             "item_id": "proficiencyboostert5",
             "item_name": "Powerful Proficiency Boost",
-            "weight": null,
-            "stack_max": null
+            "weight": "0.500",
+            "stack_max": 100
           },
           {
             "item_id": "gemstonedustt4",
             "item_name": "Strong Gemstone Dust",
-            "weight": null,
-            "stack_max": null
+            "weight": "0.500",
+            "stack_max": 100
           },
           {
             "item_id": "honingstonet4",
             "item_name": "Strong Honing Stone",
-            "weight": null,
-            "stack_max": null
+            "weight": "0.500",
+            "stack_max": 100
           },
           {
             "item_id": "incenset4",
             "item_name": "Strong Incense",
-            "weight": null,
-            "stack_max": null
+            "weight": "0.500",
+            "stack_max": 100
           },
           {
             "item_id": "oakfleshbalmt4",
             "item_name": "Strong Oakflesh Balm",
-            "weight": null,
-            "stack_max": null
+            "weight": "0.500",
+            "stack_max": 100
           },
           {
             "item_id": "gemstonedustt2",
             "item_name": "Weak Gemstone Dust",
-            "weight": null,
-            "stack_max": null
+            "weight": "0.500",
+            "stack_max": 100
           },
           {
             "item_id": "honingstonet2",
             "item_name": "Weak Honing Stone",
-            "weight": null,
-            "stack_max": null
+            "weight": "0.500",
+            "stack_max": 100
           },
           {
             "item_id": "incenset2",
             "item_name": "Weak Incense",
-            "weight": null,
-            "stack_max": null
+            "weight": "0.500",
+            "stack_max": 100
           },
           {
             "item_id": "oakfleshbalmt2",
             "item_name": "Weak Oakflesh Balm",
-            "weight": null,
-            "stack_max": null
+            "weight": "0.500",
+            "stack_max": 100
           }
         ]
       },
@@ -11010,8 +11010,8 @@
           {
             "item_id": "rabbitseasontotem",
             "item_name": "Defiled Rabbit's Foot",
-            "weight": null,
-            "stack_max": null
+            "weight": "0.100",
+            "stack_max": 100
           }
         ]
       }
@@ -11029,128 +11029,128 @@
           {
             "item_id": "summermedley_grilledfishplate",
             "item_name": "Aeternum Sturgeon Grilled Fish Plate",
-            "weight": null,
-            "stack_max": null
+            "weight": "0.300",
+            "stack_max": 100
           },
           {
             "item_id": "foodancientgummybeart5",
             "item_name": "Ancient Grizzly Gummies",
-            "weight": null,
-            "stack_max": null
+            "weight": "0.300",
+            "stack_max": 100
           },
           {
             "item_id": "foodangryearthcandyfisht5",
             "item_name": "Angry Earth Candy Fish",
-            "weight": null,
-            "stack_max": null
+            "weight": "0.300",
+            "stack_max": 100
           },
           {
             "item_id": "wcconsumable_buttercreampudding",
             "item_name": "Buttercream Pudding",
-            "weight": null,
-            "stack_max": null
+            "weight": "0.300",
+            "stack_max": 100
           },
           {
             "item_id": "wcconsumable_convergencecake",
             "item_name": "Convergence Cake",
-            "weight": null,
-            "stack_max": null
+            "weight": "0.300",
+            "stack_max": 100
           },
           {
             "item_id": "foodcorruptedchocolatet5",
             "item_name": "Corrupted Jelly Beans",
-            "weight": null,
-            "stack_max": null
+            "weight": "0.300",
+            "stack_max": 100
           },
           {
             "item_id": "summermedley_caviar",
             "item_name": "Enchanted Aeternum Sturgeon Caviar",
-            "weight": null,
-            "stack_max": null
+            "weight": "0.300",
+            "stack_max": 100
           },
           {
             "item_id": "summermedley_firecrackersturgeon",
             "item_name": "Firecracker Aeternum Sturgeon",
-            "weight": null,
-            "stack_max": null
+            "weight": "0.300",
+            "stack_max": 100
           },
           {
             "item_id": "wcconsumable_gingersnapcookie",
             "item_name": "Gingersnap Cookie",
-            "weight": null,
-            "stack_max": null
+            "weight": "0.300",
+            "stack_max": 100
           },
           {
             "item_id": "summermedley_flatwraps",
             "item_name": "Grilled Aeternum Sturgeon Flatwraps",
-            "weight": null,
-            "stack_max": null
+            "weight": "0.300",
+            "stack_max": 100
           },
           {
             "item_id": "foodlostblacklicoricet5",
             "item_name": "Lost Black Licorice",
-            "weight": null,
-            "stack_max": null
+            "weight": "0.300",
+            "stack_max": 100
           },
           {
             "item_id": "foodlostblacklicoricet5bad",
             "item_name": "Lost Black Licorice",
-            "weight": null,
-            "stack_max": null
+            "weight": "0.300",
+            "stack_max": 100
           },
           {
             "item_id": "wcconsumable_mealiewrap",
             "item_name": "Mealiewrap",
-            "weight": null,
-            "stack_max": null
+            "weight": "0.300",
+            "stack_max": 100
           },
           {
             "item_id": "foodconluct5",
             "item_name": "Roasted Monstrous Turkey Dinner",
-            "weight": null,
-            "stack_max": null
+            "weight": "0.300",
+            "stack_max": 100
           },
           {
             "item_id": "summermedley_scaledustdelight",
             "item_name": "Scaledust Delight",
-            "weight": null,
-            "stack_max": null
+            "weight": "0.300",
+            "stack_max": 100
           },
           {
             "item_id": "summermedley_kebabs",
             "item_name": "Spiced Aeternum Sturgeon Kebabs",
-            "weight": null,
-            "stack_max": null
+            "weight": "0.300",
+            "stack_max": 100
           },
           {
             "item_id": "wcconsumable_spicednog",
             "item_name": "Spiced Nog",
-            "weight": null,
-            "stack_max": null
+            "weight": "0.300",
+            "stack_max": 100
           },
           {
             "item_id": "lny_spicy_hotpot",
             "item_name": "Spicy Hotpot",
-            "weight": null,
-            "stack_max": null
+            "weight": "0.300",
+            "stack_max": 100
           },
           {
             "item_id": "sbconsumable_springtidecrumble",
             "item_name": "Springtide Crumble",
-            "weight": null,
-            "stack_max": null
+            "weight": "0.300",
+            "stack_max": 100
           },
           {
             "item_id": "sbconsumable_springtidedram",
             "item_name": "Springtide Dram",
-            "weight": null,
-            "stack_max": null
+            "weight": "0.300",
+            "stack_max": 100
           },
           {
             "item_id": "sbconsumable_springtidewafer",
             "item_name": "Springtide Wafer",
-            "weight": null,
-            "stack_max": null
+            "weight": "0.300",
+            "stack_max": 100
           }
         ]
       },
@@ -11162,8 +11162,8 @@
           {
             "item_id": "foodmagt5",
             "item_name": "Roasted Prismatic Filet",
-            "weight": null,
-            "stack_max": null
+            "weight": "0.300",
+            "stack_max": 100
           }
         ]
       },
@@ -11175,38 +11175,38 @@
           {
             "item_id": "foodcont52",
             "item_name": "Banana Parfait",
-            "weight": null,
-            "stack_max": null
+            "weight": "0.300",
+            "stack_max": 100
           },
           {
             "item_id": "foodcont3",
             "item_name": "Game Meat with Citrus Glaze",
-            "weight": null,
-            "stack_max": null
+            "weight": "0.300",
+            "stack_max": 100
           },
           {
             "item_id": "foodcont5b",
             "item_name": "Gremolata Tenderloin",
-            "weight": null,
-            "stack_max": null
+            "weight": "0.300",
+            "stack_max": 100
           },
           {
             "item_id": "foodcont5",
             "item_name": "Roasted Rabbit with Seasoned Vegetables",
-            "weight": null,
-            "stack_max": null
+            "weight": "0.300",
+            "stack_max": 100
           },
           {
             "item_id": "foodcont4",
             "item_name": "Stuffed Calamari",
-            "weight": null,
-            "stack_max": null
+            "weight": "0.300",
+            "stack_max": 100
           },
           {
             "item_id": "foodcont2",
             "item_name": "Tarragon Poultry Sliders",
-            "weight": null,
-            "stack_max": null
+            "weight": "0.300",
+            "stack_max": 100
           }
         ]
       },
@@ -11218,38 +11218,38 @@
           {
             "item_id": "fooddext52",
             "item_name": "Banana Pudding",
-            "weight": null,
-            "stack_max": null
+            "weight": "0.300",
+            "stack_max": 100
           },
           {
             "item_id": "fooddext5b",
             "item_name": "Chili con Armadillo",
-            "weight": null,
-            "stack_max": null
+            "weight": "0.300",
+            "stack_max": 100
           },
           {
             "item_id": "fooddext5",
             "item_name": "Fried Albenaja",
-            "weight": null,
-            "stack_max": null
+            "weight": "0.300",
+            "stack_max": 100
           },
           {
             "item_id": "fooddext3",
             "item_name": "Honeyed Melon",
-            "weight": null,
-            "stack_max": null
+            "weight": "0.300",
+            "stack_max": 100
           },
           {
             "item_id": "fooddext2",
             "item_name": "Meat Pie",
-            "weight": null,
-            "stack_max": null
+            "weight": "0.300",
+            "stack_max": 100
           },
           {
             "item_id": "fooddext4",
             "item_name": "Seafood Bisque",
-            "weight": null,
-            "stack_max": null
+            "weight": "0.300",
+            "stack_max": 100
           }
         ]
       },
@@ -11261,44 +11261,44 @@
           {
             "item_id": "foodfoct5b",
             "item_name": "Armadillo Jocon",
-            "weight": null,
-            "stack_max": null
+            "weight": "0.300",
+            "stack_max": 100
           },
           {
             "item_id": "foodfoct5",
             "item_name": "Blackened Lava Barb with Corn Succotash",
-            "weight": null,
-            "stack_max": null
+            "weight": "0.300",
+            "stack_max": 100
           },
           {
             "item_id": "fooddott5",
             "item_name": "Desert Sunrise",
-            "weight": null,
-            "stack_max": null
+            "weight": "0.300",
+            "stack_max": 100
           },
           {
             "item_id": "foodmacomal",
             "item_name": "Mac O’Malley",
-            "weight": null,
-            "stack_max": null
+            "weight": "0.300",
+            "stack_max": 100
           },
           {
             "item_id": "foodfoct52",
             "item_name": "Tostones",
-            "weight": null,
-            "stack_max": null
+            "weight": "0.300",
+            "stack_max": 100
           },
           {
             "item_id": "foodfoct4",
             "item_name": "Turkey Pot Pie",
-            "weight": null,
-            "stack_max": null
+            "weight": "0.300",
+            "stack_max": 100
           },
           {
             "item_id": "foodfoct2",
             "item_name": "Venison Pot Roast",
-            "weight": null,
-            "stack_max": null
+            "weight": "0.300",
+            "stack_max": 100
           }
         ]
       },
@@ -11310,32 +11310,32 @@
           {
             "item_id": "foodintt5b",
             "item_name": "Ancho Masala Scorpion",
-            "weight": null,
-            "stack_max": null
+            "weight": "0.300",
+            "stack_max": 100
           },
           {
             "item_id": "foodintt2",
             "item_name": "Blackened Fish Filet",
-            "weight": null,
-            "stack_max": null
+            "weight": "0.300",
+            "stack_max": 100
           },
           {
             "item_id": "foodintt52",
             "item_name": "Fruit Salad",
-            "weight": null,
-            "stack_max": null
+            "weight": "0.300",
+            "stack_max": 100
           },
           {
             "item_id": "foodintt5",
             "item_name": "Steamed Abaia Serpe",
-            "weight": null,
-            "stack_max": null
+            "weight": "0.300",
+            "stack_max": 100
           },
           {
             "item_id": "foodintt3",
             "item_name": "Stuffed Pork Chop",
-            "weight": null,
-            "stack_max": null
+            "weight": "0.300",
+            "stack_max": 100
           }
         ]
       }
@@ -11353,32 +11353,32 @@
           {
             "item_id": "foodstrt52",
             "item_name": "Banana Bread",
-            "weight": null,
-            "stack_max": null
+            "weight": "0.300",
+            "stack_max": 100
           },
           {
             "item_id": "foodstrt5b",
             "item_name": "Beef Braciole",
-            "weight": null,
-            "stack_max": null
+            "weight": "0.300",
+            "stack_max": 100
           },
           {
             "item_id": "foodstrt2",
             "item_name": "Pork Chops and Apple Sauce",
-            "weight": null,
-            "stack_max": null
+            "weight": "0.300",
+            "stack_max": 100
           },
           {
             "item_id": "foodstrt5",
             "item_name": "Roasted Gnufish",
-            "weight": null,
-            "stack_max": null
+            "weight": "0.300",
+            "stack_max": 100
           },
           {
             "item_id": "foodstrt3",
             "item_name": "Supreme Omelet",
-            "weight": null,
-            "stack_max": null
+            "weight": "0.300",
+            "stack_max": 100
           }
         ]
       },
@@ -11390,38 +11390,38 @@
           {
             "item_id": "foodhealthrecoveryt5",
             "item_name": "Hearty Meal",
-            "weight": null,
-            "stack_max": null
+            "weight": "0.300",
+            "stack_max": 100
           },
           {
             "item_id": "foodhealthrecoveryt3",
             "item_name": "Light Meal",
-            "weight": null,
-            "stack_max": null
+            "weight": "0.300",
+            "stack_max": 100
           },
           {
             "item_id": "foodhealthrecoveryt1",
             "item_name": "Light Ration",
-            "weight": null,
-            "stack_max": null
+            "weight": "0.100",
+            "stack_max": 100
           },
           {
             "item_id": "hardtackt1",
             "item_name": "Old Hardtack",
-            "weight": null,
-            "stack_max": null
+            "weight": "0.100",
+            "stack_max": 100
           },
           {
             "item_id": "foodhealthrecoveryt4",
             "item_name": "Satisfying Meal",
-            "weight": null,
-            "stack_max": null
+            "weight": "0.300",
+            "stack_max": 100
           },
           {
             "item_id": "foodhealthrecoveryt2",
             "item_name": "Travel Ration",
-            "weight": null,
-            "stack_max": null
+            "weight": "0.100",
+            "stack_max": 100
           }
         ]
       },
@@ -11433,32 +11433,32 @@
           {
             "item_id": "foodmanat5",
             "item_name": "Energizing Hearty Meal",
-            "weight": null,
-            "stack_max": null
+            "weight": "0.300",
+            "stack_max": 100
           },
           {
             "item_id": "foodmanat3",
             "item_name": "Energizing Light Meal",
-            "weight": null,
-            "stack_max": null
+            "weight": "0.300",
+            "stack_max": 100
           },
           {
             "item_id": "foodmanat1",
             "item_name": "Energizing Light Ration",
-            "weight": null,
-            "stack_max": null
+            "weight": "0.100",
+            "stack_max": 100
           },
           {
             "item_id": "foodmanat4",
             "item_name": "Energizing Satisfying Meal",
-            "weight": null,
-            "stack_max": null
+            "weight": "0.300",
+            "stack_max": 100
           },
           {
             "item_id": "foodmanat2",
             "item_name": "Energizing Travel Ration",
-            "weight": null,
-            "stack_max": null
+            "weight": "0.100",
+            "stack_max": 100
           }
         ]
       },
@@ -11470,8 +11470,8 @@
           {
             "item_id": "foodarcanistt5",
             "item_name": "Sweet Wild Berry Infusion",
-            "weight": null,
-            "stack_max": null
+            "weight": "0.300",
+            "stack_max": 100
           }
         ]
       },
@@ -11483,8 +11483,8 @@
           {
             "item_id": "foodarmorert5",
             "item_name": "Spicy Cabbage Soup",
-            "weight": null,
-            "stack_max": null
+            "weight": "0.300",
+            "stack_max": 100
           }
         ]
       },
@@ -11496,8 +11496,8 @@
           {
             "item_id": "foodengineert5",
             "item_name": "Herb-Crusted Vegetables",
-            "weight": null,
-            "stack_max": null
+            "weight": "0.300",
+            "stack_max": 100
           }
         ]
       },
@@ -11509,14 +11509,14 @@
           {
             "item_id": "foodharvestert52",
             "item_name": "Biscuits and Gravy",
-            "weight": null,
-            "stack_max": null
+            "weight": "0.300",
+            "stack_max": 100
           },
           {
             "item_id": "foodharvestert5",
             "item_name": "Spicy Steak Pie",
-            "weight": null,
-            "stack_max": null
+            "weight": "0.300",
+            "stack_max": 100
           }
         ]
       },
@@ -11528,14 +11528,14 @@
           {
             "item_id": "foodhuntert52",
             "item_name": "Grilled Tenderloin and Vegetables",
-            "weight": null,
-            "stack_max": null
+            "weight": "0.300",
+            "stack_max": 100
           },
           {
             "item_id": "foodhuntert5",
             "item_name": "Savory Fish Cake",
-            "weight": null,
-            "stack_max": null
+            "weight": "0.300",
+            "stack_max": 100
           }
         ]
       },
@@ -11547,8 +11547,8 @@
           {
             "item_id": "foodjewelcraftert5",
             "item_name": "Glazed Melon Bread",
-            "weight": null,
-            "stack_max": null
+            "weight": "0.300",
+            "stack_max": 100
           }
         ]
       },
@@ -11560,14 +11560,14 @@
           {
             "item_id": "foodlumberjackt52",
             "item_name": "Bear Flank and Cabbage",
-            "weight": null,
-            "stack_max": null
+            "weight": "0.300",
+            "stack_max": 100
           },
           {
             "item_id": "foodlumberjackt5",
             "item_name": "Salted Poultry with Cabbage",
-            "weight": null,
-            "stack_max": null
+            "weight": "0.300",
+            "stack_max": 100
           }
         ]
       },
@@ -11579,14 +11579,14 @@
           {
             "item_id": "foodminert52",
             "item_name": "Crispy Chicken and Potatoes",
-            "weight": null,
-            "stack_max": null
+            "weight": "0.300",
+            "stack_max": 100
           },
           {
             "item_id": "foodminert5",
             "item_name": "Salted Roasted Vegetables",
-            "weight": null,
-            "stack_max": null
+            "weight": "0.300",
+            "stack_max": 100
           }
         ]
       },
@@ -11598,8 +11598,8 @@
           {
             "item_id": "foodweaponsmitht5",
             "item_name": "Savory Vegetable Medley",
-            "weight": null,
-            "stack_max": null
+            "weight": "0.300",
+            "stack_max": 100
           }
         ]
       }
