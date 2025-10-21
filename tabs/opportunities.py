@@ -93,22 +93,54 @@ def _save_watchlist_ids(ids: set[str], df_lookup: pd.DataFrame):
 def _filters_cascade(df: pd.DataFrame) -> pd.DataFrame:
     st.markdown("### Filtros por Category / Family / Group")
 
+    # ---------------- Category ----------------
     cats_all = sorted(df["trading_category"].dropna().astype(str).unique().tolist())
     default_cats = [c for c in ["Resources","Utilities"] if c in cats_all]
-    sel_cats = st.multiselect("Category", cats_all, default=default_cats, placeholder="Selecione 1+ categorias")
+    col_c1, col_c2 = st.columns((1,1), vertical_alignment="center")
+    with col_c1:
+        sel_cats = st.multiselect("Category (incluir)", cats_all, default=default_cats,
+                                  placeholder="Selecione 1+ categorias")
+    with col_c2:
+        ex_cats = st.multiselect("Category (excluir)", cats_all, placeholder="Opcional: excluir categorias")
 
-    df_cat = df if not sel_cats else df[df["trading_category"].astype(str).isin(sel_cats)]
+    df_cat = df.copy()
+    if sel_cats:
+        df_cat = df_cat[df_cat["trading_category"].astype(str).isin(sel_cats)]
+    if ex_cats:
+        df_cat = df_cat[~df_cat["trading_category"].astype(str).isin(ex_cats)]
 
+    # ---------------- Family ----------------
     fam_opts = sorted(df_cat["trading_family"].dropna().astype(str).unique().tolist())
     fam_defaults = [f for f in ["RefinedResources","RawResources"] if f in fam_opts]
-    sel_fams = st.multiselect("Family", fam_opts, default=fam_defaults, placeholder="Selecione 1+ families")
+    col_f1, col_f2 = st.columns((1,1), vertical_alignment="center")
+    with col_f1:
+        sel_fams = st.multiselect("Family (incluir)", fam_opts, default=fam_defaults,
+                                  placeholder="Selecione 1+ families")
+    with col_f2:
+        ex_fams = st.multiselect("Family (excluir)", fam_opts, placeholder="Opcional: excluir families")
 
-    df_fam = df_cat if not sel_fams else df_cat[df_cat["trading_family"].astype(str).isin(sel_fams)]
+    df_fam = df_cat.copy()
+    if sel_fams:
+        df_fam = df_fam[df_fam["trading_family"].astype(str).isin(sel_fams)]
+    if ex_fams:
+        df_fam = df_fam[~df_fam["trading_family"].astype(str).isin(ex_fams)]
 
+    # ---------------- Group ----------------
     grp_opts = sorted(df_fam["trading_group"].dropna().astype(str).unique().tolist())
-    sel_grps = st.multiselect("Group", grp_opts, placeholder="Selecione 1+ groups")
+    col_g1, col_g2 = st.columns((1,1), vertical_alignment="center")
+    with col_g1:
+        sel_grps = st.multiselect("Group (incluir)", grp_opts, placeholder="Selecione 1+ groups")
+    with col_g2:
+        ex_grps = st.multiselect("Group (excluir)", grp_opts, placeholder="Opcional: excluir groups")
 
-    return df_fam if not sel_grps else df_fam[df_fam["trading_group"].astype(str).isin(sel_grps)]
+    df_grp = df_fam.copy()
+    if sel_grps:
+        df_grp = df_grp[df_grp["trading_group"].astype(str).isin(sel_grps)]
+    if ex_grps:
+        df_grp = df_grp[~df_grp["trading_group"].astype(str).isin(ex_grps)]
+
+    return df_grp
+
 
 def _roi_slider_bounds(df: pd.DataFrame):
     vals = pd.to_numeric(df["roi_pct"], errors="coerce").dropna()

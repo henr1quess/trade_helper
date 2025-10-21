@@ -1,16 +1,20 @@
 {
   "items": [
     {
-      "item_id": "",
-      "item_name": "Infused Weapon Fragment"
+      "item_id": "BlockT2",
+      "item_name": "Stone Block"
     },
     {
-      "item_id": "",
-      "item_name": "Iron Ore"
+      "item_id": "BlockT3",
+      "item_name": "Stone Brick"
     },
     {
-      "item_id": "adamatinedustt1",
-      "item_name": "Adamantine Dust"
+      "item_id": "BlockT4",
+      "item_name": "Lodestone Brick"
+    },
+    {
+      "item_id": "TimberT2",
+      "item_name": "Timber"
     }
   ]
 }
