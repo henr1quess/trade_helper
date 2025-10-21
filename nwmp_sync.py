@@ -149,6 +149,44 @@ def _update_last_sync_metadata(
     _write_json_object(meta_path, meta)
     return payload_copy
 
+
+def _resolve_snapshot_path(path_value: Optional[str], raw_root: Path) -> Optional[Path]:
+    if not path_value:
+        return None
+    path = Path(path_value)
+    if not path.is_absolute():
+        path = raw_root / path
+    if not path.exists():
+        return None
+    return path
+
+
+def _load_snapshot_entries_from_path(
+    path_value: Optional[str], raw_root: Path
+) -> List[Dict[str, Any]]:
+    path = _resolve_snapshot_path(path_value, raw_root)
+    if path is None:
+        return []
+    try:
+        data = json.loads(path.read_text(encoding="utf-8"))
+    except Exception:
+        return []
+    if isinstance(data, list):
+        return [entry for entry in data if isinstance(entry, dict)]
+    if isinstance(data, dict):
+        # Compatibilidade com formato legado em que buy/sell estavam no mesmo arquivo
+        buy_entries = data.get("buy")
+        if isinstance(buy_entries, list):
+            return [entry for entry in buy_entries if isinstance(entry, dict)]
+    return []
+
+
+def _write_snapshot_entries_file(path: Path, entries: List[Dict[str, Any]]) -> None:
+    _ensure_dir(path.parent)
+    with open(path, "w", encoding="utf-8") as f:
+        json.dump(entries, f, ensure_ascii=False)
+
+
 def _load_local_snapshot_entries(directory: Path) -> List[Dict[str, Any]]:
     entries: List[Dict[str, Any]] = []
     if not directory.exists():
@@ -415,27 +453,6 @@ def extract_records_from_snapshots(
 
 # ------------------ History.json projection (for the current app) ------------------
 
-def _write_snapshot_bundle(
-    bundle_path: Path,
-    source: str,
-    snapshot_iso: str,
-    buy_entries: List[Dict[str, Any]],
-    sell_entries: List[Dict[str, Any]],
-    extra: Optional[Dict[str, Any]] = None,
-) -> None:
-    payload: Dict[str, Any] = {
-        "source": source,
-        "snapshot_ts": snapshot_iso,
-        "buy": buy_entries,
-        "sell": sell_entries,
-    }
-    if extra:
-        payload.update(extra)
-    _ensure_dir(bundle_path.parent)
-    with open(bundle_path, "w", encoding="utf-8") as f:
-        json.dump(payload, f, ensure_ascii=False)
-
-
 def collect_remote_snapshot(
     buy_url_or_path: str,
     sell_url_or_path: Optional[str] = None,
@@ -469,18 +486,13 @@ def collect_remote_snapshot(
         snapshot_dt = datetime.now(timezone.utc)
     snapshot_iso = _ts_iso_z(snapshot_dt)
 
-    bundle_path = Path(raw_root) / "collected" / "remote_latest.json"
-    _write_snapshot_bundle(
-        bundle_path,
-        source="remote",
-        snapshot_iso=snapshot_iso,
-        buy_entries=buy_entries,
-        sell_entries=sell_entries,
-        extra={
-            "buy_snapshot_ts": buy_snapshot_ts,
-            "sell_snapshot_ts": sell_snapshot_ts,
-        },
-    )
+    raw_root_path = Path(raw_root)
+
+    buy_path = raw_root_path / "collected" / "remote_latest_buy.json"
+    sell_path = raw_root_path / "collected" / "remote_latest_sell.json"
+
+    _write_snapshot_entries_file(buy_path, buy_entries)
+    _write_snapshot_entries_file(sell_path, sell_entries)
 
     now_iso = _ts_iso_z(datetime.now(timezone.utc))
     meta_payload: Dict[str, Any] = {
@@ -491,7 +503,8 @@ def collect_remote_snapshot(
         "sell_snapshot_ts": sell_snapshot_ts,
         "buy_entries": len(buy_entries),
         "sell_entries": len(sell_entries),
-        "collected_payload_path": str(bundle_path),
+        "buy_snapshot_path": str(buy_path),
+        "sell_snapshot_path": str(sell_path),
         "server": server,
     }
 
@@ -503,7 +516,8 @@ def collect_remote_snapshot(
         "buy_entries": buy_entries,
         "sell_entries": sell_entries,
         "snapshot_iso": snapshot_iso,
-        "bundle_path": str(bundle_path),
+        "buy_path": str(buy_path),
+        "sell_path": str(sell_path),
     }
 
 
@@ -538,14 +552,11 @@ def collect_local_snapshot(
             _normalise_local_entry(e, snapshot_dt, server) for e in sell_entries_raw
         ]
 
-    bundle_path = raw_root_path / "collected" / "local_latest.json"
-    _write_snapshot_bundle(
-        bundle_path,
-        source="local",
-        snapshot_iso=snapshot_iso,
-        buy_entries=buy_entries,
-        sell_entries=sell_entries,
-    )
+    buy_path = raw_root_path / "collected" / "local_latest_buy.json"
+    sell_path = raw_root_path / "collected" / "local_latest_sell.json"
+
+    _write_snapshot_entries_file(buy_path, buy_entries)
+    _write_snapshot_entries_file(sell_path, sell_entries)
 
     now_iso = _ts_iso_z(datetime.now(timezone.utc))
     meta_payload: Dict[str, Any] = {
@@ -554,7 +565,8 @@ def collect_local_snapshot(
         "collected_at": now_iso,
         "buy_entries": len(buy_entries),
         "sell_entries": len(sell_entries),
-        "collected_payload_path": str(bundle_path),
+        "buy_snapshot_path": str(buy_path),
+        "sell_snapshot_path": str(sell_path),
         "server": server,
     }
 
@@ -566,7 +578,8 @@ def collect_local_snapshot(
         "buy_entries": buy_entries,
         "sell_entries": sell_entries,
         "snapshot_iso": snapshot_iso,
-        "bundle_path": str(bundle_path),
+        "buy_path": str(buy_path),
+        "sell_path": str(sell_path),
     }
 
 
@@ -662,17 +675,28 @@ def process_latest_snapshot(
 
     chosen_dt, chosen_source, chosen_entry = max(candidates, key=lambda tup: tup[0])
 
-    bundle_data = _load_snapshot_bundle(
-        chosen_entry.get("collected_payload_path"), raw_root_path
+    buy_entries = _load_snapshot_entries_from_path(
+        chosen_entry.get("buy_snapshot_path"), raw_root_path
+    )
+    sell_entries = _load_snapshot_entries_from_path(
+        chosen_entry.get("sell_snapshot_path"), raw_root_path
     )
 
-    buy_entries = bundle_data.get("buy") if isinstance(bundle_data, dict) else None
-    sell_entries = bundle_data.get("sell") if isinstance(bundle_data, dict) else None
-
-    if buy_entries is None:
-        buy_entries = []
-    if sell_entries is None:
-        sell_entries = []
+    if not buy_entries and not sell_entries:
+        legacy_payload = _load_snapshot_bundle(
+            chosen_entry.get("collected_payload_path"), raw_root_path
+        )
+        if isinstance(legacy_payload, dict):
+            buy_entries = [
+                entry
+                for entry in legacy_payload.get("buy", [])
+                if isinstance(entry, dict)
+            ]
+            sell_entries = [
+                entry
+                for entry in legacy_payload.get("sell", [])
+                if isinstance(entry, dict)
+            ]
 
     snapshot_iso = chosen_entry.get("collected_snapshot_ts") or chosen_entry.get(
         "snapshot_ts"
