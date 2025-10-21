@@ -7372,38 +7372,38 @@
           {
             "item_id": "runeglass_gem_carnelian_arcane",
             "item_name": "Runeglass of Empowered Carnelian",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 10
           },
           {
             "item_id": "runeglass_gem_carnelian_stamina",
             "item_name": "Runeglass of Energizing Carnelian",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 10
           },
           {
             "item_id": "runeglass_gem_carnelian_fire",
             "item_name": "Runeglass of Ignited Carnelian",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 10
           },
           {
             "item_id": "runeglass_gem_carnelian_heal",
             "item_name": "Runeglass of Leeching Carnelian",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 10
           },
           {
             "item_id": "runeglass_gem_carnelian_melee",
             "item_name": "Runeglass of Punishing Carnelian",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 10
           },
           {
             "item_id": "runeglass_gem_carnelian_ranged",
             "item_name": "Runeglass of Sighted Carnelian",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 10
           }
         ]
       },
@@ -7415,68 +7415,68 @@
           {
             "item_id": "runeglass_gem_diamond_void",
             "item_name": "Runeglass of Abyssal Diamond",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 10
           },
           {
             "item_id": "runeglass_gem_diamond_nature",
             "item_name": "Runeglass of Arboreal Diamond",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 10
           },
           {
             "item_id": "runeglass_gem_diamond_lightning",
             "item_name": "Runeglass of Electrified Diamond",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 10
           },
           {
             "item_id": "runeglass_gem_diamond_arcane",
             "item_name": "Runeglass of Empowered Diamond",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 10
           },
           {
             "item_id": "runeglass_gem_diamond_stamina",
             "item_name": "Runeglass of Energizing Diamond",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 10
           },
           {
             "item_id": "runeglass_gem_diamond_ice",
             "item_name": "Runeglass of Frozen Diamond",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 10
           },
           {
             "item_id": "runeglass_gem_diamond_fire",
             "item_name": "Runeglass of Ignited Diamond",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 10
           },
           {
             "item_id": "runeglass_gem_diamond_heal",
             "item_name": "Runeglass of Leeching Diamond",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 10
           },
           {
             "item_id": "runeglass_gem_diamond_melee",
             "item_name": "Runeglass of Punishing Diamond",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 10
           },
           {
             "item_id": "runeglass_gem_diamond_ranged",
             "item_name": "Runeglass of Sighted Diamond",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 10
           },
           {
             "item_id": "runeglass_gem_diamond_mana",
             "item_name": "Runeglass of Siphoning Diamond",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 10
           }
         ]
       },
@@ -7488,50 +7488,50 @@
           {
             "item_id": "runeglass_gem_emerald_void",
             "item_name": "Runeglass of Abyssal Emerald",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 10
           },
           {
             "item_id": "runeglass_gem_emerald_nature",
             "item_name": "Runeglass of Arboreal Emerald",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 10
           },
           {
             "item_id": "runeglass_gem_emerald_lightning",
             "item_name": "Runeglass of Electrified Emerald",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 10
           },
           {
             "item_id": "runeglass_gem_emerald_stamina",
             "item_name": "Runeglass of Energizing Emerald",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 10
           },
           {
             "item_id": "runeglass_gem_emerald_ice",
             "item_name": "Runeglass of Frozen Emerald",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 10
           },
           {
             "item_id": "runeglass_gem_emerald_fire",
             "item_name": "Runeglass of Ignited Emerald",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 10
           },
           {
             "item_id": "runeglass_gem_emerald_heal",
             "item_name": "Runeglass of Leeching Emerald",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 10
           },
           {
             "item_id": "runeglass_gem_emerald_melee",
             "item_name": "Runeglass of Punishing Emerald",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 10
           }
         ]
       },
@@ -7543,68 +7543,68 @@
           {
             "item_id": "runeglass_case_empty_lightning",
             "item_name": "Runeglass Case of Electrifying",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 10
           },
           {
             "item_id": "runeglass_case_empty_arcane",
             "item_name": "Runeglass Case of Empowering",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 10
           },
           {
             "item_id": "runeglass_case_empty_stamina",
             "item_name": "Runeglass Case of Energizing",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 10
           },
           {
             "item_id": "runeglass_case_empty_ice",
             "item_name": "Runeglass Case of Freezing",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 10
           },
           {
             "item_id": "runeglass_case_empty_fire",
             "item_name": "Runeglass Case of Igniting",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 10
           },
           {
             "item_id": "runeglass_case_empty_heal",
             "item_name": "Runeglass Case of Leeching",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 10
           },
           {
             "item_id": "runeglass_case_empty_nature",
             "item_name": "Runeglass Case of Nature",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 10
           },
           {
             "item_id": "runeglass_case_empty_melee",
             "item_name": "Runeglass Case of Punishing",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 10
           },
           {
             "item_id": "runeglass_case_empty_ranged",
             "item_name": "Runeglass Case of Sight",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 10
           },
           {
             "item_id": "runeglass_case_empty_mana",
             "item_name": "Runeglass Case of Siphoning",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 10
           },
           {
             "item_id": "runeglass_case_empty_void",
             "item_name": "Runeglass Case of the Abyss",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 10
           }
         ]
       },
@@ -7616,56 +7616,56 @@
           {
             "item_id": "runeglass_gem_jasper_void",
             "item_name": "Runeglass of Abyssal Jasper",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 10
           },
           {
             "item_id": "runeglass_gem_jasper_nature",
             "item_name": "Runeglass of Arboreal Jasper",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 10
           },
           {
             "item_id": "runeglass_gem_jasper_lightning",
             "item_name": "Runeglass of Electrified Jasper",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 10
           },
           {
             "item_id": "runeglass_gem_jasper_stamina",
             "item_name": "Runeglass of Energizing Jasper",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 10
           },
           {
             "item_id": "runeglass_gem_jasper_ice",
             "item_name": "Runeglass of Frozen Jasper",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 10
           },
           {
             "item_id": "runeglass_gem_jasper_fire",
             "item_name": "Runeglass of Ignited Jasper",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 10
           },
           {
             "item_id": "runeglass_gem_jasper_heal",
             "item_name": "Runeglass of Leeching Jasper",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 10
           },
           {
             "item_id": "runeglass_gem_jasper_melee",
             "item_name": "Runeglass of Punishing Jasper",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 10
           },
           {
             "item_id": "runeglass_gem_jasper_ranged",
             "item_name": "Runeglass of Sighted Jasper",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 10
           }
         ]
       }
@@ -7683,56 +7683,56 @@
           {
             "item_id": "runeglass_gem_malachite_void",
             "item_name": "Runeglass of Abyssal Malachite",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 10
           },
           {
             "item_id": "runeglass_gem_malachite_nature",
             "item_name": "Runeglass of Arboreal Malachite",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 10
           },
           {
             "item_id": "runeglass_gem_malachite_lightning",
             "item_name": "Runeglass of Electrified Malachite",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 10
           },
           {
             "item_id": "runeglass_gem_malachite_stamina",
             "item_name": "Runeglass of Energizing Malachite",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 10
           },
           {
             "item_id": "runeglass_gem_malachite_ice",
             "item_name": "Runeglass of Frozen Malachite",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 10
           },
           {
             "item_id": "runeglass_gem_malachite_fire",
             "item_name": "Runeglass of Ignited Malachite",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 10
           },
           {
             "item_id": "runeglass_gem_malachite_heal",
             "item_name": "Runeglass of Leeching Malachite",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 10
           },
           {
             "item_id": "runeglass_gem_malachite_melee",
             "item_name": "Runeglass of Punishing Malachite",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 10
           },
           {
             "item_id": "runeglass_gem_malachite_ranged",
             "item_name": "Runeglass of Sighted Malachite",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 10
           }
         ]
       },
@@ -7744,44 +7744,44 @@
           {
             "item_id": "runeglass_gem_moonstone_void",
             "item_name": "Runeglass of Abyssal Moonstone",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 10
           },
           {
             "item_id": "runeglass_gem_moonstone_nature",
             "item_name": "Runeglass of Arboreal Moonstone",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 10
           },
           {
             "item_id": "runeglass_gem_moonstone_lightning",
             "item_name": "Runeglass of Electrified Moonstone",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 10
           },
           {
             "item_id": "runeglass_gem_moonstone_stamina",
             "item_name": "Runeglass of Energizing Moonstone",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 10
           },
           {
             "item_id": "runeglass_gem_moonstone_fire",
             "item_name": "Runeglass of Ignited Moonstone",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 10
           },
           {
             "item_id": "runeglass_gem_moonstone_melee",
             "item_name": "Runeglass of Punishing Moonstone",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 10
           },
           {
             "item_id": "runeglass_gem_moonstone_ranged",
             "item_name": "Runeglass of Sighted Moonstone",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 10
           }
         ]
       },
@@ -7793,68 +7793,68 @@
           {
             "item_id": "runeglass_gem_onyx_void",
             "item_name": "Runeglass of Abyssal Onyx",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 10
           },
           {
             "item_id": "runeglass_gem_onyx_nature",
             "item_name": "Runeglass of Arboreal Onyx",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 10
           },
           {
             "item_id": "runeglass_gem_onyx_lightning",
             "item_name": "Runeglass of Electrified Onyx",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 10
           },
           {
             "item_id": "runeglass_gem_onyx_arcane",
             "item_name": "Runeglass of Empowered Onyx",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 10
           },
           {
             "item_id": "runeglass_gem_onyx_stamina",
             "item_name": "Runeglass of Energizing Onyx",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 10
           },
           {
             "item_id": "runeglass_gem_onyx_ice",
             "item_name": "Runeglass of Frozen Onyx",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 10
           },
           {
             "item_id": "runeglass_gem_onyx_fire",
             "item_name": "Runeglass of Ignited Onyx",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 10
           },
           {
             "item_id": "runeglass_gem_onyx_heal",
             "item_name": "Runeglass of Leeching Onyx",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 10
           },
           {
             "item_id": "runeglass_gem_onyx_melee",
             "item_name": "Runeglass of Punishing Onyx",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 10
           },
           {
             "item_id": "runeglass_gem_onyx_ranged",
             "item_name": "Runeglass of Sighted Onyx",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 10
           },
           {
             "item_id": "runeglass_gem_onyx_mana",
             "item_name": "Runeglass of Siphoning Onyx",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 10
           }
         ]
       },
@@ -7866,68 +7866,68 @@
           {
             "item_id": "runeglass_gem_opal_void",
             "item_name": "Runeglass of Abyssal Opal",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 10
           },
           {
             "item_id": "runeglass_gem_opal_nature",
             "item_name": "Runeglass of Arboreal Opal",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 10
           },
           {
             "item_id": "runeglass_gem_opal_lightning",
             "item_name": "Runeglass of Electrified Opal",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 10
           },
           {
             "item_id": "runeglass_gem_opal_arcane",
             "item_name": "Runeglass of Empowered Opal",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 10
           },
           {
             "item_id": "runeglass_gem_opal_stamina",
             "item_name": "Runeglass of Energizing Opal",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 10
           },
           {
             "item_id": "runeglass_gem_opal_ice",
             "item_name": "Runeglass of Frozen Opal",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 10
           },
           {
             "item_id": "runeglass_gem_opal_fire",
             "item_name": "Runeglass of Ignited Opal",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 10
           },
           {
             "item_id": "runeglass_gem_opal_heal",
             "item_name": "Runeglass of Leeching Opal",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 10
           },
           {
             "item_id": "runeglass_gem_opal_melee",
             "item_name": "Runeglass of Punishing Opal",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 10
           },
           {
             "item_id": "runeglass_gem_opal_ranged",
             "item_name": "Runeglass of Sighted Opal",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 10
           },
           {
             "item_id": "runeglass_gem_opal_mana",
             "item_name": "Runeglass of Siphoning Opal",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 10
           }
         ]
       },
@@ -7939,56 +7939,56 @@
           {
             "item_id": "runeglass_gem_ruby_void",
             "item_name": "Runeglass of Abyssal Ruby",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 10
           },
           {
             "item_id": "runeglass_gem_ruby_nature",
             "item_name": "Runeglass of Arboreal Ruby",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 10
           },
           {
             "item_id": "runeglass_gem_ruby_lightning",
             "item_name": "Runeglass of Electrified Ruby",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 10
           },
           {
             "item_id": "runeglass_gem_ruby_arcane",
             "item_name": "Runeglass of Empowered Ruby",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 10
           },
           {
             "item_id": "runeglass_gem_ruby_stamina",
             "item_name": "Runeglass of Energizing Ruby",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 10
           },
           {
             "item_id": "runeglass_gem_ruby_fire",
             "item_name": "Runeglass of Ignited Ruby",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 10
           },
           {
             "item_id": "runeglass_gem_ruby_heal",
             "item_name": "Runeglass of Leeching Ruby",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 10
           },
           {
             "item_id": "runeglass_gem_ruby_melee",
             "item_name": "Runeglass of Punishing Ruby",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 10
           },
           {
             "item_id": "runeglass_gem_ruby_ranged",
             "item_name": "Runeglass of Sighted Ruby",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 10
           }
         ]
       }
@@ -8006,44 +8006,44 @@
           {
             "item_id": "runeglass_gem_sapphire_void",
             "item_name": "Runeglass of Abyssal Sapphire",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 10
           },
           {
             "item_id": "runeglass_gem_sapphire_lightning",
             "item_name": "Runeglass of Electrified Sapphire",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 10
           },
           {
             "item_id": "runeglass_gem_sapphire_arcane",
             "item_name": "Runeglass of Empowered Sapphire",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 10
           },
           {
             "item_id": "runeglass_gem_sapphire_fire",
             "item_name": "Runeglass of Ignited Sapphire",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 10
           },
           {
             "item_id": "runeglass_gem_sapphire_heal",
             "item_name": "Runeglass of Leeching Sapphire",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 10
           },
           {
             "item_id": "runeglass_gem_sapphire_melee",
             "item_name": "Runeglass of Punishing Sapphire",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 10
           },
           {
             "item_id": "runeglass_gem_sapphire_ranged",
             "item_name": "Runeglass of Sighted Sapphire",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 10
           }
         ]
       },
@@ -8055,50 +8055,50 @@
           {
             "item_id": "runeglass_gem_topaz_void",
             "item_name": "Runeglass of Abyssal Topaz",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 10
           },
           {
             "item_id": "runeglass_gem_topaz_lightning",
             "item_name": "Runeglass of Electrified Topaz",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 10
           },
           {
             "item_id": "runeglass_gem_topaz_arcane",
             "item_name": "Runeglass of Empowered Topaz",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 10
           },
           {
             "item_id": "runeglass_gem_topaz_ice",
             "item_name": "Runeglass of Frozen Topaz",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 10
           },
           {
             "item_id": "runeglass_gem_topaz_fire",
             "item_name": "Runeglass of Ignited Topaz",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 10
           },
           {
             "item_id": "runeglass_gem_topaz_heal",
             "item_name": "Runeglass of Leeching Topaz",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 10
           },
           {
             "item_id": "runeglass_gem_topaz_melee",
             "item_name": "Runeglass of Punishing Topaz",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 10
           },
           {
             "item_id": "runeglass_gem_topaz_ranged",
             "item_name": "Runeglass of Sighted Topaz",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 10
           }
         ]
       }
@@ -8116,590 +8116,590 @@
           {
             "item_id": "evergreenarmorshardt5",
             "item_name": "Evergreen Armor Shard",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 10
           },
           {
             "item_id": "evergreenweaponshardt5",
             "item_name": "Evergreen Weapon Shard",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 10
           },
           {
             "item_id": "frozenarmorshardt5",
             "item_name": "Frozen Armor Shard",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 10
           },
           {
             "item_id": "frozenweaponshardt5",
             "item_name": "Frozen Weapon Shard",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 10
           },
           {
             "item_id": "hollowarmorshardt5",
             "item_name": "Hollow Armor Shard",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 10
           },
           {
             "item_id": "hollowweaponshardt5",
             "item_name": "Hollow Weapon Shard",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 10
           },
           {
             "item_id": "blunderbusscharmt3",
             "item_name": "Orichalcum Blunderbuss Charm",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 100
           },
           {
             "item_id": "bowcharmt3",
             "item_name": "Orichalcum Bow Charm",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 100
           },
           {
             "item_id": "firestaffcharmt3",
             "item_name": "Orichalcum Fire Staff Charm",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 100
           },
           {
             "item_id": "flailcharmt3",
             "item_name": "Orichalcum Flail Charm",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 100
           },
           {
             "item_id": "2haxecharmt3",
             "item_name": "Orichalcum Great Axe Charm",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 100
           },
           {
             "item_id": "greatswordcharmt3",
             "item_name": "Orichalcum Greatsword Charm",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 100
           },
           {
             "item_id": "hatchetcharmt3",
             "item_name": "Orichalcum Hatchet Charm",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 100
           },
           {
             "item_id": "icegauntletcharmt3",
             "item_name": "Orichalcum Ice Gauntlet Charm",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 100
           },
           {
             "item_id": "lifestaffcharmt3",
             "item_name": "Orichalcum Life Staff Charm",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 100
           },
           {
             "item_id": "musketcharmt3",
             "item_name": "Orichalcum Musket Charm",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 100
           },
           {
             "item_id": "rapiercharmt3",
             "item_name": "Orichalcum Rapier Charm",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 100
           },
           {
             "item_id": "shieldcharmt3",
             "item_name": "Orichalcum Shield Charm",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 100
           },
           {
             "item_id": "spearcharmt3",
             "item_name": "Orichalcum Spear Charm",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 100
           },
           {
             "item_id": "swordcharmt3",
             "item_name": "Orichalcum Sword Charm",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 100
           },
           {
             "item_id": "voidgauntletcharmt3",
             "item_name": "Orichalcum Void Gauntlet Charm",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 100
           },
           {
             "item_id": "2hhammercharmt3",
             "item_name": "Orichalcum War Hammer Charm",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 100
           },
           {
             "item_id": "blunderbusscharmt6",
             "item_name": "Reinforced Orichalcum Blunderbuss Charm",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 100
           },
           {
             "item_id": "bowcharmt6",
             "item_name": "Reinforced Orichalcum Bow Charm",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 100
           },
           {
             "item_id": "firestaffcharmt6",
             "item_name": "Reinforced Orichalcum Fire Staff Charm",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 100
           },
           {
             "item_id": "flailcharmt6",
             "item_name": "Reinforced Orichalcum Flail Charm",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 100
           },
           {
             "item_id": "2haxecharmt6",
             "item_name": "Reinforced Orichalcum Great Axe Charm",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 100
           },
           {
             "item_id": "greatswordcharmt6",
             "item_name": "Reinforced Orichalcum Greatsword Charm",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 100
           },
           {
             "item_id": "hatchetcharmt6",
             "item_name": "Reinforced Orichalcum Hatchet Charm",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 100
           },
           {
             "item_id": "icegauntletcharmt6",
             "item_name": "Reinforced Orichalcum Ice Gauntlet Charm",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 100
           },
           {
             "item_id": "lifestaffcharmt6",
             "item_name": "Reinforced Orichalcum Life Staff Charm",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 100
           },
           {
             "item_id": "musketcharmt6",
             "item_name": "Reinforced Orichalcum Musket Charm",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 100
           },
           {
             "item_id": "rapiercharmt6",
             "item_name": "Reinforced Orichalcum Rapier Charm",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 100
           },
           {
             "item_id": "spearcharmt6",
             "item_name": "Reinforced Orichalcum Spear Charm",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 100
           },
           {
             "item_id": "voidgauntletcharmt6",
             "item_name": "Reinforced Orichalcum Void Gauntlet Charm",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 100
           },
           {
             "item_id": "2hhammercharmt6",
             "item_name": "Reinforced Orichalcum War Hammer Charm",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 100
           },
           {
             "item_id": "blunderbusscharmt5",
             "item_name": "Reinforced Starmetal Blunderbuss Charm",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 100
           },
           {
             "item_id": "bowcharmt5",
             "item_name": "Reinforced Starmetal Bow Charm",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 100
           },
           {
             "item_id": "firestaffcharmt5",
             "item_name": "Reinforced Starmetal Fire Staff Charm",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 100
           },
           {
             "item_id": "flailcharmt5",
             "item_name": "Reinforced Starmetal Flail Charm",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 100
           },
           {
             "item_id": "2haxecharmt5",
             "item_name": "Reinforced Starmetal Great Axe Charm",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 100
           },
           {
             "item_id": "greatswordcharmt5",
             "item_name": "Reinforced Starmetal Greatsword Charm",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 100
           },
           {
             "item_id": "hatchetcharmt5",
             "item_name": "Reinforced Starmetal Hatchet Charm",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 100
           },
           {
             "item_id": "icegauntletcharmt5",
             "item_name": "Reinforced Starmetal Ice Gauntlet Charm",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 100
           },
           {
             "item_id": "lifestaffcharmt5",
             "item_name": "Reinforced Starmetal Life Staff Charm",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 100
           },
           {
             "item_id": "musketcharmt5",
             "item_name": "Reinforced Starmetal Musket Charm",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 100
           },
           {
             "item_id": "rapiercharmt5",
             "item_name": "Reinforced Starmetal Rapier Charm",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 100
           },
           {
             "item_id": "spearcharmt5",
             "item_name": "Reinforced Starmetal Spear Charm",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 100
           },
           {
             "item_id": "voidgauntletcharmt5",
             "item_name": "Reinforced Starmetal Void Gauntlet Charm",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 100
           },
           {
             "item_id": "2hhammercharmt5",
             "item_name": "Reinforced Starmetal War Hammer Charm",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 100
           },
           {
             "item_id": "blunderbusscharmt4",
             "item_name": "Reinforced Steel Blunderbuss Charm",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 100
           },
           {
             "item_id": "bowcharmt4",
             "item_name": "Reinforced Steel Bow Charm",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 100
           },
           {
             "item_id": "firestaffcharmt4",
             "item_name": "Reinforced Steel Fire Staff Charm",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 100
           },
           {
             "item_id": "flailcharmt4",
             "item_name": "Reinforced Steel Flail Charm",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 100
           },
           {
             "item_id": "2haxecharmt4",
             "item_name": "Reinforced Steel Great Axe Charm",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 100
           },
           {
             "item_id": "greatswordcharmt4",
             "item_name": "Reinforced Steel Greatsword Charm",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 100
           },
           {
             "item_id": "hatchetcharmt4",
             "item_name": "Reinforced Steel Hatchet Charm",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 100
           },
           {
             "item_id": "icegauntletcharmt4",
             "item_name": "Reinforced Steel Ice Gauntlet Charm",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 100
           },
           {
             "item_id": "lifestaffcharmt4",
             "item_name": "Reinforced Steel Life Staff Charm",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 100
           },
           {
             "item_id": "musketcharmt4",
             "item_name": "Reinforced Steel Musket Charm",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 100
           },
           {
             "item_id": "rapiercharmt4",
             "item_name": "Reinforced Steel Rapier Charm",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 100
           },
           {
             "item_id": "spearcharmt4",
             "item_name": "Reinforced Steel Spear Charm",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 100
           },
           {
             "item_id": "voidgauntletcharmt4",
             "item_name": "Reinforced Steel Void Gauntlet Charm",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 100
           },
           {
             "item_id": "2hhammercharmt4",
             "item_name": "Reinforced Steel War Hammer Charm",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 100
           },
           {
             "item_id": "smolderingarmorshardt5",
             "item_name": "Smoldering Armor Shard",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 10
           },
           {
             "item_id": "smolderingweaponshardt5",
             "item_name": "Smoldering Weapon Shard",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 10
           },
           {
             "item_id": "blunderbusscharmt2",
             "item_name": "Starmetal Blunderbuss Charm",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 100
           },
           {
             "item_id": "bowcharmt2",
             "item_name": "Starmetal Bow Charm",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 100
           },
           {
             "item_id": "firestaffcharmt2",
             "item_name": "Starmetal Fire Staff Charm",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 100
           },
           {
             "item_id": "flailcharmt2",
             "item_name": "Starmetal Flail Charm",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 100
           },
           {
             "item_id": "2haxecharmt2",
             "item_name": "Starmetal Great Axe Charm",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 100
           },
           {
             "item_id": "greatswordcharmt2",
             "item_name": "Starmetal Greatsword Charm",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 100
           },
           {
             "item_id": "hatchetcharmt2",
             "item_name": "Starmetal Hatchet Charm",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 100
           },
           {
             "item_id": "icegauntletcharmt2",
             "item_name": "Starmetal Ice Gauntlet Charm",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 100
           },
           {
             "item_id": "lifestaffcharmt2",
             "item_name": "Starmetal Life Staff Charm",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 100
           },
           {
             "item_id": "musketcharmt2",
             "item_name": "Starmetal Musket Charm",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 100
           },
           {
             "item_id": "rapiercharmt2",
             "item_name": "Starmetal Rapier Charm",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 100
           },
           {
             "item_id": "shieldcharmt2",
             "item_name": "Starmetal Shield Charm",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 100
           },
           {
             "item_id": "spearcharmt2",
             "item_name": "Starmetal Spear Charm",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 100
           },
           {
             "item_id": "swordcharmt2",
             "item_name": "Starmetal Sword Charm",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 100
           },
           {
             "item_id": "voidgauntletcharmt2",
             "item_name": "Starmetal Void Gauntlet Charm",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 100
           },
           {
             "item_id": "2hhammercharmt2",
             "item_name": "Starmetal War Hammer Charm",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 100
           },
           {
             "item_id": "blunderbusscharmt1",
             "item_name": "Steel Blunderbuss Charm",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 100
           },
           {
             "item_id": "bowcharmt1",
             "item_name": "Steel Bow Charm",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 100
           },
           {
             "item_id": "firestaffcharmt1",
             "item_name": "Steel Fire Staff Charm",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 100
           },
           {
             "item_id": "flailcharmt1",
             "item_name": "Steel Flail Charm",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 100
           },
           {
             "item_id": "2haxecharmt1",
             "item_name": "Steel Great Axe Charm",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 100
           },
           {
             "item_id": "greatswordcharmt1",
             "item_name": "Steel Greatsword Charm",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 100
           },
           {
             "item_id": "hatchetcharmt1",
             "item_name": "Steel Hatchet Charm",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 100
           },
           {
             "item_id": "icegauntletcharmt1",
             "item_name": "Steel Ice Gauntlet Charm",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 100
           },
           {
             "item_id": "lifestaffcharmt1",
             "item_name": "Steel Life Staff Charm",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 100
           },
           {
             "item_id": "musketcharmt1",
             "item_name": "Steel Musket Charm",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 100
           },
           {
             "item_id": "rapiercharmt1",
             "item_name": "Steel Rapier Charm",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 100
           },
           {
             "item_id": "shieldcharmt1",
             "item_name": "Steel Shield Charm",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 100
           },
           {
             "item_id": "spearcharmt1",
             "item_name": "Steel Spear Charm",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 100
           },
           {
             "item_id": "swordcharmt1",
             "item_name": "Steel Sword Charm",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 100
           },
           {
             "item_id": "voidgauntletcharmt1",
             "item_name": "Steel Void Gauntlet Charm",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 100
           },
           {
             "item_id": "2hhammercharmt1",
             "item_name": "Steel War Hammer Charm",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 100
           }
         ]
       }
