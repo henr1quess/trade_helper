@@ -1,27 +1,20 @@
 # nwmp_sync.py
 # --------------------------------------------------------------------------------------
-# Fluxo:
-# 1) Baixar snapshots cloud (buy e sell) -> raw/collected/
-# 2) Copiar snapshots locais (BUY = arquivo; SELL = diretório com vários .json) -> raw/collected/
-# 3) Atualizar meta -> raw/last_sync_meta.json
-# 4) Processar -> raw/latest_snapshot.json (records com top_buy/low_sell por item)
-#    => agora aceita override de fonte: auto/cloud/local por lado (buy/sell)
+# 1) Download cloud -> raw/collected/
+# 2) Copy local (BUY arquivo, SELL pasta) -> raw/collected/ + ENRICH com item_name via raw/item_name_map.json
+# 3) Process -> raw/latest_snapshot.json (top_buy / low_sell)
+#    prefer_buy/prefer_sell: 'auto' | 'cloud' | 'local'
 # --------------------------------------------------------------------------------------
 
 from __future__ import annotations
 import json
-import shutil
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
 from datetime import datetime, timezone
 import requests
 import pandas as pd
-import glob
-import os
 
-# -----------------------------------
-# Caminhos do projeto
-# -----------------------------------
+# --- paths ---
 PROJECT_DIR = Path.cwd()
 RAW_DIR = PROJECT_DIR / "raw"
 COLLECTED_DIR = RAW_DIR / "collected"
@@ -31,32 +24,27 @@ COLLECTED_DIR.mkdir(parents=True, exist_ok=True)
 LAST_META_PATH = RAW_DIR / "last_sync_meta.json"
 PROCESSED_SNAPSHOT_PATH = RAW_DIR / "latest_snapshot.json"
 
-# Arquivos na pasta collected
+# mapa de nomes
+ITEM_NAME_MAP_PATH = RAW_DIR / "item_name_map.json"
+
+# arquivos coletados
 CLOUD_BUY_PATH = COLLECTED_DIR / "cloud_buy_devaloka.json"
 CLOUD_SELL_PATH = COLLECTED_DIR / "cloud_sell_devaloka.json"
 LOCAL_BUY_PATH = COLLECTED_DIR / "local_buy_devaloka.json"
 LOCAL_SELL_PATH = COLLECTED_DIR / "local_sell_devaloka.json"
 
-# Gaming Tools (cloud)
+# endpoints cloud
 GT_BASE = "https://nwmpdata.gaming.tools"
 BUY_URL = f"{GT_BASE}/buy-orders2/devaloka.json"
 SELL_URL = f"{GT_BASE}/auctions2/devaloka.json"
 
-# ----------- fontes locais padrão -----------
-# Crie local_sources.json no diretório do projeto (preferido)
-# ou ~/.nw_local_sources.json (fallback) com:
-# {
-#   "buy_file": "C:/Users/Administrador/AppData/Local/NWMPScanner2/current/buy-orders/devaloka.json",
-#   "sell_dir": "C:/Users/Administrador/AppData/Local/NWMPScanner2/current/auctions"
-# }
+# fontes locais padrão
 LOCAL_SOURCES_CANDIDATES = [
     PROJECT_DIR / "local_sources.json",
     Path.home() / ".nw_local_sources.json",
 ]
 
-# -----------------------
-# Helpers genéricos
-# -----------------------
+# --- utils ---
 def _now_utc_iso() -> str:
     return datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
 
@@ -85,8 +73,8 @@ def _parse_ts(s: Optional[str]) -> Optional[datetime]:
     except Exception:
         return None
 
-# ----- timestamp: aceita ISO ou epoch em created_at/expires_at -----
 def _to_iso_utc(ts_val) -> Optional[str]:
+    # aceita ISO ou epoch (int/float/str)
     if ts_val is None:
         return None
     if isinstance(ts_val, str) and "T" in ts_val:
@@ -111,7 +99,6 @@ def _extract_any_ts(entry: dict) -> Optional[str]:
     return None
 
 def _max_snapshot_ts(arr: List[Dict[str, Any]]) -> Optional[str]:
-    """Maior timestamp (ISO) considerando 'timestamp' (ISO) ou created_at/expires_at (epoch)."""
     best_iso: Optional[str] = None
     best_dt: Optional[datetime] = None
     for el in arr or []:
@@ -122,12 +109,10 @@ def _max_snapshot_ts(arr: List[Dict[str, Any]]) -> Optional[str]:
     return best_iso
 
 def _choose_by_newest(candidates: List[Tuple[str, Path]]) -> Tuple[Optional[Path], Optional[str], int]:
-    """Escolhe o arquivo com maior timestamp interno; se não houver, usa o mais recente por mtime."""
     winner_path: Optional[Path] = None
     winner_ts_raw: Optional[str] = None
     winner_dt: Optional[datetime] = None
     winner_len: int = 0
-
     for _, p in candidates:
         if not p.exists():
             continue
@@ -138,7 +123,6 @@ def _choose_by_newest(candidates: List[Tuple[str, Path]]) -> Tuple[Optional[Path
             ts_raw = _max_snapshot_ts(arr)
             ts_dt = _parse_ts(ts_raw) if ts_raw else None
             n = len(arr)
-            # fallback para mtime quando não há ts interno
             if not ts_dt:
                 ts_dt = datetime.fromtimestamp(p.stat().st_mtime, tz=timezone.utc)
             if (winner_dt is None) or (ts_dt and ts_dt > winner_dt):
@@ -148,12 +132,8 @@ def _choose_by_newest(candidates: List[Tuple[str, Path]]) -> Tuple[Optional[Path
                 winner_len = n
         except Exception:
             continue
-
     return winner_path, winner_ts_raw, winner_len
 
-# --------------------------------------
-# Helpers de leitura local (arquivo/pasta)
-# --------------------------------------
 def _load_json_array(p: Path) -> List[Dict[str, Any]]:
     try:
         data = _read_json(p)
@@ -175,16 +155,49 @@ def _load_from_file_or_folder(src: Optional[str]) -> List[Dict[str, Any]]:
     else:
         return _load_json_array(p)
 
-# -----------------------------
-# Config: fontes locais padrão
-# -----------------------------
+# --- item_name mapping ---
+def _load_item_name_map(path: Path = ITEM_NAME_MAP_PATH) -> Dict[str, str]:
+    """
+    raw/item_name_map.json:
+      - preferido: { "StoneT4": "Lodestone", ... }
+      - aceita lista de objetos com (item_id/item_name) ou (id/name)
+    """
+    try:
+        if not path.exists():
+            return {}
+        data = _read_json(path)
+        if isinstance(data, dict):
+            return {str(k): str(v) for k, v in data.items() if k and v}
+        if isinstance(data, list):
+            out: Dict[str, str] = {}
+            for row in data:
+                if not isinstance(row, dict):
+                    continue
+                iid = row.get("item_id") or row.get("id")
+                nm  = row.get("item_name") or row.get("name")
+                if iid and nm:
+                    out[str(iid)] = str(nm)
+            return out
+    except Exception:
+        pass
+    return {}
+
+def _enrich_with_names(rows: List[Dict[str, Any]], name_map: Dict[str, str]) -> List[Dict[str, Any]]:
+    """Adiciona item_name usando o mapa quando estiver ausente."""
+    if not rows or not name_map:
+        return rows
+    out: List[Dict[str, Any]] = []
+    for r in rows:
+        if isinstance(r, dict):
+            if not r.get("item_name"):
+                iid = r.get("item_id")
+                if iid and iid in name_map:
+                    r = {**r, "item_name": name_map[iid]}
+        out.append(r)
+    return out
+
+# --- config local_sources ---
 def _load_local_sources():
-    """
-    Aceita esquema:
-      {"buy_file":".../buy-orders/devaloka.json","sell_dir":".../auctions"}
-    ou legado:
-      {"buy":"...","sell":"..."}
-    """
     for p in LOCAL_SOURCES_CANDIDATES:
         if p.exists():
             try:
@@ -209,9 +222,7 @@ def get_local_source_config() -> Dict[str, Any]:
         "sell_dir": sell_src,
     }
 
-# --------------------------------------
-# 1) Baixar snapshots cloud (buy/sell)
-# --------------------------------------
+# --- 1) cloud download ---
 def download_cloud_snapshots(timeout: int = 60) -> Dict[str, Any]:
     r_buy = requests.get(BUY_URL, timeout=timeout)
     r_buy.raise_for_status()
@@ -238,15 +249,14 @@ def download_cloud_snapshots(timeout: int = 60) -> Dict[str, Any]:
     _merge_and_write_meta(meta)
     return meta
 
-# ---------------------------------------------------
-# 2) Copiar snapshots locais (arquivo/pasta) → collected
-# ---------------------------------------------------
+# --- 2) copy local (and ENRICH with names) ---
 def copy_local_snapshots(src_buy: Optional[str] = None, src_sell: Optional[str] = None) -> Dict[str, Any]:
     saved: Dict[str, Any] = {}
+    name_map = _load_item_name_map(ITEM_NAME_MAP_PATH)
 
-    # BUY (arquivo único)
     if src_buy:
         buy_rows = _load_from_file_or_folder(src_buy)
+        buy_rows = _enrich_with_names(buy_rows, name_map)
         _write_json(LOCAL_BUY_PATH, buy_rows)
         saved.update({
             "local_buy_path": str(LOCAL_BUY_PATH),
@@ -255,9 +265,9 @@ def copy_local_snapshots(src_buy: Optional[str] = None, src_sell: Optional[str] 
             "local_buy_source": src_buy,
         })
 
-    # SELL (arquivo OU diretório -> agrega)
     if src_sell:
         sell_rows = _load_from_file_or_folder(src_sell)
+        sell_rows = _enrich_with_names(sell_rows, name_map)
         _write_json(LOCAL_SELL_PATH, sell_rows)
         saved.update({
             "local_sell_path": str(LOCAL_SELL_PATH),
@@ -266,16 +276,12 @@ def copy_local_snapshots(src_buy: Optional[str] = None, src_sell: Optional[str] 
             "local_sell_source": src_sell,
         })
 
-    meta = {
-        "action": "copy_local_snapshots",
-        "when": _now_utc_iso(),
-        "saved": saved,
-    }
+    meta = {"action": "copy_local_snapshots", "when": _now_utc_iso(), "saved": saved}
     _merge_and_write_meta(meta)
     return meta
 
 def copy_local_from_defaults() -> Dict[str, Any]:
-    cfg_path, buy_file, sell_dir = _load_local_sources()
+    _, buy_file, sell_dir = _load_local_sources()
     if not buy_file and not sell_dir:
         raise RuntimeError(
             "Caminhos padrão não configurados. Crie local_sources.json com "
@@ -283,72 +289,86 @@ def copy_local_from_defaults() -> Dict[str, Any]:
         )
     return copy_local_snapshots(buy_file, sell_dir)
 
-# ---------------------------------------------------
-# 3) Processar (agora com override por lado)
-# ---------------------------------------------------
+# --- 3) process ---
+def _names_df(df: pd.DataFrame) -> pd.DataFrame:
+    cols = set(df.columns)
+    if {"item_id", "item_name"}.issubset(cols):
+        out = df.dropna(subset=["item_id"]).copy()
+        out = out.loc[:, ["item_id", "item_name"]]
+        return out.drop_duplicates("item_id")
+    return pd.DataFrame(columns=["item_id", "item_name"])
+
+def _group_buy(df: pd.DataFrame) -> pd.DataFrame:
+    needed = {"item_id", "price", "quantity"}
+    if not needed.issubset(set(df.columns)):
+        return pd.DataFrame(columns=["item_id","top_buy","buy_qty"])
+    x = df.copy()
+    x["price"] = pd.to_numeric(x["price"], errors="coerce")
+    x["quantity"] = pd.to_numeric(x["quantity"], errors="coerce").fillna(0)
+    return x.groupby("item_id", as_index=False).agg(top_buy=("price", "max"),
+                                                    buy_qty=("quantity", "sum"))
+
+def _group_sell(df: pd.DataFrame) -> pd.DataFrame:
+    needed = {"item_id", "price", "quantity"}
+    if not needed.issubset(set(df.columns)):
+        return pd.DataFrame(columns=["item_id","low_sell","sell_qty"])
+    x = df.copy()
+    x["price"] = pd.to_numeric(x["price"], errors="coerce")
+    x["quantity"] = pd.to_numeric(x["quantity"], errors="coerce").fillna(0)
+    return x.groupby("item_id", as_index=False).agg(low_sell=("price", "min"),
+                                                    sell_qty=("quantity", "sum"))
+
 def process_latest_snapshot(prefer_buy: str = "auto", prefer_sell: str = "auto") -> Dict[str, Any]:
-    """
-    prefer_buy / prefer_sell ∈ {'auto','cloud','local'}
-    """
-    # BUY: escolher fonte
+    # BUY select
     if prefer_buy == "cloud":
         buy_path = CLOUD_BUY_PATH if CLOUD_BUY_PATH.exists() else None
-        buy_ts = _max_snapshot_ts(_read_json(buy_path)) if buy_path else None
-        buy_count = _safe_len(_read_json(buy_path)) if buy_path else 0
+        buy_arr = _read_json(buy_path) if buy_path else []
+        buy_ts = _max_snapshot_ts(buy_arr); buy_count = _safe_len(buy_arr)
     elif prefer_buy == "local":
         buy_path = LOCAL_BUY_PATH if LOCAL_BUY_PATH.exists() else None
-        buy_ts = _max_snapshot_ts(_read_json(buy_path)) if buy_path else None
-        buy_count = _safe_len(_read_json(buy_path)) if buy_path else 0
-    else:  # auto
-        buy_path, buy_ts, buy_count = _choose_by_newest([
-            ("cloud_buy", CLOUD_BUY_PATH),
-            ("local_buy", LOCAL_BUY_PATH),
-        ])
+        buy_arr = _read_json(buy_path) if buy_path else []
+        buy_ts = _max_snapshot_ts(buy_arr); buy_count = _safe_len(buy_arr)
+    else:
+        buy_path, buy_ts, buy_count = _choose_by_newest([("cloud_buy", CLOUD_BUY_PATH), ("local_buy", LOCAL_BUY_PATH)])
+        buy_arr = _read_json(buy_path) if buy_path else []
 
-    # SELL: escolher fonte
+    # SELL select
     if prefer_sell == "cloud":
         sell_path = CLOUD_SELL_PATH if CLOUD_SELL_PATH.exists() else None
-        sell_ts = _max_snapshot_ts(_read_json(sell_path)) if sell_path else None
-        sell_count = _safe_len(_read_json(sell_path)) if sell_path else 0
+        sell_arr = _read_json(sell_path) if sell_path else []
+        sell_ts = _max_snapshot_ts(sell_arr); sell_count = _safe_len(sell_arr)
     elif prefer_sell == "local":
         sell_path = LOCAL_SELL_PATH if LOCAL_SELL_PATH.exists() else None
-        sell_ts = _max_snapshot_ts(_read_json(sell_path)) if sell_path else None
-        sell_count = _safe_len(_read_json(sell_path)) if sell_path else 0
-    else:  # auto
-        sell_path, sell_ts, sell_count = _choose_by_newest([
-            ("cloud_sell", CLOUD_SELL_PATH),
-            ("local_sell", LOCAL_SELL_PATH),
-        ])
-
-    buy_df = pd.DataFrame(_read_json(buy_path)) if buy_path else pd.DataFrame()
-    sell_df = pd.DataFrame(_read_json(sell_path)) if sell_path else pd.DataFrame()
-
-    if not buy_df.empty:
-        top_buy = (buy_df.groupby("item_id", as_index=False)
-                   .agg(top_buy=("price", "max"), buy_qty=("quantity", "sum")))
-        name_buy = (buy_df.dropna(subset=["item_id","item_name"])
-                    .drop_duplicates("item_id")[["item_id","item_name"]])
+        sell_arr = _read_json(sell_path) if sell_path else []
+        sell_ts = _max_snapshot_ts(sell_arr); sell_count = _safe_len(sell_arr)
     else:
-        top_buy = pd.DataFrame(columns=["item_id","top_buy","buy_qty"])
-        name_buy = pd.DataFrame(columns=["item_id","item_name"])
+        sell_path, sell_ts, sell_count = _choose_by_newest([("cloud_sell", CLOUD_SELL_PATH), ("local_sell", LOCAL_SELL_PATH)])
+        sell_arr = _read_json(sell_path) if sell_path else []
 
-    if not sell_df.empty:
-        low_sell = (sell_df.groupby("item_id", as_index=False)
-                    .agg(low_sell=("price", "min"), sell_qty=("quantity", "sum")))
-        name_sell = (sell_df.dropna(subset=["item_id","item_name"])
-                     .drop_duplicates("item_id")[["item_id","item_name"]])
-    else:
-        low_sell = pd.DataFrame(columns=["item_id","low_sell","sell_qty"])
-        name_sell = pd.DataFrame(columns=["item_id","item_name"])
+    buy_df  = pd.DataFrame(buy_arr)  if buy_arr  else pd.DataFrame()
+    sell_df = pd.DataFrame(sell_arr) if sell_arr else pd.DataFrame()
+
+    top_buy  = _group_buy(buy_df)
+    low_sell = _group_sell(sell_df)
+    name_buy  = _names_df(buy_df)
+    name_sell = _names_df(sell_df)
 
     merged = top_buy.merge(low_sell, on="item_id", how="outer")
-    names = (pd.concat([name_sell, name_buy], ignore_index=True)
-             if not name_buy.empty or not name_sell.empty
-             else pd.DataFrame(columns=["item_id","item_name"]))
-    names = names.drop_duplicates("item_id", keep="first")
+    if not name_buy.empty or not name_sell.empty:
+        names = pd.concat([name_sell, name_buy], ignore_index=True).drop_duplicates("item_id")
+    else:
+        names = pd.DataFrame(columns=["item_id","item_name"])
     merged = merged.merge(names, on="item_id", how="left")
 
-    # TS de referência
+    # fallback de nomes via mapa também no processamento
+    item_name_map = _load_item_name_map(ITEM_NAME_MAP_PATH)
+    if not merged.empty and ("item_name" not in merged.columns or merged["item_name"].isna().any()):
+        if "item_name" not in merged.columns:
+            merged["item_name"] = None
+        merged["item_name"] = merged["item_name"].where(merged["item_name"].notna(),
+                                                        merged["item_id"].map(item_name_map))
+
+    # timestamp de referência
     ref_ts = buy_ts or sell_ts
     bdt = _parse_ts(buy_ts) if buy_ts else None
     sdt = _parse_ts(sell_ts) if sell_ts else None
@@ -361,10 +381,10 @@ def process_latest_snapshot(prefer_buy: str = "auto", prefer_sell: str = "auto")
             "timestamp": ref_ts,
             "item_id": row.item_id,
             "item_name": getattr(row, "item_name", None),
-            "top_buy": float(row.top_buy) if pd.notna(getattr(row, "top_buy", None)) else None,
-            "low_sell": float(row.low_sell) if pd.notna(getattr(row, "low_sell", None)) else None,
-            "buy_qty": int(row.buy_qty) if pd.notna(getattr(row, "buy_qty", None)) else 0,
-            "sell_qty": int(row.sell_qty) if pd.notna(getattr(row, "sell_qty", None)) else 0,
+            "top_buy":  float(row.top_buy)  if hasattr(row, "top_buy")  and pd.notna(row.top_buy)  else None,
+            "low_sell": float(row.low_sell) if hasattr(row, "low_sell") and pd.notna(row.low_sell) else None,
+            "buy_qty":  int(row.buy_qty)    if hasattr(row, "buy_qty")  and pd.notna(row.buy_qty)  else 0,
+            "sell_qty": int(row.sell_qty)   if hasattr(row, "sell_qty") and pd.notna(row.sell_qty) else 0,
         })
 
     snapshot = {
@@ -380,16 +400,14 @@ def process_latest_snapshot(prefer_buy: str = "auto", prefer_sell: str = "auto")
     meta = {
         "action": "process_latest_snapshot",
         "when": _now_utc_iso(),
-        "buy": {"chosen_path": str(buy_path) if buy_path else None, "entries": buy_count, "snapshot_ts": buy_ts, "mode": prefer_buy},
+        "buy":  {"chosen_path": str(buy_path) if buy_path else None,  "entries": buy_count,  "snapshot_ts": buy_ts,  "mode": prefer_buy},
         "sell": {"chosen_path": str(sell_path) if sell_path else None, "entries": sell_count, "snapshot_ts": sell_ts, "mode": prefer_sell},
         "processed": {"records": len(records), "output_path": str(PROCESSED_SNAPSHOT_PATH), "ref_snapshot_ts": ref_ts},
     }
     _merge_and_write_meta(meta)
     return meta
 
-# ------------------------------------
-# Meta
-# ------------------------------------
+# --- meta ---
 def _merge_and_write_meta(update: Dict[str, Any]) -> None:
     try:
         current = _read_json(LAST_META_PATH)
@@ -415,15 +433,13 @@ def _merge_and_write_meta(update: Dict[str, Any]) -> None:
 
     _write_json(LAST_META_PATH, current)
 
-# ---------------------------
-# CLI (opcional)
-# ---------------------------
+# --- CLI opcional ---
 if __name__ == "__main__":
     import argparse
-    ap = argparse.ArgumentParser(prog="nwmp_sync", description="Coleta e processa snapshots (cloud/local) para New World.")
+    ap = argparse.ArgumentParser(prog="nwmp_sync", description="Coleta e processa snapshots (cloud/local).")
     ap.add_argument("--download-cloud", action="store_true")
     ap.add_argument("--copy-local-buy", type=str, default=None)
-    ap.add_argument("--copy-local-sell", type=str, default=None, help="Arquivo OU diretório de SELL")
+    ap.add_argument("--copy-local-sell", type=str, default=None, help="Arquivo ou diretório (SELL)")
     ap.add_argument("--process", action="store_true")
     ap.add_argument("--prefer-buy", choices=["auto", "cloud", "local"], default="auto")
     ap.add_argument("--prefer-sell", choices=["auto", "cloud", "local"], default="auto")
