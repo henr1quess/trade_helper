@@ -45,14 +45,6 @@ DEFAULT_NWMP_SELL_SRC = os.getenv(
     "https://nwmpdata.gaming.tools/auctions2/devaloka.json",
 )
 DEFAULT_NWMP_RAW_ROOT = os.getenv("NWMP_RAW_ROOT", "raw")
-DEFAULT_NWMP_BUY_CSV = os.getenv("NWMP_BUY_CSV_PATH", "data/history_devaloka_buy.csv")
-DEFAULT_NWMP_SELL_CSV = os.getenv("NWMP_SELL_CSV_PATH", "data/history_devaloka_sell.csv")
-DEFAULT_NWMP_BUY_HISTORY_CSV = os.getenv(
-    "NWMP_BUY_HISTORY_LOCAL_CSV", "data/history_buy_local.csv"
-)
-DEFAULT_HISTORY_JSON = "history_local.json"
-
-
 def _resolve_default_local_dir(env_var: str, default_candidate: str, fallback: Path) -> str:
     from pathlib import Path as _Path
 
@@ -1403,16 +1395,12 @@ with tab_coletar:
         "Buy orders": DEFAULT_NWMP_BUY_SRC,
         "Sell orders": DEFAULT_NWMP_SELL_SRC,
         "Pasta RAW": DEFAULT_NWMP_RAW_ROOT,
-        "CSV Buy (NWMP)": DEFAULT_NWMP_BUY_CSV,
-        "CSV Sell (NWMP)": DEFAULT_NWMP_SELL_CSV,
         "Servidor": DEFAULT_NWMP_SERVER,
-        "history_local.json": DEFAULT_HISTORY_JSON,
     }
 
     settings_local = {
         "Snapshot local (buy-orders)": DEFAULT_LOCAL_BUYORDERS_DIR,
         "Snapshot local (auctions)": DEFAULT_LOCAL_AUCTIONS_DIR,
-        "Histórico local (compras agregadas)": DEFAULT_NWMP_BUY_HISTORY_CSV,
     }
 
     st.caption("Parâmetros usados automaticamente para coleta/processamento")
@@ -1428,8 +1416,8 @@ with tab_coletar:
     missing_local = [name for name, value in settings_local.items() if not str(value).strip()]
 
     st.info(
-        "Esta página baixa snapshots de buy e sell orders, atualiza ambos os CSVs "
-        "e consolida o history_local.json."
+        "Esta página baixa snapshots de buy e sell orders e salva o bundle mais recente "
+        "em raw/collected."
     )
 
     # Importa o novo módulo do scraper
@@ -1510,9 +1498,6 @@ with tab_coletar:
             records = entry.get("records")
             if isinstance(records, int):
                 parts.append(f"{records:,} registros consolidados")
-            buy_hist_rows = entry.get("buy_history_rows")
-            if isinstance(buy_hist_rows, int) and buy_hist_rows:
-                parts.append(f"{buy_hist_rows:,} linhas em histórico de compras")
             return " • ".join(parts)
 
         def _render_source_status(
@@ -1672,10 +1657,6 @@ with tab_coletar:
                 with st.spinner("Processando snapshot mais recente..."):
                     result = nwmp_sync.process_latest_snapshot(
                         raw_root=DEFAULT_NWMP_RAW_ROOT,
-                        buy_csv_path=DEFAULT_NWMP_BUY_CSV,
-                        sell_csv_path=DEFAULT_NWMP_SELL_CSV,
-                        history_json_path=DEFAULT_HISTORY_JSON,
-                        buy_history_csv_path=DEFAULT_NWMP_BUY_HISTORY_CSV,
                         server=DEFAULT_NWMP_SERVER,
                     )
                 src = result.get("source") if isinstance(result, dict) else None
@@ -1712,74 +1693,21 @@ with tab_coletar:
         if st.button("⚙️ Processar snapshot mais recente", use_container_width=True):
             _run_process_latest()
 
-        utility_col1, utility_col2 = st.columns(2)
-        if utility_col1.button(
-            "🧱 Reprocessar tudo do RAW → CSV", use_container_width=True
-        ):
-            if missing_remote:
-                st.error(
-                    "Configurações obrigatórias ausentes: "
-                    + ", ".join(missing_remote)
-                    + ". Defina-as via variáveis de ambiente."
-                )
-            else:
-                try:
-                    with st.spinner("Reconstruindo CSVs a partir dos dados brutos..."):
-                        nwmp_sync.run_rebuild(
-                            raw_root=DEFAULT_NWMP_RAW_ROOT,
-                            buy_csv_path=DEFAULT_NWMP_BUY_CSV,
-                            sell_csv_path=DEFAULT_NWMP_SELL_CSV,
-                            history_json_path=DEFAULT_HISTORY_JSON,
-                            server=DEFAULT_NWMP_SERVER,
-                        )
-                    st.success("Rebuild concluído ✅")
-                except Exception as exc:
-                    st.error(f"Falhou: {exc}")
-
-        if utility_col2.button(
-            "📈 Recalcular histórico de compras", use_container_width=True
-        ):
-            try:
-                with st.spinner("Agregando histórico de compras a partir de raw/buy.json..."):
-                    rebuild_info = nwmp_sync.rebuild_buy_history_from_raw(
-                        raw_root=DEFAULT_NWMP_RAW_ROOT,
-                        buy_history_csv_path=DEFAULT_NWMP_BUY_HISTORY_CSV,
-                    )
-                snapshots = rebuild_info.get("snapshots", 0) if isinstance(rebuild_info, dict) else 0
-                rows = rebuild_info.get("rows", 0) if isinstance(rebuild_info, dict) else 0
-                st.success(
-                    f"Histórico recalculado ✅ — {rows} linha(s) consolidada(s)"
-                    + (f" a partir de {snapshots} snapshot(s)." if snapshots else ".")
-                )
-            except Exception as exc:
-                st.error(f"Falhou ao recalcular histórico: {exc}")
-
-        # Mostrar prévia do CSV NWMP e do history_local.json (se existirem)
+        # Mostrar prévia básica do snapshot mais recente, se disponível
         import pandas as pd
-        prev1, prev2, prev3 = st.columns(3)
-        try:
-            csv_path = DEFAULT_NWMP_BUY_CSV
-            if Path(csv_path).exists():
-                df_csv = pd.read_csv(csv_path)
-                prev1.caption(f"Prévia CSV Buy NWMP: {csv_path}")
-                prev1.dataframe(df_csv.tail(50), use_container_width=True)
-        except Exception:
-            pass
-        try:
-            if Path(DEFAULT_HISTORY_JSON).exists():
-                df_hist = pd.read_json(DEFAULT_HISTORY_JSON, orient="records")
-                prev2.caption(f"Prévia history_local.json (app): {DEFAULT_HISTORY_JSON}")
-                prev2.dataframe(df_hist.tail(50), use_container_width=True)
-        except Exception:
-            pass
-        try:
-            if Path(DEFAULT_NWMP_BUY_HISTORY_CSV).exists():
-                df_buy_hist = pd.read_csv(DEFAULT_NWMP_BUY_HISTORY_CSV)
-                prev3.caption(
-                    "Histórico local de compras (agregado): "
-                    f"{DEFAULT_NWMP_BUY_HISTORY_CSV}"
-                )
-                prev3.dataframe(df_buy_hist.tail(50), use_container_width=True)
-        except Exception:
-            pass
+        preview_col = st.container()
+        latest_snapshot_path = Path(DEFAULT_NWMP_RAW_ROOT) / "latest_snapshot.json"
+        if latest_snapshot_path.exists():
+            try:
+                with latest_snapshot_path.open("r", encoding="utf-8") as f:
+                    latest_payload = json.load(f)
+                records = latest_payload.get("records", [])
+                if isinstance(records, list) and records:
+                    df_preview = pd.DataFrame(records)
+                    preview_col.caption(
+                        f"Prévia dos registros consolidados: {latest_snapshot_path}"
+                    )
+                    preview_col.dataframe(df_preview.tail(50), use_container_width=True)
+            except Exception:
+                pass
 
