@@ -1245,7 +1245,8 @@ with tab_coletar:
     st.markdown("### Scraper de preços (sell)")
     st.caption(
         "Execute o script `devaloka_price_scraper.py` diretamente daqui. "
-        "Configure a pasta/arquivo do CSV antes de rodar."
+        "Ele mantém a base histórica de ordens de venda em CSV, enquanto o processamento abaixo"
+        " consolida apenas o snapshot mais recente em JSON."
     )
 
     dir_col, file_col = st.columns([3, 2])
@@ -1289,7 +1290,7 @@ with tab_coletar:
     else:
         resolved_csv_path = Path(os.path.expanduser(csv_filename_clean))
 
-    st.caption(f"CSV final: `{resolved_csv_path}`")
+    st.caption(f"CSV histórico de sell: `{resolved_csv_path}`")
 
     confirm_run = st.checkbox(
         "Confirmo que desejo executar o scraper agora",
@@ -1379,16 +1380,36 @@ with tab_coletar:
             st.caption("stderr")
             st.code(st.session_state.get("scraper_last_stderr", "") or "(sem saída)", language="text")
 
-        st.markdown("#### Prévia do CSV atualizado")
-        if csv_path_str:
-            st.caption(f"Arquivo: {csv_path_str}")
+        st.markdown("#### Snapshot consolidado mais recente")
+        latest_snapshot_path = Path(DEFAULT_NWMP_RAW_ROOT) / "latest_snapshot.json"
+        if latest_snapshot_path.exists():
             try:
-                df_tail = pd.read_csv(csv_path_str)
-                st.dataframe(df_tail.tail(50), use_container_width=True)
-            except FileNotFoundError:
-                st.warning(f"Arquivo não encontrado: {csv_path_str}")
+                with latest_snapshot_path.open("r", encoding="utf-8") as f:
+                    latest_payload = json.load(f)
+                records = latest_payload.get("records", []) if isinstance(latest_payload, dict) else []
+                st.caption(f"Arquivo consolidado: `{latest_snapshot_path}`")
+                if isinstance(records, list) and records:
+                    df_preview = pd.DataFrame(records)
+                    st.dataframe(df_preview.tail(50), use_container_width=True)
+                else:
+                    st.info("Snapshot consolidado ainda não possui registros.")
             except Exception as exc:
-                st.error(f"Falha ao carregar o CSV: {exc}")
+                st.error(f"Falha ao ler o snapshot consolidado: {exc}")
+        else:
+            st.info(
+                "Nenhum snapshot consolidado encontrado. Processe um snapshot para gerar `latest_snapshot.json`."
+            )
+
+        if csv_path_str:
+            csv_path = Path(csv_path_str)
+            if csv_path.exists():
+                st.caption(
+                    f"O scraper mantém a base histórica de ordens de venda em `{csv_path}`."
+                )
+            else:
+                st.caption(
+                    f"O scraper gravará a base histórica de ordens de venda em `{csv_path}` quando executado."
+                )
 
     # Parâmetros fixos (sem necessidade de entrada manual)
     settings_remote = {
@@ -1416,8 +1437,9 @@ with tab_coletar:
     missing_local = [name for name, value in settings_local.items() if not str(value).strip()]
 
     st.info(
-        "Esta página baixa snapshots de buy e sell orders e salva o bundle mais recente "
-        "em raw/collected."
+        "Esta página baixa snapshots de buy e sell orders e grava apenas o snapshot consolidado "
+        "mais recente (`latest_snapshot.json`). O CSV gerado pelo scraper serve como histórico de"
+        " vendas."
     )
 
     # Importa o novo módulo do scraper
@@ -1692,22 +1714,4 @@ with tab_coletar:
 
         if st.button("⚙️ Processar snapshot mais recente", use_container_width=True):
             _run_process_latest()
-
-        # Mostrar prévia básica do snapshot mais recente, se disponível
-        import pandas as pd
-        preview_col = st.container()
-        latest_snapshot_path = Path(DEFAULT_NWMP_RAW_ROOT) / "latest_snapshot.json"
-        if latest_snapshot_path.exists():
-            try:
-                with latest_snapshot_path.open("r", encoding="utf-8") as f:
-                    latest_payload = json.load(f)
-                records = latest_payload.get("records", [])
-                if isinstance(records, list) and records:
-                    df_preview = pd.DataFrame(records)
-                    preview_col.caption(
-                        f"Prévia dos registros consolidados: {latest_snapshot_path}"
-                    )
-                    preview_col.dataframe(df_preview.tail(50), use_container_width=True)
-            except Exception:
-                pass
 
