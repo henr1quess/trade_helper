@@ -4994,8 +4994,8 @@
           {
             "item_id": "beeswaxt1",
             "item_name": "Beeswax",
-            "weight": null,
-            "stack_max": null
+            "weight": "0.100",
+            "stack_max": 1000
           }
         ]
       },
@@ -5007,32 +5007,32 @@
           {
             "item_id": "phasefibert1",
             "item_name": "Phasefiber",
-            "weight": null,
-            "stack_max": null
+            "weight": "0.300",
+            "stack_max": 10000
           },
           {
             "item_id": "scaleclotht1",
             "item_name": "Scalecloth",
-            "weight": null,
-            "stack_max": null
+            "weight": "0.300",
+            "stack_max": 10000
           },
           {
             "item_id": "scalecordt1",
             "item_name": "Scalecord",
-            "weight": null,
-            "stack_max": null
+            "weight": "0.300",
+            "stack_max": 10000
           },
           {
             "item_id": "shadeclotht1",
             "item_name": "Shadecloth",
-            "weight": null,
-            "stack_max": null
+            "weight": "0.300",
+            "stack_max": 10000
           },
           {
             "item_id": "spidersilkt5",
             "item_name": "Spider Silk",
-            "weight": null,
-            "stack_max": null
+            "weight": "0.200",
+            "stack_max": 10000
           }
         ]
       }
@@ -5050,536 +5050,536 @@
           {
             "item_id": "gatherable_research_unusual_ore_t3",
             "item_name": "Abnormal Ore",
-            "weight": null,
-            "stack_max": null
+            "weight": "0.100",
+            "stack_max": 1000
           },
           {
             "item_id": "adamatinedustt1",
             "item_name": "Adamantine Dust",
-            "weight": null,
-            "stack_max": null
+            "weight": "0.100",
+            "stack_max": 1000
           },
           {
             "item_id": "loadingmechanismt5",
             "item_name": "Advanced Loading Mechanism",
-            "weight": null,
-            "stack_max": null
+            "weight": "0.100",
+            "stack_max": 10
           },
           {
             "item_id": "ancientbearingt1",
             "item_name": "Ancient Bearing",
-            "weight": null,
-            "stack_max": null
+            "weight": "0.100",
+            "stack_max": 10
           },
           {
             "item_id": "ancientfemurt1",
             "item_name": "Ancient Femur",
-            "weight": null,
-            "stack_max": null
+            "weight": "0.100",
+            "stack_max": 10
           },
           {
             "item_id": "ancientectoplasm",
             "item_name": "Ancient Glob of Ectoplasm",
-            "weight": null,
-            "stack_max": null
+            "weight": "0.100",
+            "stack_max": 10
           },
           {
             "item_id": "ancientmandiblet1",
             "item_name": "Ancient Mandible",
-            "weight": null,
-            "stack_max": null
+            "weight": "0.100",
+            "stack_max": 10
           },
           {
             "item_id": "ancientskullt1",
             "item_name": "Ancient Skull",
-            "weight": null,
-            "stack_max": null
+            "weight": "0.100",
+            "stack_max": 10
           },
           {
             "item_id": "ancienttextst1",
             "item_name": "Ancient Texts",
-            "weight": null,
-            "stack_max": null
+            "weight": "0.100",
+            "stack_max": 10
           },
           {
             "item_id": "armorersjournalt1",
             "item_name": "Armorer's Journal",
-            "weight": null,
-            "stack_max": null
+            "weight": "0.100",
+            "stack_max": 10
           },
           {
             "item_id": "barkflesht1",
             "item_name": "Barkflesh",
-            "weight": null,
-            "stack_max": null
+            "weight": "0.100",
+            "stack_max": 10
           },
           {
             "item_id": "gatherable_research_bizzare_ore_t5",
             "item_name": "Bizarre Ore",
-            "weight": null,
-            "stack_max": null
+            "weight": "0.100",
+            "stack_max": 1000
           },
           {
             "item_id": "blessedsceptert1",
             "item_name": "Blessed Scepter",
-            "weight": null,
-            "stack_max": null
+            "weight": "0.100",
+            "stack_max": 10
           },
           {
             "item_id": "brokenbladet5",
             "item_name": "Broken Blade",
-            "weight": null,
-            "stack_max": null
+            "weight": "0.100",
+            "stack_max": 10
           },
           {
             "item_id": "brokenhatchett1",
             "item_name": "Broken Hatchet",
-            "weight": null,
-            "stack_max": null
+            "weight": "0.100",
+            "stack_max": 10
           },
           {
             "item_id": "chefssecretcookbookt1",
             "item_name": "Chef's Secret Cookbook",
-            "weight": null,
-            "stack_max": null
+            "weight": "0.100",
+            "stack_max": 10
           },
           {
             "item_id": "chefssecrettechniquest1",
             "item_name": "Chef's Secret Techniques",
-            "weight": null,
-            "stack_max": null
+            "weight": "0.100",
+            "stack_max": 10
           },
           {
             "item_id": "corruptedcrestt1",
             "item_name": "Corrupted Crest",
-            "weight": null,
-            "stack_max": null
+            "weight": "0.100",
+            "stack_max": 10
           },
           {
             "item_id": "corruptedtotemt1",
             "item_name": "Corrupted Totem",
-            "weight": null,
-            "stack_max": null
+            "weight": "0.100",
+            "stack_max": 10
           },
           {
             "item_id": "crestoffortitudet1",
             "item_name": "Crest of Fortitude",
-            "weight": null,
-            "stack_max": null
+            "weight": "0.100",
+            "stack_max": 10
           },
           {
             "item_id": "dummyframe",
             "item_name": "Dummy Frame",
-            "weight": null,
-            "stack_max": null
+            "weight": "0.100",
+            "stack_max": 10
           },
           {
             "item_id": "ectoplasmicessencet1",
             "item_name": "Ectoplasmic Essence",
-            "weight": null,
-            "stack_max": null
+            "weight": "0.100",
+            "stack_max": 10
           },
           {
             "item_id": "emberstonet1",
             "item_name": "Ember Stone",
-            "weight": null,
-            "stack_max": null
+            "weight": "0.100",
+            "stack_max": 10
           },
           {
             "item_id": "emblemoffortitudet1",
             "item_name": "Emblem of Fortitude",
-            "weight": null,
-            "stack_max": null
+            "weight": "0.100",
+            "stack_max": 10
           },
           {
             "item_id": "emptyheartt1",
             "item_name": "Empty Ancient Heart",
-            "weight": null,
-            "stack_max": null
+            "weight": "0.100",
+            "stack_max": 10
           },
           {
             "item_id": "emptysceptert5",
             "item_name": "Empty Scepter",
-            "weight": null,
-            "stack_max": null
+            "weight": "0.100",
+            "stack_max": 10
           },
           {
             "item_id": "engineerstechniquemanualst1",
             "item_name": "Engineer's Technique Manuals",
-            "weight": null,
-            "stack_max": null
+            "weight": "0.100",
+            "stack_max": 10
           },
           {
             "item_id": "ephemeralsealt1",
             "item_name": "Ephemeral Seal",
-            "weight": null,
-            "stack_max": null
+            "weight": "0.100",
+            "stack_max": 10
           },
           {
             "item_id": "eternalicet1",
             "item_name": "Eternal Ice",
-            "weight": null,
-            "stack_max": null
+            "weight": "0.100",
+            "stack_max": 10
           },
           {
             "item_id": "flamecore",
             "item_name": "Flame Core",
-            "weight": null,
-            "stack_max": null
+            "weight": "0.100",
+            "stack_max": 10
           },
           {
             "item_id": "fluffystuffingt1",
             "item_name": "Fluffy Stuffing",
-            "weight": null,
-            "stack_max": null
+            "weight": "0.100",
+            "stack_max": 10
           },
           {
             "item_id": "forgemastersnotest1",
             "item_name": "Forgemaster's Notes",
-            "weight": null,
-            "stack_max": null
+            "weight": "0.100",
+            "stack_max": 10
           },
           {
             "item_id": "fragmentedmuskett1",
             "item_name": "Fragmented Musket",
-            "weight": null,
-            "stack_max": null
+            "weight": "0.100",
+            "stack_max": 10
           },
           {
             "item_id": "glowingsapt1",
             "item_name": "Glowing Sap",
-            "weight": null,
-            "stack_max": null
+            "weight": "0.100",
+            "stack_max": 10
           },
           {
             "item_id": "goldenscarab",
             "item_name": "Golden Scarab",
-            "weight": null,
-            "stack_max": null
+            "weight": "0.100",
+            "stack_max": 10
           },
           {
             "item_id": "gravedirt",
             "item_name": "Grave Dirt",
-            "weight": null,
-            "stack_max": null
+            "weight": "0.100",
+            "stack_max": 10
           },
           {
             "item_id": "aeterniandigitt1",
             "item_name": "Human Digit",
-            "weight": null,
-            "stack_max": null
+            "weight": "0.100",
+            "stack_max": 10
           },
           {
             "item_id": "aeternianidolt1",
             "item_name": "Human Idol",
-            "weight": null,
-            "stack_max": null
+            "weight": "0.100",
+            "stack_max": 10
           },
           {
             "item_id": "journalflorat1",
             "item_name": "Journal of Aeternum Flora",
-            "weight": null,
-            "stack_max": null
+            "weight": "0.100",
+            "stack_max": 10
           },
           {
             "item_id": "weaponsmithingresearchnotest4",
             "item_name": "Journeyman Weaponsmithing Research Notes",
-            "weight": null,
-            "stack_max": null
+            "weight": "0.100",
+            "stack_max": 10
           },
           {
             "item_id": "loadeddicet1",
             "item_name": "Loaded Dice",
-            "weight": null,
-            "stack_max": null
+            "weight": "0.100",
+            "stack_max": 10
           },
           {
             "item_id": "lumberjackstokent1",
             "item_name": "Lumberjack's Token",
-            "weight": null,
-            "stack_max": null
+            "weight": "0.100",
+            "stack_max": 10
           },
           {
             "item_id": "mercurialtokent1",
             "item_name": "Mercurial Token",
-            "weight": null,
-            "stack_max": null
+            "weight": "0.100",
+            "stack_max": 10
           },
           {
             "item_id": "notesonaeternumfaunat1",
             "item_name": "Notes on Aeternum Fauna",
-            "weight": null,
-            "stack_max": null
+            "weight": "0.100",
+            "stack_max": 10
           },
           {
             "item_id": "petrifiedfiret1",
             "item_name": "Petrified Fire",
-            "weight": null,
-            "stack_max": null
+            "weight": "0.100",
+            "stack_max": 10
           },
           {
             "item_id": "philosophersstonet1",
             "item_name": "Philosopher's Stone",
-            "weight": null,
-            "stack_max": null
+            "weight": "0.100",
+            "stack_max": 10
           },
           {
             "item_id": "precisionarmoringtoolst1",
             "item_name": "Precision Armoring Tools",
-            "weight": null,
-            "stack_max": null
+            "weight": "0.100",
+            "stack_max": 10
           },
           {
             "item_id": "precisionengineeringtoolst1",
             "item_name": "Precision Engineering Tools",
-            "weight": null,
-            "stack_max": null
+            "weight": "0.100",
+            "stack_max": 10
           },
           {
             "item_id": "prismaticscarab",
             "item_name": "Prismatic Scarab",
-            "weight": null,
-            "stack_max": null
+            "weight": "0.100",
+            "stack_max": 10
           },
           {
             "item_id": "pristinebearclawt1",
             "item_name": "Pristine Bear Claw",
-            "weight": null,
-            "stack_max": null
+            "weight": "0.100",
+            "stack_max": 10
           },
           {
             "item_id": "pristinebearpeltt1",
             "item_name": "Pristine Bear Pelt",
-            "weight": null,
-            "stack_max": null
+            "weight": "0.100",
+            "stack_max": 10
           },
           {
             "item_id": "pristinewolfclawt1",
             "item_name": "Pristine Wolf Claw",
-            "weight": null,
-            "stack_max": null
+            "weight": "0.100",
+            "stack_max": 10
           },
           {
             "item_id": "pureresint1",
             "item_name": "Pure Resin",
-            "weight": null,
-            "stack_max": null
+            "weight": "0.100",
+            "stack_max": 1000
           },
           {
             "item_id": "quartermastersnotest1",
             "item_name": "Quartermaster's Notes",
-            "weight": null,
-            "stack_max": null
+            "weight": "0.100",
+            "stack_max": 10
           },
           {
             "item_id": "rabbitsfoott1",
             "item_name": "Rabbit's Foot",
-            "weight": null,
-            "stack_max": null
+            "weight": "0.100",
+            "stack_max": 10
           },
           {
             "item_id": "rattail",
             "item_name": "Rat Tail",
-            "weight": null,
-            "stack_max": null
+            "weight": "0.100",
+            "stack_max": 10
           },
           {
             "item_id": "scalingpowdert1",
             "item_name": "Scaling Powder",
-            "weight": null,
-            "stack_max": null
+            "weight": "0.100",
+            "stack_max": 10
           },
           {
             "item_id": "schematic_contingencyplant4",
             "item_name": "Schematic: Contingency Plan",
-            "weight": null,
-            "stack_max": null
+            "weight": "0.100",
+            "stack_max": 10
           },
           {
             "item_id": "schematic_craftsmanspassiont5",
             "item_name": "Schematic: Craftsman's Passion",
-            "weight": null,
-            "stack_max": null
+            "weight": "0.100",
+            "stack_max": 10
           },
           {
             "item_id": "schematic_emptypromiset5",
             "item_name": "Schematic: Empty Promise",
-            "weight": null,
-            "stack_max": null
+            "weight": "0.100",
+            "stack_max": 10
           },
           {
             "item_id": "schematic_eternalduskt5",
             "item_name": "Schematic: Eternal Dusk",
-            "weight": null,
-            "stack_max": null
+            "weight": "0.100",
+            "stack_max": 10
           },
           {
             "item_id": "schematic_frostfairysgiftt5",
             "item_name": "Schematic: Frost Fairy's Gift",
-            "weight": null,
-            "stack_max": null
+            "weight": "0.100",
+            "stack_max": 10
           },
           {
             "item_id": "schematic_graspinglightt4",
             "item_name": "Schematic: Grasping Light",
-            "weight": null,
-            "stack_max": null
+            "weight": "0.100",
+            "stack_max": 10
           },
           {
             "item_id": "schematic_hiddentruths",
             "item_name": "Schematic: Hidden Truths",
-            "weight": null,
-            "stack_max": null
+            "weight": "0.100",
+            "stack_max": 10
           },
           {
             "item_id": "schematic_inquisitiont5",
             "item_name": "Schematic: Inquisition",
-            "weight": null,
-            "stack_max": null
+            "weight": "0.100",
+            "stack_max": 10
           },
           {
             "item_id": "schematic_makersmarkt5",
             "item_name": "Schematic: Maker's Mark",
-            "weight": null,
-            "stack_max": null
+            "weight": "0.100",
+            "stack_max": 10
           },
           {
             "item_id": "schematic_needlert5",
             "item_name": "Schematic: Needler",
-            "weight": null,
-            "stack_max": null
+            "weight": "0.100",
+            "stack_max": 10
           },
           {
             "item_id": "schematic_rabbithuntersblunderbusst5",
             "item_name": "Schematic: Rabbit Hunter's Blunderbuss",
-            "weight": null,
-            "stack_max": null
+            "weight": "0.100",
+            "stack_max": 10
           },
           {
             "item_id": "schematic_stonerendt5",
             "item_name": "Schematic: Stonerend",
-            "weight": null,
-            "stack_max": null
+            "weight": "0.100",
+            "stack_max": 10
           },
           {
             "item_id": "schematic_thundersnowt4",
             "item_name": "Schematic: Thundersnow",
-            "weight": null,
-            "stack_max": null
+            "weight": "0.100",
+            "stack_max": 10
           },
           {
             "item_id": "schematic_troublemakert4",
             "item_name": "Schematic: Troublemaker",
-            "weight": null,
-            "stack_max": null
+            "weight": "0.100",
+            "stack_max": 10
           },
           {
             "item_id": "schematic_veilpiercert5",
             "item_name": "Schematic: Veilpiercer",
-            "weight": null,
-            "stack_max": null
+            "weight": "0.100",
+            "stack_max": 10
           },
           {
             "item_id": "schematic_voidforgedharbingert5",
             "item_name": "Schematic: Void-Forged Harbinger",
-            "weight": null,
-            "stack_max": null
+            "weight": "0.100",
+            "stack_max": 10
           },
           {
             "item_id": "schematic_waningcrescentt5",
             "item_name": "Schematic: Waning Crescent",
-            "weight": null,
-            "stack_max": null
+            "weight": "0.100",
+            "stack_max": 10
           },
           {
             "item_id": "schematic_windsingert5",
             "item_name": "Schematic: Windsinger",
-            "weight": null,
-            "stack_max": null
+            "weight": "0.100",
+            "stack_max": 10
           },
           {
             "item_id": "serpentinehandguardt1",
             "item_name": "Serpentine Handguard",
-            "weight": null,
-            "stack_max": null
+            "weight": "0.100",
+            "stack_max": 10
           },
           {
             "item_id": "shatteredswordt1",
             "item_name": "Shattered Sword",
-            "weight": null,
-            "stack_max": null
+            "weight": "0.100",
+            "stack_max": 10
           },
           {
             "item_id": "spidereggt5",
             "item_name": "Spider Egg",
-            "weight": null,
-            "stack_max": null
+            "weight": "0.100",
+            "stack_max": 10
           },
           {
             "item_id": "splinteredbowt1",
             "item_name": "Splintered Bow",
-            "weight": null,
-            "stack_max": null
+            "weight": "0.100",
+            "stack_max": 10
           },
           {
             "item_id": "stackeddeckt1",
             "item_name": "Stacked Deck",
-            "weight": null,
-            "stack_max": null
+            "weight": "0.100",
+            "stack_max": 10
           },
           {
             "item_id": "gatherable_research_strange_wood_t2",
             "item_name": "Strange Resin",
-            "weight": null,
-            "stack_max": null
+            "weight": "0.100",
+            "stack_max": 1000
           },
           {
             "item_id": "sunflowerbloomt1",
             "item_name": "Sunflower Bloom",
-            "weight": null,
-            "stack_max": null
+            "weight": "0.100",
+            "stack_max": 1000
           },
           {
             "item_id": "surveyorstoolst1",
             "item_name": "Surveyor's Tools",
-            "weight": null,
-            "stack_max": null
+            "weight": "0.100",
+            "stack_max": 10
           },
           {
             "item_id": "trackerssealt1",
             "item_name": "Tracker's Seal",
-            "weight": null,
-            "stack_max": null
+            "weight": "0.100",
+            "stack_max": 10
           },
           {
             "item_id": "gatherable_research_abnormal_wood_t4",
             "item_name": "Unusual Resin",
-            "weight": null,
-            "stack_max": null
+            "weight": "0.100",
+            "stack_max": 1000
           },
           {
             "item_id": "voidessence",
             "item_name": "Void Essence",
-            "weight": null,
-            "stack_max": null
+            "weight": "0.100",
+            "stack_max": 10
           },
           {
             "item_id": "voidore",
             "item_name": "Void Ore",
-            "weight": null,
-            "stack_max": null
+            "weight": "0.100",
+            "stack_max": 10
           },
           {
             "item_id": "voidbentingot",
             "item_name": "Voidbent Ingot",
-            "weight": null,
-            "stack_max": null
+            "weight": "0.300",
+            "stack_max": 10000
           },
           {
             "item_id": "witheredbought1",
             "item_name": "Withered Bough",
-            "weight": null,
-            "stack_max": null
+            "weight": "0.100",
+            "stack_max": 10
           }
         ]
       }
@@ -5597,14 +5597,14 @@
           {
             "item_id": "featherblackt1",
             "item_name": "Black Feather",
-            "weight": null,
-            "stack_max": null
+            "weight": "0.100",
+            "stack_max": 1000
           },
           {
             "item_id": "feathert1",
             "item_name": "Feathers",
-            "weight": null,
-            "stack_max": null
+            "weight": "0.100",
+            "stack_max": 10000
           }
         ]
       },
@@ -5616,26 +5616,26 @@
           {
             "item_id": "fibert1",
             "item_name": "Fibers",
-            "weight": null,
-            "stack_max": null
+            "weight": "0.100",
+            "stack_max": 10000
           },
           {
             "item_id": "fibert4",
             "item_name": "Silk Threads",
-            "weight": null,
-            "stack_max": null
+            "weight": "0.100",
+            "stack_max": 10000
           },
           {
             "item_id": "fibert52",
             "item_name": "Spinfiber",
-            "weight": null,
-            "stack_max": null
+            "weight": "0.100",
+            "stack_max": 10000
           },
           {
             "item_id": "fibert5",
             "item_name": "Wirefiber",
-            "weight": null,
-            "stack_max": null
+            "weight": "0.100",
+            "stack_max": 10000
           }
         ]
       },
@@ -5647,38 +5647,38 @@
           {
             "item_id": "fishinganchort2",
             "item_name": "Anchor",
-            "weight": null,
-            "stack_max": null
+            "weight": "5.000",
+            "stack_max": 1
           },
           {
             "item_id": "fishingheadedhammert2",
             "item_name": "Fish Headed Hammer",
-            "weight": null,
-            "stack_max": null
+            "weight": "3.000",
+            "stack_max": 1
           },
           {
             "item_id": "fishingfishswordt2",
             "item_name": "Fish Sword",
-            "weight": null,
-            "stack_max": null
+            "weight": "2.000",
+            "stack_max": 1
           },
           {
             "item_id": "fishingoart2",
             "item_name": "Oar",
-            "weight": null,
-            "stack_max": null
+            "weight": "2.000",
+            "stack_max": 1
           },
           {
             "item_id": "fishingseaweedt1",
             "item_name": "Seaweed",
-            "weight": null,
-            "stack_max": null
+            "weight": "0.100",
+            "stack_max": 1000
           },
           {
             "item_id": "fishingboott2",
             "item_name": "Waterlogged Boot",
-            "weight": null,
-            "stack_max": null
+            "weight": "1.500",
+            "stack_max": 1
           }
         ]
       },
@@ -5690,8 +5690,8 @@
           {
             "item_id": "oilt1",
             "item_name": "Oil",
-            "weight": null,
-            "stack_max": null
+            "weight": "0.200",
+            "stack_max": 10000
           }
         ]
       },
@@ -5703,62 +5703,62 @@
           {
             "item_id": "crystalizedsoul",
             "item_name": "Anima Quartz",
-            "weight": null,
-            "stack_max": null
+            "weight": "0.200",
+            "stack_max": 10000
           },
           {
             "item_id": "azuritechunkt1",
             "item_name": "Azurite Chunk",
-            "weight": null,
-            "stack_max": null
+            "weight": "0.100",
+            "stack_max": 1000
           },
           {
             "item_id": "sandt4",
             "item_name": "Charged Sand",
-            "weight": null,
-            "stack_max": null
+            "weight": "0.100",
+            "stack_max": 10000
           },
           {
             "item_id": "cinnabart1",
             "item_name": "Cinnabar",
-            "weight": null,
-            "stack_max": null
+            "weight": "0.300",
+            "stack_max": 10000
           },
           {
             "item_id": "faeiront1",
             "item_name": "Fae Iron",
-            "weight": null,
-            "stack_max": null
+            "weight": "0.100",
+            "stack_max": 1000
           },
           {
             "item_id": "oret1",
             "item_name": "Iron Ore",
-            "weight": null,
-            "stack_max": null
+            "weight": "0.200",
+            "stack_max": 10000
           },
           {
             "item_id": "oret52",
             "item_name": "Mythril Ore",
-            "weight": null,
-            "stack_max": null
+            "weight": "0.300",
+            "stack_max": 10000
           },
           {
             "item_id": "oret5",
             "item_name": "Orichalcum Ore",
-            "weight": null,
-            "stack_max": null
+            "weight": "0.300",
+            "stack_max": 10000
           },
           {
             "item_id": "oret4",
             "item_name": "Starmetal Ore",
-            "weight": null,
-            "stack_max": null
+            "weight": "0.200",
+            "stack_max": 10000
           },
           {
             "item_id": "voidsteelt1",
             "item_name": "Voidmetal",
-            "weight": null,
-            "stack_max": null
+            "weight": "0.300",
+            "stack_max": 10000
           }
         ]
       },
@@ -5770,20 +5770,20 @@
           {
             "item_id": "oreprecioust2",
             "item_name": "Gold Ore",
-            "weight": null,
-            "stack_max": null
+            "weight": "0.300",
+            "stack_max": 10000
           },
           {
             "item_id": "oreprecioust3",
             "item_name": "Platinum Ore",
-            "weight": null,
-            "stack_max": null
+            "weight": "0.300",
+            "stack_max": 10000
           },
           {
             "item_id": "oreprecioust1",
             "item_name": "Silver Ore",
-            "weight": null,
-            "stack_max": null
+            "weight": "0.300",
+            "stack_max": 10000
           }
         ]
       }
@@ -5801,410 +5801,410 @@
           {
             "item_id": "ambert2",
             "item_name": "Amber",
-            "weight": null,
-            "stack_max": null
+            "weight": "0.100",
+            "stack_max": 10000
           },
           {
             "item_id": "amethystt2",
             "item_name": "Amethyst",
-            "weight": null,
-            "stack_max": null
+            "weight": "0.100",
+            "stack_max": 10000
           },
           {
             "item_id": "aquamarinet2",
             "item_name": "Aquamarine",
-            "weight": null,
-            "stack_max": null
+            "weight": "0.100",
+            "stack_max": 10000
           },
           {
             "item_id": "ambert3",
             "item_name": "Brilliant Amber",
-            "weight": null,
-            "stack_max": null
+            "weight": "0.100",
+            "stack_max": 10000
           },
           {
             "item_id": "amethystt3",
             "item_name": "Brilliant Amethyst",
-            "weight": null,
-            "stack_max": null
+            "weight": "0.100",
+            "stack_max": 10000
           },
           {
             "item_id": "aquamarinet3",
             "item_name": "Brilliant Aquamarine",
-            "weight": null,
-            "stack_max": null
+            "weight": "0.100",
+            "stack_max": 10000
           },
           {
             "item_id": "carneliant3",
             "item_name": "Brilliant Carnelian",
-            "weight": null,
-            "stack_max": null
+            "weight": "0.100",
+            "stack_max": 10000
           },
           {
             "item_id": "diamondt3",
             "item_name": "Brilliant Diamond",
-            "weight": null,
-            "stack_max": null
+            "weight": "0.100",
+            "stack_max": 10000
           },
           {
             "item_id": "emeraldt3",
             "item_name": "Brilliant Emerald",
-            "weight": null,
-            "stack_max": null
+            "weight": "0.100",
+            "stack_max": 10000
           },
           {
             "item_id": "jadet3",
             "item_name": "Brilliant Jade",
-            "weight": null,
-            "stack_max": null
+            "weight": "0.100",
+            "stack_max": 10000
           },
           {
             "item_id": "jaspert3",
             "item_name": "Brilliant Jasper",
-            "weight": null,
-            "stack_max": null
+            "weight": "0.100",
+            "stack_max": 10000
           },
           {
             "item_id": "malachitet3",
             "item_name": "Brilliant Malachite",
-            "weight": null,
-            "stack_max": null
+            "weight": "0.100",
+            "stack_max": 10000
           },
           {
             "item_id": "moonstonet3",
             "item_name": "Brilliant Moonstone",
-            "weight": null,
-            "stack_max": null
+            "weight": "0.100",
+            "stack_max": 10000
           },
           {
             "item_id": "onyxt3",
             "item_name": "Brilliant Onyx",
-            "weight": null,
-            "stack_max": null
+            "weight": "0.100",
+            "stack_max": 10000
           },
           {
             "item_id": "opalt3",
             "item_name": "Brilliant Opal",
-            "weight": null,
-            "stack_max": null
+            "weight": "0.100",
+            "stack_max": 10000
           },
           {
             "item_id": "pearlt3",
             "item_name": "Brilliant Pearl",
-            "weight": null,
-            "stack_max": null
+            "weight": "0.100",
+            "stack_max": 10000
           },
           {
             "item_id": "rubyt3",
             "item_name": "Brilliant Ruby",
-            "weight": null,
-            "stack_max": null
+            "weight": "0.100",
+            "stack_max": 10000
           },
           {
             "item_id": "sapphiret3",
             "item_name": "Brilliant Sapphire",
-            "weight": null,
-            "stack_max": null
+            "weight": "0.100",
+            "stack_max": 10000
           },
           {
             "item_id": "topazt3",
             "item_name": "Brilliant Topaz",
-            "weight": null,
-            "stack_max": null
+            "weight": "0.100",
+            "stack_max": 10000
           },
           {
             "item_id": "turquoiset3",
             "item_name": "Brilliant Turquoise",
-            "weight": null,
-            "stack_max": null
+            "weight": "0.100",
+            "stack_max": 10000
           },
           {
             "item_id": "carneliant2",
             "item_name": "Carnelian",
-            "weight": null,
-            "stack_max": null
+            "weight": "0.100",
+            "stack_max": 10000
           },
           {
             "item_id": "diamondt2",
             "item_name": "Diamond",
-            "weight": null,
-            "stack_max": null
+            "weight": "0.100",
+            "stack_max": 10000
           },
           {
             "item_id": "emeraldt2",
             "item_name": "Emerald",
-            "weight": null,
-            "stack_max": null
+            "weight": "0.100",
+            "stack_max": 10000
           },
           {
             "item_id": "ambert1",
             "item_name": "Flawed Amber",
-            "weight": null,
-            "stack_max": null
+            "weight": "0.100",
+            "stack_max": 10000
           },
           {
             "item_id": "amethystt1",
             "item_name": "Flawed Amethyst",
-            "weight": null,
-            "stack_max": null
+            "weight": "0.100",
+            "stack_max": 10000
           },
           {
             "item_id": "aquamarinet1",
             "item_name": "Flawed Aquamarine",
-            "weight": null,
-            "stack_max": null
+            "weight": "0.100",
+            "stack_max": 10000
           },
           {
             "item_id": "carneliant1",
             "item_name": "Flawed Carnelian",
-            "weight": null,
-            "stack_max": null
+            "weight": "0.100",
+            "stack_max": 10000
           },
           {
             "item_id": "diamondt1",
             "item_name": "Flawed Diamond",
-            "weight": null,
-            "stack_max": null
+            "weight": "0.100",
+            "stack_max": 10000
           },
           {
             "item_id": "emeraldt1",
             "item_name": "Flawed Emerald",
-            "weight": null,
-            "stack_max": null
+            "weight": "0.100",
+            "stack_max": 10000
           },
           {
             "item_id": "jadet1",
             "item_name": "Flawed Jade",
-            "weight": null,
-            "stack_max": null
+            "weight": "0.100",
+            "stack_max": 10000
           },
           {
             "item_id": "jaspert1",
             "item_name": "Flawed Jasper",
-            "weight": null,
-            "stack_max": null
+            "weight": "0.100",
+            "stack_max": 10000
           },
           {
             "item_id": "malachitet1",
             "item_name": "Flawed Malachite",
-            "weight": null,
-            "stack_max": null
+            "weight": "0.100",
+            "stack_max": 10000
           },
           {
             "item_id": "moonstonet1",
             "item_name": "Flawed Moonstone",
-            "weight": null,
-            "stack_max": null
+            "weight": "0.100",
+            "stack_max": 10000
           },
           {
             "item_id": "onyxt1",
             "item_name": "Flawed Onyx",
-            "weight": null,
-            "stack_max": null
+            "weight": "0.100",
+            "stack_max": 10000
           },
           {
             "item_id": "opalt1",
             "item_name": "Flawed Opal",
-            "weight": null,
-            "stack_max": null
+            "weight": "0.100",
+            "stack_max": 10000
           },
           {
             "item_id": "pearlt1",
             "item_name": "Flawed Pearl",
-            "weight": null,
-            "stack_max": null
+            "weight": "0.100",
+            "stack_max": 10000
           },
           {
             "item_id": "rubyt1",
             "item_name": "Flawed Ruby",
-            "weight": null,
-            "stack_max": null
+            "weight": "0.100",
+            "stack_max": 10000
           },
           {
             "item_id": "sapphiret1",
             "item_name": "Flawed Sapphire",
-            "weight": null,
-            "stack_max": null
+            "weight": "0.100",
+            "stack_max": 10000
           },
           {
             "item_id": "topazt1",
             "item_name": "Flawed Topaz",
-            "weight": null,
-            "stack_max": null
+            "weight": "0.100",
+            "stack_max": 10000
           },
           {
             "item_id": "turquoiset1",
             "item_name": "Flawed Turquoise",
-            "weight": null,
-            "stack_max": null
+            "weight": "0.100",
+            "stack_max": 10000
           },
           {
             "item_id": "jadet2",
             "item_name": "Jade",
-            "weight": null,
-            "stack_max": null
+            "weight": "0.100",
+            "stack_max": 10000
           },
           {
             "item_id": "jaspert2",
             "item_name": "Jasper",
-            "weight": null,
-            "stack_max": null
+            "weight": "0.100",
+            "stack_max": 10000
           },
           {
             "item_id": "malachitet2",
             "item_name": "Malachite",
-            "weight": null,
-            "stack_max": null
+            "weight": "0.100",
+            "stack_max": 10000
           },
           {
             "item_id": "moonstonet2",
             "item_name": "Moonstone",
-            "weight": null,
-            "stack_max": null
+            "weight": "0.100",
+            "stack_max": 10000
           },
           {
             "item_id": "onyxt2",
             "item_name": "Onyx",
-            "weight": null,
-            "stack_max": null
+            "weight": "0.100",
+            "stack_max": 10000
           },
           {
             "item_id": "opalt2",
             "item_name": "Opal",
-            "weight": null,
-            "stack_max": null
+            "weight": "0.100",
+            "stack_max": 10000
           },
           {
             "item_id": "pearlt2",
             "item_name": "Pearl",
-            "weight": null,
-            "stack_max": null
+            "weight": "0.100",
+            "stack_max": 10000
           },
           {
             "item_id": "ambert4",
             "item_name": "Pristine Amber",
-            "weight": null,
-            "stack_max": null
+            "weight": "0.100",
+            "stack_max": 10000
           },
           {
             "item_id": "amethystt4",
             "item_name": "Pristine Amethyst",
-            "weight": null,
-            "stack_max": null
+            "weight": "0.100",
+            "stack_max": 10000
           },
           {
             "item_id": "aquamarinet4",
             "item_name": "Pristine Aquamarine",
-            "weight": null,
-            "stack_max": null
+            "weight": "0.100",
+            "stack_max": 10000
           },
           {
             "item_id": "carneliant4",
             "item_name": "Pristine Carnelian",
-            "weight": null,
-            "stack_max": null
+            "weight": "0.100",
+            "stack_max": 10000
           },
           {
             "item_id": "diamondt4",
             "item_name": "Pristine Diamond",
-            "weight": null,
-            "stack_max": null
+            "weight": "0.100",
+            "stack_max": 10000
           },
           {
             "item_id": "emeraldt4",
             "item_name": "Pristine Emerald",
-            "weight": null,
-            "stack_max": null
+            "weight": "0.100",
+            "stack_max": 10000
           },
           {
             "item_id": "jadet4",
             "item_name": "Pristine Jade",
-            "weight": null,
-            "stack_max": null
+            "weight": "0.100",
+            "stack_max": 10000
           },
           {
             "item_id": "jaspert4",
             "item_name": "Pristine Jasper",
-            "weight": null,
-            "stack_max": null
+            "weight": "0.100",
+            "stack_max": 10000
           },
           {
             "item_id": "malachitet4",
             "item_name": "Pristine Malachite",
-            "weight": null,
-            "stack_max": null
+            "weight": "0.100",
+            "stack_max": 10000
           },
           {
             "item_id": "moonstonet4",
             "item_name": "Pristine Moonstone",
-            "weight": null,
-            "stack_max": null
+            "weight": "0.100",
+            "stack_max": 10000
           },
           {
             "item_id": "onyxt4",
             "item_name": "Pristine Onyx",
-            "weight": null,
-            "stack_max": null
+            "weight": "0.100",
+            "stack_max": 10000
           },
           {
             "item_id": "opalt4",
             "item_name": "Pristine Opal",
-            "weight": null,
-            "stack_max": null
+            "weight": "0.100",
+            "stack_max": 10000
           },
           {
             "item_id": "pearlt4",
             "item_name": "Pristine Pearl",
-            "weight": null,
-            "stack_max": null
+            "weight": "0.100",
+            "stack_max": 10000
           },
           {
             "item_id": "rubyt4",
             "item_name": "Pristine Ruby",
-            "weight": null,
-            "stack_max": null
+            "weight": "0.100",
+            "stack_max": 10000
           },
           {
             "item_id": "sapphiret4",
             "item_name": "Pristine Sapphire",
-            "weight": null,
-            "stack_max": null
+            "weight": "0.100",
+            "stack_max": 10000
           },
           {
             "item_id": "topazt4",
             "item_name": "Pristine Topaz",
-            "weight": null,
-            "stack_max": null
+            "weight": "0.100",
+            "stack_max": 10000
           },
           {
             "item_id": "turquoiset4",
             "item_name": "Pristine Turquoise",
-            "weight": null,
-            "stack_max": null
+            "weight": "0.100",
+            "stack_max": 10000
           },
           {
             "item_id": "rubyt2",
             "item_name": "Ruby",
-            "weight": null,
-            "stack_max": null
+            "weight": "0.100",
+            "stack_max": 10000
           },
           {
             "item_id": "sapphiret2",
             "item_name": "Sapphire",
-            "weight": null,
-            "stack_max": null
+            "weight": "0.100",
+            "stack_max": 10000
           },
           {
             "item_id": "topazt2",
             "item_name": "Topaz",
-            "weight": null,
-            "stack_max": null
+            "weight": "0.100",
+            "stack_max": 10000
           },
           {
             "item_id": "turquoiset2",
             "item_name": "Turquoise",
-            "weight": null,
-            "stack_max": null
+            "weight": "0.100",
+            "stack_max": 10000
           }
         ]
       }
