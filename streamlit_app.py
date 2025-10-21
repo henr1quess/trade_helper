@@ -243,9 +243,39 @@ def load_latest_snapshot_records(
     ``None`` when it was not possible to load a valid snapshot payload.
     """
 
-    meta_path = Path(raw_root) / "last_sync_meta.json"
+    raw_root = Path(raw_root)
+    meta_path = raw_root / "last_sync_meta.json"
+    latest_snapshot_path = raw_root / "latest_snapshot.json"
+    def _load_snapshot_payload(path: Path) -> Tuple[Optional[List[Dict[str, Any]]], Optional[Dict[str, Any]]]:
+        if not path.exists():
+            return None, None
+        try:
+            payload = json.loads(path.read_text(encoding="utf-8"))
+        except Exception:
+            return None, None
+
+        if isinstance(payload, dict):
+            records = payload.get("records")
+        elif isinstance(payload, list):
+            payload = {"records": payload}
+            records = payload.get("records")
+        else:
+            return None, None
+
+        if isinstance(records, list):
+            return records, payload
+        return None, None
+
     if not meta_path.exists():
-        return None, None, None, {}
+        records, payload = _load_snapshot_payload(latest_snapshot_path)
+        if records is None:
+            return None, None, None, {}
+        best_entry: Dict[str, Any] = {
+            "snapshot_path": str(latest_snapshot_path),
+            "snapshot_ts": payload.get("snapshot_ts") if isinstance(payload, dict) else None,
+        }
+        source = payload.get("source") if isinstance(payload, dict) else None
+        return records, source, best_entry, {}
 
     try:
         meta_data = json.loads(meta_path.read_text(encoding="utf-8"))
@@ -253,7 +283,15 @@ def load_latest_snapshot_records(
         return None, None, None, {}
 
     if not isinstance(meta_data, dict):
-        return None, None, None, {}
+        records, payload = _load_snapshot_payload(latest_snapshot_path)
+        if records is None:
+            return None, None, None, {}
+        best_entry = {
+            "snapshot_path": str(latest_snapshot_path),
+            "snapshot_ts": payload.get("snapshot_ts") if isinstance(payload, dict) else None,
+        }
+        source = payload.get("source") if isinstance(payload, dict) else None
+        return records, source, best_entry, {}
 
     best_source: Optional[str] = None
     best_entry: Optional[Dict[str, Any]] = None
@@ -275,7 +313,15 @@ def load_latest_snapshot_records(
             best_entry = entry
 
     if not best_entry:
-        return None, None, None, meta_data
+        records, payload = _load_snapshot_payload(latest_snapshot_path)
+        if records is None:
+            return None, None, None, meta_data
+        best_entry = {
+            "snapshot_path": str(latest_snapshot_path),
+            "snapshot_ts": payload.get("snapshot_ts") if isinstance(payload, dict) else None,
+        }
+        best_source = payload.get("source") if isinstance(payload, dict) else None
+        return records, best_source, best_entry, meta_data
 
     snapshot_path_raw = best_entry.get("snapshot_path")
     if not snapshot_path_raw:
@@ -285,20 +331,19 @@ def load_latest_snapshot_records(
     if not snapshot_path.is_absolute():
         snapshot_path = Path(raw_root) / snapshot_path
 
-    if not snapshot_path.exists():
-        return None, best_source, best_entry, meta_data
-
-    try:
-        payload = json.loads(snapshot_path.read_text(encoding="utf-8"))
-    except Exception:
-        return None, best_source, best_entry, meta_data
-
-    if isinstance(payload, dict) and "records" in payload:
-        records = payload.get("records")
-    elif isinstance(payload, list):
-        records = payload
-    else:
-        records = None
+    records, payload = _load_snapshot_payload(snapshot_path)
+    if records is None:
+        # Última tentativa: usar latest_snapshot.json diretamente
+        records, payload = _load_snapshot_payload(latest_snapshot_path)
+        if records is None:
+            return None, best_source, best_entry, meta_data
+        best_entry = dict(best_entry)
+        best_entry["snapshot_path"] = str(latest_snapshot_path)
+        if isinstance(payload, dict) and payload.get("snapshot_ts"):
+            best_entry.setdefault("snapshot_ts", payload.get("snapshot_ts"))
+        if isinstance(payload, dict) and payload.get("source"):
+            best_source = payload.get("source")
+        return records, best_source, best_entry, meta_data
 
     return records, best_source, best_entry, meta_data
 
