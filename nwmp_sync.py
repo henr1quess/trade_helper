@@ -931,12 +931,9 @@ def collect_remote_snapshot(
             sell_url_or_path, raw_root, label="sell", timeout=timeout
         )
 
-    ts_candidates = [
-        _normalise_timestamp(buy_snapshot_ts),
-        _normalise_timestamp(sell_snapshot_ts),
-    ]
-    ts_candidates = [ts for ts in ts_candidates if ts is not None]
-    snapshot_dt = max(ts_candidates) if ts_candidates else datetime.now(timezone.utc)
+    snapshot_dt = _normalise_timestamp(buy_snapshot_ts)
+    if snapshot_dt is None:
+        snapshot_dt = datetime.now(timezone.utc)
     snapshot_iso = _ts_iso_z(snapshot_dt)
 
     bundle_path = Path(raw_root) / "collected" / "remote_latest.json"
@@ -990,22 +987,13 @@ def collect_local_snapshot(
     if auctions_dir and str(auctions_dir).strip():
         sell_entries_raw = _load_local_snapshot_entries(Path(auctions_dir))
 
-    timestamp_candidates: List[datetime] = []
     buy_dt = _summarise_snapshot_entries(buy_entries_raw, prefer="max")
-    if buy_dt is not None:
-        timestamp_candidates.append(buy_dt)
-    sell_dt = None
-    if sell_entries_raw:
-        sell_dt = _summarise_snapshot_entries(sell_entries_raw, prefer="max")
-        if sell_dt is not None:
-            timestamp_candidates.append(sell_dt)
 
-    if timestamp_candidates:
-        snapshot_dt = max(timestamp_candidates).astimezone(timezone.utc)
-    else:
+    snapshot_dt = buy_dt.astimezone(timezone.utc) if buy_dt is not None else None
+    if snapshot_dt is None:
         snapshot_dt = _normalise_timestamp(snapshot_time) if snapshot_time else None
-        if snapshot_dt is None:
-            snapshot_dt = datetime.now(timezone.utc)
+    if snapshot_dt is None:
+        snapshot_dt = datetime.now(timezone.utc)
     snapshot_iso = _ts_iso_z(snapshot_dt)
 
     buy_entries = [_normalise_local_entry(e, snapshot_dt, server) for e in buy_entries_raw]
