@@ -26,6 +26,10 @@ def _write_json(path: Path, data):
 # --------------------------- data loading ---------------------------
 def _load_snapshot_df(snapshot_path: Path) -> pd.DataFrame:
     snap = _read_json(snapshot_path, {})
+    if isinstance(snap, dict):
+        price_scale = str(snap.get("price_scale") or "").strip().lower()
+    else:
+        price_scale = ""
     recs = snap.get("records") or []
     df = pd.DataFrame(recs)
 
@@ -36,6 +40,13 @@ def _load_snapshot_df(snapshot_path: Path) -> pd.DataFrame:
 
     df["top_buy"] = pd.to_numeric(df["top_buy"], errors="coerce")
     df["low_sell"] = pd.to_numeric(df["low_sell"], errors="coerce")
+
+    # Snapshots antigos armazenavam valores em centavos. Quando o metadado
+    # price_scale está ausente (ou diferente de "coins"), convertemos para
+    # moedas dividindo por 100 para que cálculos e exibição fiquem corretos.
+    if price_scale not in {"coin", "coins"}:
+        df["top_buy"] = df["top_buy"] / 100.0
+        df["low_sell"] = df["low_sell"] / 100.0
 
     def _roi(row):
         tb, ls = row["top_buy"], row["low_sell"]
