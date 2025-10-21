@@ -1,793 +1,437 @@
 # nwmp_sync.py
+# --------------------------------------------------------------------------------------
+# Fluxo:
+# 1) Baixar snapshots cloud (buy e sell) -> raw/collected/
+# 2) Copiar snapshots locais (BUY = arquivo; SELL = diretório com vários .json) -> raw/collected/
+# 3) Atualizar meta -> raw/last_sync_meta.json
+# 4) Processar -> raw/latest_snapshot.json (records com top_buy/low_sell por item)
+#    => agora aceita override de fonte: auto/cloud/local por lado (buy/sell)
+# --------------------------------------------------------------------------------------
+
 from __future__ import annotations
-# Requisitos: pandas (obrigatório), numpy (para estatísticas), requests (apenas para URLs)
-import gzip
 import json
+import shutil
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
 from datetime import datetime, timezone
-
+import requests
 import pandas as pd
+import glob
+import os
 
-# ------------------ Utils (I/O & time) ------------------
+# -----------------------------------
+# Caminhos do projeto
+# -----------------------------------
+PROJECT_DIR = Path.cwd()
+RAW_DIR = PROJECT_DIR / "raw"
+COLLECTED_DIR = RAW_DIR / "collected"
+RAW_DIR.mkdir(parents=True, exist_ok=True)
+COLLECTED_DIR.mkdir(parents=True, exist_ok=True)
 
-def _ensure_dir(p: Path) -> None:
-    p.mkdir(parents=True, exist_ok=True)
+LAST_META_PATH = RAW_DIR / "last_sync_meta.json"
+PROCESSED_SNAPSHOT_PATH = RAW_DIR / "latest_snapshot.json"
 
-def _read_json_bytes(raw: bytes) -> Any:
-    return json.loads(raw.decode("utf-8"))
+# Arquivos na pasta collected
+CLOUD_BUY_PATH = COLLECTED_DIR / "cloud_buy_devaloka.json"
+CLOUD_SELL_PATH = COLLECTED_DIR / "cloud_sell_devaloka.json"
+LOCAL_BUY_PATH = COLLECTED_DIR / "local_buy_devaloka.json"
+LOCAL_SELL_PATH = COLLECTED_DIR / "local_sell_devaloka.json"
 
-def _read_bytes_local_or_url(path_or_url: str, timeout: int = 60) -> bytes:
-    p = (path_or_url or "").strip()
-    if not p:
-        raise ValueError("path_or_url vazio")
-    if p.startswith("http://") or p.startswith("https://"):
-        try:
-            import requests  # opcional
-        except Exception as exc:
-            raise RuntimeError("requests não disponível para baixar URLs") from exc
-        resp = requests.get(p, timeout=timeout)
-        if resp.status_code != 200:
-            raise RuntimeError(f"Falha ao baixar: {p} ({resp.status_code})")
-        return resp.content
-    path = Path(p)
-    if not path.exists():
-        raise FileNotFoundError(f"Arquivo não encontrado: {p}")
-    return path.read_bytes()
+# Gaming Tools (cloud)
+GT_BASE = "https://nwmpdata.gaming.tools"
+BUY_URL = f"{GT_BASE}/buy-orders2/devaloka.json"
+SELL_URL = f"{GT_BASE}/auctions2/devaloka.json"
 
-def _maybe_gunzip(raw: bytes, hint: Optional[str] = None) -> bytes:
-    name = (hint or "").lower()
-    gz_ext = name.endswith(".gz")
-    gz_magic = raw[:2] == b"\x1f\x8b"
-    if gz_ext or gz_magic:
-        try:
-            return gzip.decompress(raw)
-        except OSError:
-            return raw
-    return raw
+# ----------- fontes locais padrão -----------
+# Crie local_sources.json no diretório do projeto (preferido)
+# ou ~/.nw_local_sources.json (fallback) com:
+# {
+#   "buy_file": "C:/Users/Administrador/AppData/Local/NWMPScanner2/current/buy-orders/devaloka.json",
+#   "sell_dir": "C:/Users/Administrador/AppData/Local/NWMPScanner2/current/auctions"
+# }
+LOCAL_SOURCES_CANDIDATES = [
+    PROJECT_DIR / "local_sources.json",
+    Path.home() / ".nw_local_sources.json",
+]
 
-def _normalise_timestamp(value: Any) -> Optional[datetime]:
-    if value is None:
+# -----------------------
+# Helpers genéricos
+# -----------------------
+def _now_utc_iso() -> str:
+    return datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
+
+def _read_json(path: Path) -> Any:
+    with open(path, "r", encoding="utf-8") as f:
+        return json.load(f)
+
+def _write_json(path: Path, data: Any) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    with open(path, "w", encoding="utf-8") as f:
+        json.dump(data, f, ensure_ascii=False)
+
+def _safe_len(x) -> int:
+    try:
+        return len(x)
+    except Exception:
+        return 0
+
+def _parse_ts(s: Optional[str]) -> Optional[datetime]:
+    if not s:
         return None
-    if isinstance(value, datetime):
-        return value.astimezone(timezone.utc) if value.tzinfo else value.replace(tzinfo=timezone.utc)
-    if isinstance(value, (int, float)) and not isinstance(value, bool):
-        # heurística: >=1e12 assume ms
-        div = 1000.0 if float(value) >= 1_000_000_000_000 else 1.0
-        try:
-            return datetime.fromtimestamp(float(value)/div, tz=timezone.utc)
-        except Exception:
-            return None
-    if isinstance(value, str):
-        try:
-            ts = pd.to_datetime(value, utc=True, errors="coerce")
-            if pd.isna(ts): return None
-            return ts.to_pydatetime()
-        except Exception:
-            return None
+    try:
+        if s.endswith("Z"):
+            return datetime.fromisoformat(s.replace("Z", "+00:00"))
+        return datetime.fromisoformat(s)
+    except Exception:
+        return None
+
+# ----- timestamp: aceita ISO ou epoch em created_at/expires_at -----
+def _to_iso_utc(ts_val) -> Optional[str]:
+    if ts_val is None:
+        return None
+    if isinstance(ts_val, str) and "T" in ts_val:
+        return ts_val
+    try:
+        if isinstance(ts_val, str):
+            ts_val = float(ts_val)
+        if isinstance(ts_val, (int, float)):
+            return datetime.fromtimestamp(ts_val, tz=timezone.utc).isoformat().replace("+00:00", "Z")
+    except Exception:
+        pass
     return None
 
-def _ts_iso_z(dt: datetime) -> str:
-    return dt.astimezone(timezone.utc).isoformat().replace("+00:00","Z")
-
-def _detect_snapshot_ts(entries: List[Dict[str, Any]]) -> str:
-    tss: List[datetime] = []
-    for e in entries:
-        ts = _normalise_timestamp(e.get("timestamp"))
-        if ts is not None:
-            tss.append(ts)
-    base = min(tss).astimezone(timezone.utc) if tss else datetime.now(timezone.utc)
-    return _ts_iso_z(base)
-
-
-def _ensure_iso_timestamp(value: Any, fallback: Optional[datetime] = None) -> str:
-    dt = _normalise_timestamp(value)
-    if dt is None:
-        dt = fallback or datetime.now(timezone.utc)
-    return _ts_iso_z(dt)
-
-
-def _maybe_iso_datetime_field(entry: Dict[str, Any], key: str, fallback: Optional[datetime] = None) -> None:
-    if key not in entry:
-        return
-    entry[key] = _ensure_iso_timestamp(entry.get(key), fallback=fallback)
-
-# ------------------ Load snapshot arrays ------------------
-
-def load_snapshot_array(path_or_url: str, timeout: int = 60) -> List[Dict[str, Any]]:
-    raw = _read_bytes_local_or_url(path_or_url, timeout=timeout)
-    raw = _maybe_gunzip(raw, hint=path_or_url)
-    data = _read_json_bytes(raw)
-    if not isinstance(data, list):
-        raise TypeError("Snapshot deve ser array JSON")
-    return [x for x in data if isinstance(x, dict)]
-
-# ------------------ RAW save ------------------
-
-def _load_json_object(path: Path) -> Dict[str, Any]:
-    if not path.exists():
-        return {}
-    try:
-        data = json.loads(path.read_text(encoding="utf-8"))
-    except Exception:
-        return {}
-    return data if isinstance(data, dict) else {}
-
-
-def _write_json_object(path: Path, payload: Dict[str, Any]) -> None:
-    _ensure_dir(path.parent)
-    with open(path, "w", encoding="utf-8") as f:
-        json.dump(payload, f, ensure_ascii=False, indent=2)
-
-
-def _update_last_sync_metadata(
-    meta_path: Path,
-    source: str,
-    payload: Dict[str, Any],
-    snapshot_path: Optional[Path] = None,
-) -> Dict[str, Any]:
-    if not source:
-        return {}
-
-    meta = _load_json_object(meta_path)
-    existing = meta.get(source)
-    if not isinstance(existing, dict):
-        existing = {}
-
-    payload_copy = dict(existing)
-    payload_copy.update(payload)
-
-    if snapshot_path is not None:
-        payload_copy["snapshot_path"] = str(snapshot_path)
-    else:
-        snapshot_value = payload_copy.get("snapshot_path")
-        if isinstance(snapshot_value, Path):
-            payload_copy["snapshot_path"] = str(snapshot_value)
-
-    meta[source] = payload_copy
-    meta["_last_updated"] = _ts_iso_z(datetime.now(timezone.utc))
-    _write_json_object(meta_path, meta)
-    return payload_copy
-
-
-def _resolve_snapshot_path(path_value: Optional[str], raw_root: Path) -> Optional[Path]:
-    if not path_value:
+def _extract_any_ts(entry: dict) -> Optional[str]:
+    if not isinstance(entry, dict):
         return None
-    path = Path(path_value)
-    if not path.is_absolute():
-        path = raw_root / path
-    if not path.exists():
-        return None
-    return path
+    for k in ("timestamp", "created_at", "expires_at"):
+        if k in entry:
+            iso = _to_iso_utc(entry[k])
+            if iso:
+                return iso
+    return None
 
+def _max_snapshot_ts(arr: List[Dict[str, Any]]) -> Optional[str]:
+    """Maior timestamp (ISO) considerando 'timestamp' (ISO) ou created_at/expires_at (epoch)."""
+    best_iso: Optional[str] = None
+    best_dt: Optional[datetime] = None
+    for el in arr or []:
+        ts_iso = _extract_any_ts(el)
+        dt = _parse_ts(ts_iso) if ts_iso else None
+        if dt and (best_dt is None or dt > best_dt):
+            best_dt, best_iso = dt, ts_iso
+    return best_iso
 
-def _load_snapshot_entries_from_path(
-    path_value: Optional[str], raw_root: Path
-) -> List[Dict[str, Any]]:
-    path = _resolve_snapshot_path(path_value, raw_root)
-    if path is None:
-        return []
-    try:
-        data = json.loads(path.read_text(encoding="utf-8"))
-    except Exception:
-        return []
-    if isinstance(data, list):
-        return [entry for entry in data if isinstance(entry, dict)]
-    if isinstance(data, dict):
-        # Compatibilidade com formato legado em que buy/sell estavam no mesmo arquivo
-        buy_entries = data.get("buy")
-        if isinstance(buy_entries, list):
-            return [entry for entry in buy_entries if isinstance(entry, dict)]
-    return []
+def _choose_by_newest(candidates: List[Tuple[str, Path]]) -> Tuple[Optional[Path], Optional[str], int]:
+    """Escolhe o arquivo com maior timestamp interno; se não houver, usa o mais recente por mtime."""
+    winner_path: Optional[Path] = None
+    winner_ts_raw: Optional[str] = None
+    winner_dt: Optional[datetime] = None
+    winner_len: int = 0
 
-
-def _write_snapshot_entries_file(path: Path, entries: List[Dict[str, Any]]) -> None:
-    _ensure_dir(path.parent)
-    with open(path, "w", encoding="utf-8") as f:
-        json.dump(entries, f, ensure_ascii=False)
-
-
-def _load_local_snapshot_entries(directory: Path) -> List[Dict[str, Any]]:
-    entries: List[Dict[str, Any]] = []
-    if not directory.exists():
-        raise FileNotFoundError(f"Diretório não encontrado: {directory}")
-
-    for json_path in sorted(directory.rglob("*.json")):
-        if not json_path.is_file():
+    for _, p in candidates:
+        if not p.exists():
             continue
         try:
-            data = json.loads(json_path.read_text(encoding="utf-8"))
+            arr = _read_json(p)
+            if not isinstance(arr, list):
+                continue
+            ts_raw = _max_snapshot_ts(arr)
+            ts_dt = _parse_ts(ts_raw) if ts_raw else None
+            n = len(arr)
+            # fallback para mtime quando não há ts interno
+            if not ts_dt:
+                ts_dt = datetime.fromtimestamp(p.stat().st_mtime, tz=timezone.utc)
+            if (winner_dt is None) or (ts_dt and ts_dt > winner_dt):
+                winner_dt = ts_dt
+                winner_ts_raw = ts_raw
+                winner_path = p
+                winner_len = n
         except Exception:
             continue
-        if isinstance(data, list):
-            for raw in data:
-                if isinstance(raw, dict):
-                    entries.append(raw.copy())
-    return entries
 
+    return winner_path, winner_ts_raw, winner_len
 
-def _normalise_local_entry(
-    entry: Dict[str, Any],
-    snapshot_dt: datetime,
-    server: str,
-) -> Dict[str, Any]:
-    norm: Dict[str, Any] = dict(entry)
+# --------------------------------------
+# Helpers de leitura local (arquivo/pasta)
+# --------------------------------------
+def _load_json_array(p: Path) -> List[Dict[str, Any]]:
+    try:
+        data = _read_json(p)
+        return data if isinstance(data, list) else []
+    except Exception:
+        return []
 
-    norm["timestamp"] = _ensure_iso_timestamp(norm.get("timestamp"), fallback=snapshot_dt)
-    _maybe_iso_datetime_field(norm, "created_at", fallback=snapshot_dt)
-    _maybe_iso_datetime_field(norm, "expires_at", fallback=snapshot_dt)
-    norm["snapshot_ts"] = _ts_iso_z(snapshot_dt)
+def _load_from_file_or_folder(src: Optional[str]) -> List[Dict[str, Any]]:
+    if not src:
+        return []
+    p = Path(src)
+    if not p.exists():
+        return []
+    if p.is_dir():
+        rows: List[Dict[str, Any]] = []
+        for f in sorted(p.glob("*.json")):
+            rows.extend(_load_json_array(f))
+        return rows
+    else:
+        return _load_json_array(p)
 
-    server_norm = (server or "devaloka").lower()
-    norm["server_id"] = server_norm
-    if not norm.get("server"):
-        norm["server"] = server_norm
-
-    slug = str(norm.get("item_id") or norm.get("slug") or norm.get("id") or "").strip()
-    if slug:
-        norm.setdefault("slug", slug)
-    if not norm.get("item_name"):
-        norm["item_name"] = slug or norm.get("item") or ""
-
-    for key in ["price", "quantity"]:
-        if key in norm:
+# -----------------------------
+# Config: fontes locais padrão
+# -----------------------------
+def _load_local_sources():
+    """
+    Aceita esquema:
+      {"buy_file":".../buy-orders/devaloka.json","sell_dir":".../auctions"}
+    ou legado:
+      {"buy":"...","sell":"..."}
+    """
+    for p in LOCAL_SOURCES_CANDIDATES:
+        if p.exists():
             try:
-                norm[key] = int(norm[key])
+                with open(p, "r", encoding="utf-8") as f:
+                    cfg = json.load(f)
+                buy_file = cfg.get("buy_file") or cfg.get("buy") or None
+                sell_dir = cfg.get("sell_dir") or cfg.get("sell") or None
+                if isinstance(buy_file, str):
+                    buy_file = str(Path(buy_file).expanduser())
+                if isinstance(sell_dir, str):
+                    sell_dir = str(Path(sell_dir).expanduser())
+                return p, buy_file, sell_dir
             except Exception:
-                try:
-                    norm[key] = int(float(norm[key]))
-                except Exception:
-                    pass
+                continue
+    return None, None, None
 
-    return norm
-
-
-# ------------------ Snapshot probes ------------------
-
-def _summarise_snapshot_entries(
-    entries: List[Dict[str, Any]], *, prefer: str = "min"
-) -> Optional[datetime]:
-    if not entries:
-        return None
-    timestamps: List[datetime] = []
-    for entry in entries:
-        ts = _normalise_timestamp(entry.get("timestamp"))
-        if ts is not None:
-            timestamps.append(ts)
-    if not timestamps:
-        return None
-    if prefer == "max":
-        return max(timestamps)
-    return min(timestamps)
-
-
-def probe_remote_snapshot(
-    buy_orders_url: str,
-    sell_orders_url: Optional[str] = None,
-    *,
-    timeout: int = 30,
-) -> Dict[str, Any]:
-    """Collect lightweight metadata about the remote snapshots without persisting."""
-
-    result: Dict[str, Any] = {
-        "source": "remote",
-        "snapshot_ts": None,
-        "buy_entries": None,
-        "buy_snapshot_ts": None,
-        "sell_entries": None,
-        "sell_snapshot_ts": None,
-        "error": None,
+def get_local_source_config() -> Dict[str, Any]:
+    cfg_path, buy_src, sell_src = _load_local_sources()
+    return {
+        "config_path": str(cfg_path) if cfg_path else None,
+        "buy_file": buy_src,
+        "sell_dir": sell_src,
     }
 
-    errors: List[str] = []
-    buy_dt: Optional[datetime] = None
-    sell_dt: Optional[datetime] = None
+# --------------------------------------
+# 1) Baixar snapshots cloud (buy/sell)
+# --------------------------------------
+def download_cloud_snapshots(timeout: int = 60) -> Dict[str, Any]:
+    r_buy = requests.get(BUY_URL, timeout=timeout)
+    r_buy.raise_for_status()
+    buy_arr = r_buy.json()
+    _write_json(CLOUD_BUY_PATH, buy_arr)
 
-    if not (buy_orders_url or "").strip():
-        errors.append("buy: URL não configurada")
-    else:
-        try:
-            buy_entries = load_snapshot_array(buy_orders_url, timeout=timeout)
-            result["buy_entries"] = len(buy_entries)
-            buy_dt = _summarise_snapshot_entries(buy_entries, prefer="min")
-            if buy_dt is not None:
-                result["buy_snapshot_ts"] = _ts_iso_z(buy_dt)
-        except Exception as exc:  # pragma: no cover - falhas de rede/IO
-            errors.append(f"buy: {exc}")
+    r_sell = requests.get(SELL_URL, timeout=timeout)
+    r_sell.raise_for_status()
+    sell_arr = r_sell.json()
+    _write_json(CLOUD_SELL_PATH, sell_arr)
 
-    if sell_orders_url and sell_orders_url.strip():
-        try:
-            sell_entries = load_snapshot_array(sell_orders_url, timeout=timeout)
-            result["sell_entries"] = len(sell_entries)
-            sell_dt = _summarise_snapshot_entries(sell_entries, prefer="min")
-            if sell_dt is not None:
-                result["sell_snapshot_ts"] = _ts_iso_z(sell_dt)
-        except Exception as exc:  # pragma: no cover - falhas de rede/IO
-            errors.append(f"sell: {exc}")
-
-    ts_candidates = [dt for dt in [buy_dt, sell_dt] if dt is not None]
-    if ts_candidates:
-        latest = max(ts_candidates)
-        result["snapshot_ts"] = _ts_iso_z(latest)
-
-    if errors:
-        result["error"] = "; ".join(errors)
-
-    return result
-
-
-def probe_local_snapshot(
-    buy_orders_dir: str,
-    auctions_dir: Optional[str] = None,
-) -> Dict[str, Any]:
-    """Collect metadata from local snapshot folders without mutating RAW."""
-
-    result: Dict[str, Any] = {
-        "source": "local",
-        "snapshot_ts": None,
-        "buy_entries": None,
-        "buy_snapshot_ts": None,
-        "sell_entries": None,
-        "sell_snapshot_ts": None,
-        "error": None,
+    meta = {
+        "action": "download_cloud_snapshots",
+        "when": _now_utc_iso(),
+        "saved": {
+            "cloud_buy_path": str(CLOUD_BUY_PATH),
+            "cloud_sell_path": str(CLOUD_SELL_PATH),
+            "cloud_buy_entries": _safe_len(buy_arr),
+            "cloud_sell_entries": _safe_len(sell_arr),
+            "cloud_buy_snapshot_ts": _max_snapshot_ts(buy_arr),
+            "cloud_sell_snapshot_ts": _max_snapshot_ts(sell_arr),
+        },
     }
+    _merge_and_write_meta(meta)
+    return meta
 
-    errors: List[str] = []
-    buy_dt: Optional[datetime] = None
-    sell_dt: Optional[datetime] = None
+# ---------------------------------------------------
+# 2) Copiar snapshots locais (arquivo/pasta) → collected
+# ---------------------------------------------------
+def copy_local_snapshots(src_buy: Optional[str] = None, src_sell: Optional[str] = None) -> Dict[str, Any]:
+    saved: Dict[str, Any] = {}
 
-    try:
-        buy_entries = _load_local_snapshot_entries(Path(buy_orders_dir))
-        result["buy_entries"] = len(buy_entries)
-        buy_dt = _summarise_snapshot_entries(buy_entries, prefer="max")
-        if buy_dt is not None:
-            result["buy_snapshot_ts"] = _ts_iso_z(buy_dt)
-    except FileNotFoundError as exc:
-        errors.append(f"buy: {exc}")
-    except Exception as exc:  # pragma: no cover - leitura local
-        errors.append(f"buy: {exc}")
-
-    if auctions_dir and str(auctions_dir).strip():
-        try:
-            sell_entries = _load_local_snapshot_entries(Path(auctions_dir))
-            result["sell_entries"] = len(sell_entries)
-            sell_dt = _summarise_snapshot_entries(sell_entries, prefer="max")
-            if sell_dt is not None:
-                result["sell_snapshot_ts"] = _ts_iso_z(sell_dt)
-        except FileNotFoundError as exc:
-            errors.append(f"sell: {exc}")
-        except Exception as exc:  # pragma: no cover - leitura local
-            errors.append(f"sell: {exc}")
-
-    ts_candidates = [dt for dt in [buy_dt, sell_dt] if dt is not None]
-    if ts_candidates:
-        latest = max(ts_candidates)
-        result["snapshot_ts"] = _ts_iso_z(latest)
-
-    if errors:
-        result["error"] = "; ".join(errors)
-
-    return result
-
-# ------------------ Transform to historical rows ------------------
-
-def _price_cents_to_float(v: Any) -> Optional[float]:
-    try:
-        iv = int(v)
-    except Exception:
-        return None
-    return round(iv/100.0, 2)
-
-def _group_key(entry: Dict[str, Any]) -> Optional[Tuple[str, str, str]]:
-    ts = _normalise_timestamp(entry.get("timestamp"))
-    if ts is None:
-        return None
-    tsz = _ts_iso_z(ts)
-    server_id = (entry.get("server_id") or entry.get("server") or "devaloka").lower()
-    item_id = (entry.get("item_id") or entry.get("slug") or entry.get("id") or "").strip()
-    if not item_id:
-        return None
-    return (tsz, server_id, item_id)
-
-def extract_records_from_snapshots(
-    buy_orders: List[Dict[str, Any]],
-    auctions: List[Dict[str, Any]],
-    server: str = "devaloka",
-) -> List[Dict[str, Any]]:
-    server_norm = (server or "devaloka").lower()
-    buy_map: Dict[Tuple[str,str,str], Dict[str, Any]] = {}
-    for e in buy_orders:
-        k = _group_key(e)
-        if not k: continue
-        ts, srv, item = k
-        if server_norm and srv != server_norm: continue
-        price = _price_cents_to_float(e.get("price"))
-        qty = e.get("quantity")
-        name = e.get("item_name")
-        rec = buy_map.setdefault(k, {"max_price": None, "qty_sum": 0, "item_name": name})
-        if price is not None:
-            rec["max_price"] = price if rec["max_price"] is None else max(rec["max_price"], price)
-        if isinstance(qty, int):
-            rec["qty_sum"] += qty
-        if not rec.get("item_name") and name:
-            rec["item_name"] = name
-
-    sell_map: Dict[Tuple[str,str,str], Dict[str, Any]] = {}
-    for e in auctions:
-        k = _group_key(e)
-        if not k: continue
-        ts, srv, item = k
-        if server_norm and srv != server_norm: continue
-        price = _price_cents_to_float(e.get("price"))
-        qty = e.get("quantity")
-        name = e.get("item_name")
-        rec = sell_map.setdefault(k, {"min_price": None, "qty_sum": 0, "item_name": name})
-        if price is not None:
-            rec["min_price"] = price if rec["min_price"] is None else min(rec["min_price"], price)
-        if isinstance(qty, int):
-            rec["qty_sum"] += qty
-        if not rec.get("item_name") and name:
-            rec["item_name"] = name
-
-    keys = set(buy_map.keys()) | set(sell_map.keys())
-    rows: List[Dict[str, Any]] = []
-    for ts, srv, item in keys:
-        buy = buy_map.get((ts, srv, item), {})
-        sell = sell_map.get((ts, srv, item), {})
-        item_name = sell.get("item_name") or buy.get("item_name") or item
-        rows.append({
-            "timestamp": ts,
-            "item": item_name,
-            "slug": item,
-            "server": srv,
-            "top_buy": buy.get("max_price"),
-            "low_sell": sell.get("min_price"),
-            "avg_price": None,
-            "volume": sell.get("qty_sum") if isinstance(sell.get("qty_sum"), int) else None,
-            "source": "nwmp_snapshot",
+    # BUY (arquivo único)
+    if src_buy:
+        buy_rows = _load_from_file_or_folder(src_buy)
+        _write_json(LOCAL_BUY_PATH, buy_rows)
+        saved.update({
+            "local_buy_path": str(LOCAL_BUY_PATH),
+            "local_buy_entries": len(buy_rows),
+            "local_buy_snapshot_ts": _max_snapshot_ts(buy_rows),
+            "local_buy_source": src_buy,
         })
-    return rows
 
+    # SELL (arquivo OU diretório -> agrega)
+    if src_sell:
+        sell_rows = _load_from_file_or_folder(src_sell)
+        _write_json(LOCAL_SELL_PATH, sell_rows)
+        saved.update({
+            "local_sell_path": str(LOCAL_SELL_PATH),
+            "local_sell_entries": len(sell_rows),
+            "local_sell_snapshot_ts": _max_snapshot_ts(sell_rows),
+            "local_sell_source": src_sell,
+        })
 
-# ------------------ Aggregated metrics per side ------------------
+    meta = {
+        "action": "copy_local_snapshots",
+        "when": _now_utc_iso(),
+        "saved": saved,
+    }
+    _merge_and_write_meta(meta)
+    return meta
 
-# ------------------ History.json projection (for the current app) ------------------
+def copy_local_from_defaults() -> Dict[str, Any]:
+    cfg_path, buy_file, sell_dir = _load_local_sources()
+    if not buy_file and not sell_dir:
+        raise RuntimeError(
+            "Caminhos padrão não configurados. Crie local_sources.json com "
+            "{\"buy_file\": \"C:/.../buy-orders/devaloka.json\", \"sell_dir\": \"C:/.../auctions\"}"
+        )
+    return copy_local_snapshots(buy_file, sell_dir)
 
-def collect_remote_snapshot(
-    buy_url_or_path: str,
-    sell_url_or_path: Optional[str] = None,
-    raw_root: str = "raw",
-    server: str = "devaloka",
-    timeout: int = 60,
-) -> Dict[str, Any]:
-    buy_entries: List[Dict[str, Any]] = []
-    sell_entries: List[Dict[str, Any]] = []
-    buy_snapshot_ts: Optional[str] = None
-    sell_snapshot_ts: Optional[str] = None
+# ---------------------------------------------------
+# 3) Processar (agora com override por lado)
+# ---------------------------------------------------
+def process_latest_snapshot(prefer_buy: str = "auto", prefer_sell: str = "auto") -> Dict[str, Any]:
+    """
+    prefer_buy / prefer_sell ∈ {'auto','cloud','local'}
+    """
+    # BUY: escolher fonte
+    if prefer_buy == "cloud":
+        buy_path = CLOUD_BUY_PATH if CLOUD_BUY_PATH.exists() else None
+        buy_ts = _max_snapshot_ts(_read_json(buy_path)) if buy_path else None
+        buy_count = _safe_len(_read_json(buy_path)) if buy_path else 0
+    elif prefer_buy == "local":
+        buy_path = LOCAL_BUY_PATH if LOCAL_BUY_PATH.exists() else None
+        buy_ts = _max_snapshot_ts(_read_json(buy_path)) if buy_path else None
+        buy_count = _safe_len(_read_json(buy_path)) if buy_path else 0
+    else:  # auto
+        buy_path, buy_ts, buy_count = _choose_by_newest([
+            ("cloud_buy", CLOUD_BUY_PATH),
+            ("local_buy", LOCAL_BUY_PATH),
+        ])
 
-    if buy_url_or_path:
-        buy_entries = load_snapshot_array(buy_url_or_path, timeout=timeout)
-        if buy_entries:
-            buy_snapshot_ts = _detect_snapshot_ts(buy_entries)
+    # SELL: escolher fonte
+    if prefer_sell == "cloud":
+        sell_path = CLOUD_SELL_PATH if CLOUD_SELL_PATH.exists() else None
+        sell_ts = _max_snapshot_ts(_read_json(sell_path)) if sell_path else None
+        sell_count = _safe_len(_read_json(sell_path)) if sell_path else 0
+    elif prefer_sell == "local":
+        sell_path = LOCAL_SELL_PATH if LOCAL_SELL_PATH.exists() else None
+        sell_ts = _max_snapshot_ts(_read_json(sell_path)) if sell_path else None
+        sell_count = _safe_len(_read_json(sell_path)) if sell_path else 0
+    else:  # auto
+        sell_path, sell_ts, sell_count = _choose_by_newest([
+            ("cloud_sell", CLOUD_SELL_PATH),
+            ("local_sell", LOCAL_SELL_PATH),
+        ])
 
-    if sell_url_or_path:
-        sell_entries = load_snapshot_array(sell_url_or_path, timeout=timeout)
-        if sell_entries:
-            sell_snapshot_ts = _detect_snapshot_ts(sell_entries)
+    buy_df = pd.DataFrame(_read_json(buy_path)) if buy_path else pd.DataFrame()
+    sell_df = pd.DataFrame(_read_json(sell_path)) if sell_path else pd.DataFrame()
 
-    ts_candidates = [
-        _normalise_timestamp(buy_snapshot_ts),
-        _normalise_timestamp(sell_snapshot_ts),
-    ]
-    ts_candidates = [dt for dt in ts_candidates if dt is not None]
-    if ts_candidates:
-        snapshot_dt = max(ts_candidates)
+    if not buy_df.empty:
+        top_buy = (buy_df.groupby("item_id", as_index=False)
+                   .agg(top_buy=("price", "max"), buy_qty=("quantity", "sum")))
+        name_buy = (buy_df.dropna(subset=["item_id","item_name"])
+                    .drop_duplicates("item_id")[["item_id","item_name"]])
     else:
-        snapshot_dt = datetime.now(timezone.utc)
-    snapshot_iso = _ts_iso_z(snapshot_dt)
+        top_buy = pd.DataFrame(columns=["item_id","top_buy","buy_qty"])
+        name_buy = pd.DataFrame(columns=["item_id","item_name"])
 
-    raw_root_path = Path(raw_root)
+    if not sell_df.empty:
+        low_sell = (sell_df.groupby("item_id", as_index=False)
+                    .agg(low_sell=("price", "min"), sell_qty=("quantity", "sum")))
+        name_sell = (sell_df.dropna(subset=["item_id","item_name"])
+                     .drop_duplicates("item_id")[["item_id","item_name"]])
+    else:
+        low_sell = pd.DataFrame(columns=["item_id","low_sell","sell_qty"])
+        name_sell = pd.DataFrame(columns=["item_id","item_name"])
 
-    buy_path = raw_root_path / "collected" / "remote_latest_buy.json"
-    sell_path = raw_root_path / "collected" / "remote_latest_sell.json"
+    merged = top_buy.merge(low_sell, on="item_id", how="outer")
+    names = (pd.concat([name_sell, name_buy], ignore_index=True)
+             if not name_buy.empty or not name_sell.empty
+             else pd.DataFrame(columns=["item_id","item_name"]))
+    names = names.drop_duplicates("item_id", keep="first")
+    merged = merged.merge(names, on="item_id", how="left")
 
-    _write_snapshot_entries_file(buy_path, buy_entries)
-    _write_snapshot_entries_file(sell_path, sell_entries)
+    # TS de referência
+    ref_ts = buy_ts or sell_ts
+    bdt = _parse_ts(buy_ts) if buy_ts else None
+    sdt = _parse_ts(sell_ts) if sell_ts else None
+    if bdt and sdt:
+        ref_ts = buy_ts if bdt >= sdt else sell_ts
 
-    now_iso = _ts_iso_z(datetime.now(timezone.utc))
-    meta_payload: Dict[str, Any] = {
-        "source": "remote",
-        "collected_snapshot_ts": snapshot_iso,
-        "collected_at": now_iso,
-        "buy_snapshot_ts": buy_snapshot_ts,
-        "sell_snapshot_ts": sell_snapshot_ts,
-        "buy_entries": len(buy_entries),
-        "sell_entries": len(sell_entries),
-        "buy_snapshot_path": str(buy_path),
-        "sell_snapshot_path": str(sell_path),
-        "server": server,
-    }
+    records: List[Dict[str, Any]] = []
+    for row in merged.itertuples(index=False):
+        records.append({
+            "timestamp": ref_ts,
+            "item_id": row.item_id,
+            "item_name": getattr(row, "item_name", None),
+            "top_buy": float(row.top_buy) if pd.notna(getattr(row, "top_buy", None)) else None,
+            "low_sell": float(row.low_sell) if pd.notna(getattr(row, "low_sell", None)) else None,
+            "buy_qty": int(row.buy_qty) if pd.notna(getattr(row, "buy_qty", None)) else 0,
+            "sell_qty": int(row.sell_qty) if pd.notna(getattr(row, "sell_qty", None)) else 0,
+        })
 
-    meta_path = Path(raw_root) / "last_sync_meta.json"
-    updated_meta = _update_last_sync_metadata(meta_path, "remote", meta_payload)
-
-    return {
-        "meta": updated_meta,
-        "buy_entries": buy_entries,
-        "sell_entries": sell_entries,
-        "snapshot_iso": snapshot_iso,
-        "buy_path": str(buy_path),
-        "sell_path": str(sell_path),
-    }
-
-
-def collect_local_snapshot(
-    buy_orders_dir: str,
-    auctions_dir: Optional[str] = None,
-    raw_root: str = "raw",
-    server: str = "devaloka",
-    snapshot_time: Optional[datetime] = None,
-) -> Dict[str, Any]:
-    buy_entries_raw = _load_local_snapshot_entries(Path(buy_orders_dir))
-
-    sell_entries_raw: List[Dict[str, Any]] = []
-    if auctions_dir and str(auctions_dir).strip():
-        sell_entries_raw = _load_local_snapshot_entries(Path(auctions_dir))
-
-    buy_dt = _summarise_snapshot_entries(buy_entries_raw, prefer="max")
-
-    snapshot_dt = buy_dt.astimezone(timezone.utc) if buy_dt is not None else None
-    if snapshot_dt is None:
-        snapshot_dt = _normalise_timestamp(snapshot_time) if snapshot_time else None
-    if snapshot_dt is None:
-        snapshot_dt = datetime.now(timezone.utc)
-    snapshot_iso = _ts_iso_z(snapshot_dt)
-
-    buy_entries = [_normalise_local_entry(e, snapshot_dt, server) for e in buy_entries_raw]
-
-    raw_root_path = Path(raw_root)
-    sell_entries: List[Dict[str, Any]] = []
-    if sell_entries_raw:
-        sell_entries = [
-            _normalise_local_entry(e, snapshot_dt, server) for e in sell_entries_raw
-        ]
-
-    buy_path = raw_root_path / "collected" / "local_latest_buy.json"
-    sell_path = raw_root_path / "collected" / "local_latest_sell.json"
-
-    _write_snapshot_entries_file(buy_path, buy_entries)
-    _write_snapshot_entries_file(sell_path, sell_entries)
-
-    now_iso = _ts_iso_z(datetime.now(timezone.utc))
-    meta_payload: Dict[str, Any] = {
-        "source": "local",
-        "collected_snapshot_ts": snapshot_iso,
-        "collected_at": now_iso,
-        "buy_entries": len(buy_entries),
-        "sell_entries": len(sell_entries),
-        "buy_snapshot_path": str(buy_path),
-        "sell_snapshot_path": str(sell_path),
-        "server": server,
-    }
-
-    meta_path = raw_root_path / "last_sync_meta.json"
-    updated_meta = _update_last_sync_metadata(meta_path, "local", meta_payload)
-
-    return {
-        "meta": updated_meta,
-        "buy_entries": buy_entries,
-        "sell_entries": sell_entries,
-        "snapshot_iso": snapshot_iso,
-        "buy_path": str(buy_path),
-        "sell_path": str(sell_path),
-    }
-
-
-def _process_snapshot_entries(
-    source: str,
-    snapshot_iso: str,
-    buy_entries: List[Dict[str, Any]],
-    sell_entries: List[Dict[str, Any]],
-    raw_root_path: Path,
-    server: str,
-) -> Dict[str, Any]:
-    records = extract_records_from_snapshots(buy_entries, sell_entries, server=server)
-
-    now_dt = datetime.now(timezone.utc)
-    latest_snapshot_path = raw_root_path / "latest_snapshot.json"
-    latest_snapshot_payload = {
-        "source": source,
-        "snapshot_ts": snapshot_iso,
+    snapshot = {
+        "server": "devaloka",
+        "processed_at": _now_utc_iso(),
+        "snapshot_ts": ref_ts,
+        "buy_source_path": str(buy_path) if buy_path else None,
+        "sell_source_path": str(sell_path) if sell_path else None,
         "records": records,
-        "record_count": len(records),
-        "generated_at": _ts_iso_z(now_dt),
     }
-    _ensure_dir(latest_snapshot_path.parent)
-    with open(latest_snapshot_path, "w", encoding="utf-8") as f:
-        json.dump(latest_snapshot_payload, f, ensure_ascii=False, indent=2)
+    _write_json(PROCESSED_SNAPSHOT_PATH, snapshot)
 
-    meta_payload: Dict[str, Any] = {
-        "source": source,
-        "snapshot_ts": snapshot_iso,
-        "processed_snapshot_ts": snapshot_iso,
-        "processed_at": _ts_iso_z(now_dt),
-        "records": len(records),
-        "updated_at": _ts_iso_z(now_dt),
-        "buy_entries": len(buy_entries),
-        "sell_entries": len(sell_entries),
+    meta = {
+        "action": "process_latest_snapshot",
+        "when": _now_utc_iso(),
+        "buy": {"chosen_path": str(buy_path) if buy_path else None, "entries": buy_count, "snapshot_ts": buy_ts, "mode": prefer_buy},
+        "sell": {"chosen_path": str(sell_path) if sell_path else None, "entries": sell_count, "snapshot_ts": sell_ts, "mode": prefer_sell},
+        "processed": {"records": len(records), "output_path": str(PROCESSED_SNAPSHOT_PATH), "ref_snapshot_ts": ref_ts},
     }
+    _merge_and_write_meta(meta)
+    return meta
 
-    meta_path = raw_root_path / "last_sync_meta.json"
-    updated_meta = _update_last_sync_metadata(
-        meta_path, source, meta_payload, latest_snapshot_path
-    )
-
-    return updated_meta
-
-
-def _load_snapshot_bundle(path_value: Optional[str], raw_root: Path) -> Dict[str, Any]:
-    if not path_value:
-        return {}
-    path = Path(path_value)
-    if not path.is_absolute():
-        path = raw_root / path
-    if not path.exists():
-        return {}
+# ------------------------------------
+# Meta
+# ------------------------------------
+def _merge_and_write_meta(update: Dict[str, Any]) -> None:
     try:
-        data = json.loads(path.read_text(encoding="utf-8"))
+        current = _read_json(LAST_META_PATH)
+        if not isinstance(current, dict):
+            current = {}
     except Exception:
-        return {}
-    return data if isinstance(data, dict) else {}
+        current = {}
 
+    history = current.get("history", [])
+    history.append(update)
 
-def process_latest_snapshot(
-    raw_root: str = "raw",
-    server: str = "devaloka",
-    prefer_source: Optional[str] = None,
-) -> Dict[str, Any]:
-    raw_root_path = Path(raw_root)
-    meta_path = raw_root_path / "last_sync_meta.json"
-    meta = _load_json_object(meta_path)
+    current.update({
+        "updated_at": _now_utc_iso(),
+        "last_action": update.get("action"),
+        "history": history[-50:],
+    })
+    if "saved" in update:
+        current["last_saved"] = update["saved"]
+    if "processed" in update:
+        current["last_processed"] = update["processed"]
+    if "buy" in update or "sell" in update:
+        current["last_sources"] = {"buy": update.get("buy"), "sell": update.get("sell")}
 
-    def _candidate_from_meta(src: str) -> Optional[Tuple[datetime, str, Dict[str, Any]]]:
-        entry = meta.get(src)
-        if not isinstance(entry, dict):
-            return None
-        ts_value = entry.get("collected_snapshot_ts") or entry.get("snapshot_ts")
-        ts_dt = _normalise_timestamp(ts_value)
-        if ts_dt is None:
-            return None
-        return ts_dt, src, entry
+    _write_json(LAST_META_PATH, current)
 
-    candidates: List[Tuple[datetime, str, Dict[str, Any]]] = []
-    if prefer_source:
-        preferred = _candidate_from_meta(prefer_source)
-        if preferred:
-            candidates.append(preferred)
-    else:
-        for src in ("remote", "local"):
-            candidate = _candidate_from_meta(src)
-            if candidate:
-                candidates.append(candidate)
+# ---------------------------
+# CLI (opcional)
+# ---------------------------
+if __name__ == "__main__":
+    import argparse
+    ap = argparse.ArgumentParser(prog="nwmp_sync", description="Coleta e processa snapshots (cloud/local) para New World.")
+    ap.add_argument("--download-cloud", action="store_true")
+    ap.add_argument("--copy-local-buy", type=str, default=None)
+    ap.add_argument("--copy-local-sell", type=str, default=None, help="Arquivo OU diretório de SELL")
+    ap.add_argument("--process", action="store_true")
+    ap.add_argument("--prefer-buy", choices=["auto", "cloud", "local"], default="auto")
+    ap.add_argument("--prefer-sell", choices=["auto", "cloud", "local"], default="auto")
+    args = ap.parse_args()
 
-    if not candidates:
-        raise RuntimeError("Nenhum snapshot coletado para processar")
-
-    chosen_dt, chosen_source, chosen_entry = max(candidates, key=lambda tup: tup[0])
-
-    buy_entries = _load_snapshot_entries_from_path(
-        chosen_entry.get("buy_snapshot_path"), raw_root_path
-    )
-    sell_entries = _load_snapshot_entries_from_path(
-        chosen_entry.get("sell_snapshot_path"), raw_root_path
-    )
-
-    if not buy_entries and not sell_entries:
-        legacy_payload = _load_snapshot_bundle(
-            chosen_entry.get("collected_payload_path"), raw_root_path
-        )
-        if isinstance(legacy_payload, dict):
-            buy_entries = [
-                entry
-                for entry in legacy_payload.get("buy", [])
-                if isinstance(entry, dict)
-            ]
-            sell_entries = [
-                entry
-                for entry in legacy_payload.get("sell", [])
-                if isinstance(entry, dict)
-            ]
-
-    snapshot_iso = chosen_entry.get("collected_snapshot_ts") or chosen_entry.get(
-        "snapshot_ts"
-    )
-    if not snapshot_iso:
-        snapshot_iso = _ts_iso_z(chosen_dt)
-
-    processed_meta = _process_snapshot_entries(
-        source=chosen_source,
-        snapshot_iso=snapshot_iso,
-        buy_entries=buy_entries,
-        sell_entries=sell_entries,
-        raw_root_path=raw_root_path,
-        server=chosen_entry.get("server") or server,
-    )
-
-    refreshed_meta = _load_json_object(meta_path)
-    if isinstance(refreshed_meta, dict):
-        refreshed_meta["_last_processed_source"] = chosen_source
-        _write_json_object(meta_path, refreshed_meta)
-
-    return {
-        "source": chosen_source,
-        "snapshot_ts": processed_meta.get("snapshot_ts"),
-        "records": processed_meta.get("records"),
-        "processed_meta": processed_meta,
-    }
-
-# Conveniências simples para o app
-def run_sync(
-    buy_url_or_path: str,
-    sell_url_or_path: Optional[str] = None,
-    raw_root: str = "raw",
-    server: str = "devaloka",
-    timeout: int = 60,
-    process: bool = True,
-) -> Dict[str, Any]:
-    collected = collect_remote_snapshot(
-        buy_url_or_path,
-        sell_url_or_path,
-        raw_root=raw_root,
-        server=server,
-        timeout=timeout,
-    )
-
-    if not process:
-        return collected["meta"]
-
-    processed_meta = _process_snapshot_entries(
-        source="remote",
-        snapshot_iso=collected.get("snapshot_iso") or _ts_iso_z(datetime.now(timezone.utc)),
-        buy_entries=collected.get("buy_entries", []),
-        sell_entries=collected.get("sell_entries", []),
-        raw_root_path=Path(raw_root),
-        server=server,
-    )
-    return processed_meta
-
-
-def run_sync_local_snapshot(
-    buy_orders_dir: str,
-    auctions_dir: Optional[str] = None,
-    raw_root: str = "raw",
-    server: str = "devaloka",
-    snapshot_time: Optional[datetime] = None,
-    process: bool = True,
-) -> Dict[str, Any]:
-    collected = collect_local_snapshot(
-        buy_orders_dir,
-        auctions_dir=auctions_dir,
-        raw_root=raw_root,
-        server=server,
-        snapshot_time=snapshot_time,
-    )
-
-    if not process:
-        return collected["meta"]
-
-    snapshot_iso = collected.get("snapshot_iso")
-    if not snapshot_iso:
-        snapshot_iso = _ts_iso_z(
-            _normalise_timestamp(snapshot_time) or datetime.now(timezone.utc)
-        )
-
-    processed_meta = _process_snapshot_entries(
-        source="local",
-        snapshot_iso=snapshot_iso,
-        buy_entries=collected.get("buy_entries", []),
-        sell_entries=collected.get("sell_entries", []),
-        raw_root_path=Path(raw_root),
-        server=server,
-    )
-
-    return processed_meta
+    if args.download_cloud:
+        print(json.dumps(download_cloud_snapshots(), ensure_ascii=False, indent=2))
+    if args.copy_local_buy or args.copy_local_sell:
+        print(json.dumps(copy_local_snapshots(args.copy_local_buy, args.copy_local_sell), ensure_ascii=False, indent=2))
+    if args.process:
+        print(json.dumps(process_latest_snapshot(args.prefer_buy, args.prefer_sell), ensure_ascii=False, indent=2))
