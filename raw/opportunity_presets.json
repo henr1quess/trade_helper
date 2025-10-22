@@ -1,0 +1,62 @@
+{
+  "presets": [
+    {
+      "name": "resources basic",
+      "state": {
+        "op_flt_cats_exc": [],
+        "op_roi_min_input": 0.0,
+        "op_flt_fams_exc": [],
+        "op_flt_cats": [],
+        "op_overwrite": false,
+        "op_preset_name": "resources basic",
+        "op_flt_include_items": [],
+        "op_mgr_sel": "(nenhum)",
+        "op_roi_max_input": 1000.0,
+        "op_no_roi_max": true,
+        "op_price_max": null,
+        "op_mgr_newlabel": "",
+        "op_flt_grps_inc": [],
+        "op_price_min": 0.0,
+        "op_roi_max": null,
+        "op_flt_exclude_items": [],
+        "op_flt_grps": [
+          "Block",
+          "Cloth",
+          "Fiber",
+          "Ingot",
+          "Rawhide",
+          "Ore",
+          "Stone",
+          "Timber",
+          "Wood",
+          "Salvage",
+          "Oil",
+          "Charcoal",
+          "CutGem"
+        ],
+        "op_price_field": "low_sell",
+        "op_flt_grps_exc": [
+          "RawGem",
+          "Beeswax",
+          "Charcoal",
+          "CraftingComponents",
+          "CutGem"
+        ],
+        "op_price_field_radio": "low_sell",
+        "op_flt_fams_inc": [
+          "RefinedResources",
+          "RawResources"
+        ],
+        "op_price_min_input": 0.0,
+        "op_no_price_max": true,
+        "op_price_max_input": 1000000.0,
+        "op_flt_cats_inc": [],
+        "op_roi_min": 0.0,
+        "op_flt_fams": [
+          "RawResources",
+          "RefinedResources"
+        ]
+      }
+    }
+  ]
+}

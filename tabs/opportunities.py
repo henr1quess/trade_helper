@@ -1,4 +1,4 @@
-# opportunities.py — Presets com snapshot completo + filtros ROI/Preço (corrigido)
+# opportunities.py — Presets snapshot + include/exclude hierárquico + ROI/Preço ao lado + fixes
 from __future__ import annotations
 from pathlib import Path
 import json
@@ -14,8 +14,18 @@ RAW_DIR = PROJECT_DIR / "raw"
 LATEST_SNAPSHOT_PATH = RAW_DIR / "latest_snapshot.json"
 PRESETS_PATH = RAW_DIR / "opportunity_presets.json"
 
-# Tudo que for estado desta aba deve usar este prefixo para entrar no snapshot
+# Prefixo para chaves de estado desta aba
 OP_PREFIX = "op_"
+
+# Keys de botões (não entram no snapshot!)
+BUTTON_KEYS_DENYLIST_PREFIXES = (
+    f"{OP_PREFIX}preset_btn_",
+)
+BUTTON_KEYS_DENYLIST_EXACT = {
+    f"{OP_PREFIX}save_state",
+    f"{OP_PREFIX}mgr_del",
+    f"{OP_PREFIX}mgr_rename",
+}
 
 # --------------------------------------------------------------------------------------
 # IO utils
@@ -49,7 +59,7 @@ def _load_snapshot_df(snapshot_path: Path) -> pd.DataFrame:
     df["top_buy"] = pd.to_numeric(df["top_buy"], errors="coerce")
     df["low_sell"] = pd.to_numeric(df["low_sell"], errors="coerce")
 
-    # snapshots antigos vinham em centavos; escala atual "coin"/"coins" já é moeda
+    # snapshots antigos em centavos
     if price_scale not in {"coin", "coins"}:
         df["top_buy"] = df["top_buy"] / 100.0
         df["low_sell"] = df["low_sell"] / 100.0
@@ -66,7 +76,6 @@ def _load_snapshot_df(snapshot_path: Path) -> pd.DataFrame:
 
     df["roi_pct"] = df.apply(_roi, axis=1)
 
-    # normalizações úteis
     for c in ["trading_category","trading_family","trading_group","item_id","item_name"]:
         df[c] = df[c].astype(str)
     return df
@@ -97,7 +106,7 @@ def _load_presets() -> list[dict]:
     presets = data.get("presets") or []
     for p in presets:
         p.setdefault("name", "")
-        p.setdefault("state", {})  # estado completo desta aba
+        p.setdefault("state", {})
     return presets
 
 def _save_presets(presets: list[dict]):
@@ -109,16 +118,22 @@ def _find_preset(presets: list[dict], name: str) -> int:
             return i
     return -1
 
+def _is_button_key(k: str) -> bool:
+    if k in BUTTON_KEYS_DENYLIST_EXACT:
+        return True
+    return any(k.startswith(pref) for pref in BUTTON_KEYS_DENYLIST_PREFIXES)
+
 def _capture_state_from_session() -> dict:
     snap = {}
     for k, v in st.session_state.items():
-        if isinstance(k, str) and k.startswith(OP_PREFIX):
+        if isinstance(k, str) and k.startswith(OP_PREFIX) and not _is_button_key(k):
             snap[k] = v
     return snap
 
 def _apply_state_to_session(state: dict):
     for k, v in (state or {}).items():
-        st.session_state[k] = v
+        if not _is_button_key(k):
+            st.session_state[k] = v
 
 # --------------------------------------------------------------------------------------
 # Filter logic
@@ -128,18 +143,21 @@ def _apply_filters(
     inc_cats: list[str],
     inc_fams: list[str],
     inc_groups: list[str],
+    exc_cats: list[str],
+    exc_fams: list[str],
+    exc_groups: list[str],
     include_items: list[str],
     exclude_items: list[str],
     roi_min: float | None,
     roi_max: float | None,
     price_min: float | None,
     price_max: float | None,
-    price_field: str = "low_sell",  # "low_sell" ou "top_buy"
+    price_field: str = "low_sell",
 ) -> pd.DataFrame:
 
     base = df.copy()
 
-    # filtros por hierarquia
+    # filtros por hierarquia (include)
     if inc_cats:
         base = base[base["trading_category"].isin(inc_cats)]
     if inc_fams:
@@ -147,7 +165,15 @@ def _apply_filters(
     if inc_groups:
         base = base[base["trading_group"].isin(inc_groups)]
 
-    # incluir itens específicos mesmo se ficaram fora dos grupos
+    # exclusões por hierarquia
+    if exc_cats:
+        base = base[~base["trading_category"].isin(exc_cats)]
+    if exc_fams:
+        base = base[~base["trading_family"].isin(exc_fams)]
+    if exc_groups:
+        base = base[~base["trading_group"].isin(exc_groups)]
+
+    # incluir itens específicos mesmo se ficaram fora
     if include_items:
         extra = df[df["item_id"].isin(include_items)]
         base = pd.concat([base, extra], ignore_index=True).drop_duplicates(subset=["item_id"])
@@ -162,12 +188,12 @@ def _apply_filters(
     if roi_max is not None:
         base = base[base["roi_pct"] <= roi_max]
 
-    # Preço unitário range (aplicado ao campo escolhido)
+    # Preço unitário range
     fld = "low_sell" if price_field not in {"low_sell","top_buy"} else price_field
     if price_min is not None:
-        base = base[base[fld] >= price_min]  # <-- corrigido
+        base = base[base[fld] >= price_min]
     if price_max is not None:
-        base = base[base[fld] <= price_max]  # <-- corrigido
+        base = base[base[fld] <= price_max]
 
     return base
 
@@ -187,7 +213,7 @@ def render(snapshot_path: Path | None = None, *_, **__):
     presets = _load_presets()
     preset_names = [p["name"] for p in presets]
 
-    # ---------------- Chips de presets (aplicar rápido) ----------------
+    # ---------------- Chips de presets ----------------
     st.caption("Presets salvos")
     if not presets:
         st.write("— (nenhum preset salvo ainda) —")
@@ -200,140 +226,149 @@ def render(snapshot_path: Path | None = None, *_, **__):
                 st.rerun()
     st.divider()
 
-    # ---------------- Estado inicial (sempre prefixado) ----------------
+    # ---------------- Estado inicial (só 1x) ----------------
     def _init(key, val):
         k = f"{OP_PREFIX}{key}"
         if k not in st.session_state:
             st.session_state[k] = val
 
-    _init("flt_cats", [])
-    _init("flt_fams", [])
-    _init("flt_grps", [])
+    # Hierarquia
+    _init("flt_cats_inc", [])
+    _init("flt_fams_inc", [])
+    _init("flt_grps_inc", [])
+    _init("flt_cats_exc", [])
+    _init("flt_fams_exc", [])
+    _init("flt_grps_exc", [])
+    # Itens finos
     _init("flt_include_items", [])
     _init("flt_exclude_items", [])
-    _init("roi_min", None)           # float|None
+    # Intervalos
+    _init("roi_min", 0.0)
     _init("roi_max", None)
-    _init("price_min", None)
+    _init("price_min", 0.0)
     _init("price_max", None)
-    _init("price_field", "low_sell")  # "low_sell" ou "top_buy"
+    _init("price_field", "low_sell")
 
-    # ---------------- Seletor hierárquico ----------------
-    st.markdown("### Filtros por Category / Family / Group")
+    # ---------------- Layout em 2 colunas ----------------
+    col_left, col_right = st.columns([1.6, 1], vertical_alignment="top")
 
-    all_cats = sorted(df["trading_category"].unique().tolist())
-    all_fams = sorted(df["trading_family"].unique().tolist())
-    all_groups = sorted(df["trading_group"].unique().tolist())
+    # ===== LEFT: filtros hierárquicos e itens =====
+    with col_left:
+        st.markdown("### Filtros por Category / Family / Group")
 
-    sel_cats = st.multiselect(
-        "Category (incluir)", all_cats,
-        default=st.session_state[f"{OP_PREFIX}flt_cats"],
-        placeholder="Selecione 1+ categorias"
-    )
+        all_cats = sorted(df["trading_category"].unique().tolist())
+        all_fams = sorted(df["trading_family"].unique().tolist())
+        all_groups = sorted(df["trading_group"].unique().tolist())
 
-    fam_pool = df[df["trading_category"].isin(sel_cats)] if sel_cats else df
-    fam_opts = sorted(fam_pool["trading_family"].unique().tolist())
-    sel_fams = st.multiselect(
-        "Family (incluir)", fam_opts,
-        default=st.session_state[f"{OP_PREFIX}flt_fams"],
-        placeholder="Selecione 1+ families"
-    )
+        # Category include/exclude
+        sel_cats_inc = st.multiselect(
+            "Category (incluir)", all_cats, key=f"{OP_PREFIX}flt_cats_inc",
+            placeholder="Selecione 1+ categorias"
+        )
+        sel_cats_exc = st.multiselect(
+            "Category (excluir)", [c for c in all_cats if c not in sel_cats_inc],
+            key=f"{OP_PREFIX}flt_cats_exc", placeholder="Opcional"
+        )
 
-    grp_pool = fam_pool[fam_pool["trading_family"].isin(sel_fams)] if sel_fams else fam_pool
-    grp_opts = sorted(grp_pool["trading_group"].unique().tolist())
-    sel_grps = st.multiselect(
-        "Group (incluir)", grp_opts,
-        default=st.session_state[f"{OP_PREFIX}flt_grps"],
-        placeholder="Selecione 1+ groups"
-    )
+        # Family options condicionadas
+        fam_pool = df[df["trading_category"].isin(sel_cats_inc)] if sel_cats_inc else df
+        fam_opts = sorted(fam_pool["trading_family"].unique().tolist())
+        sel_fams_inc = st.multiselect(
+            "Family (incluir)", fam_opts, key=f"{OP_PREFIX}flt_fams_inc",
+            placeholder="Selecione 1+ families"
+        )
+        fam_exc_opts = [f for f in fam_opts if f not in sel_fams_inc]
+        sel_fams_exc = st.multiselect(
+            "Family (excluir)", fam_exc_opts, key=f"{OP_PREFIX}flt_fams_exc", placeholder="Opcional"
+        )
 
-    st.markdown("### Refinar por itens (opcional)")
-    df_scope = df.copy()
-    if sel_cats:
-        df_scope = df_scope[df_scope["trading_category"].isin(sel_cats)]
-    if sel_fams:
-        df_scope = df_scope[df_scope["trading_family"].isin(sel_fams)]
-    if sel_grps:
-        df_scope = df_scope[df_scope["trading_group"].isin(sel_grps)]
+        # Group options condicionadas
+        grp_pool = fam_pool[fam_pool["trading_family"].isin(sel_fams_inc)] if sel_fams_inc else fam_pool
+        grp_opts = sorted(grp_pool["trading_group"].unique().tolist())
+        sel_grps_inc = st.multiselect(
+            "Group (incluir)", grp_opts, key=f"{OP_PREFIX}flt_grps_inc",
+            placeholder="Selecione 1+ groups"
+        )
+        grp_exc_opts = [g for g in grp_opts if g not in sel_grps_inc]
+        sel_grps_exc = st.multiselect(
+            "Group (excluir)", grp_exc_opts, key=f"{OP_PREFIX}flt_grps_exc", placeholder="Opcional"
+        )
 
-    item_choices = (
-        df_scope.loc[:, ["item_id","item_name"]]
-        .drop_duplicates()
-        .sort_values("item_name")
-    )
-    id_to_label = {r.item_id: f'{r.item_name} · ({r.item_id})' for r in item_choices.itertuples()}
-    all_ids = list(id_to_label.keys())
+        st.markdown("### Refinar por itens (opcional)")
+        # universo de itens baseado só no include (faz sentido para procurar rapidamente)
+        df_scope = df.copy()
+        if sel_cats_inc:
+            df_scope = df_scope[df_scope["trading_category"].isin(sel_cats_inc)]
+        if sel_fams_inc:
+            df_scope = df_scope[df_scope["trading_family"].isin(sel_fams_inc)]
+        if sel_grps_inc:
+            df_scope = df_scope[df_scope["trading_group"].isin(sel_grps_inc)]
 
-    include_items = st.multiselect(
-        "Sempre incluir estes itens", all_ids,
-        default=st.session_state[f"{OP_PREFIX}flt_include_items"],
-        format_func=lambda x: id_to_label.get(x, x)
-    )
-    exclude_items = st.multiselect(
-        "Sempre excluir estes itens", all_ids,
-        default=st.session_state[f"{OP_PREFIX}flt_exclude_items"],
-        format_func=lambda x: id_to_label.get(x, x)
-    )
+        item_choices = (
+            df_scope.loc[:, ["item_id","item_name"]]
+            .drop_duplicates()
+            .sort_values("item_name")
+        )
+        id_to_label = {r.item_id: f'{r.item_name} · ({r.item_id})' for r in item_choices.itertuples()}
+        all_ids = list(id_to_label.keys())
 
-    # ---------------- Intervalos ROI e Preço (inputs com +/-) ----------------
-    st.markdown("### Intervalos")
-    col_r1, col_r2, col_r3 = st.columns([1,1,1])
-    with col_r1:
+        st.multiselect(
+            "Sempre incluir estes itens", all_ids,
+            key=f"{OP_PREFIX}flt_include_items",
+            format_func=lambda x: id_to_label.get(x, x)
+        )
+        st.multiselect(
+            "Sempre excluir estes itens", all_ids,
+            key=f"{OP_PREFIX}flt_exclude_items",
+            format_func=lambda x: id_to_label.get(x, x)
+        )
+
+    # ===== RIGHT: intervalos =====
+    with col_right:
+        st.markdown("### Intervalos")
         roi_min = st.number_input(
             "ROI mínimo (%)",
-            value=st.session_state[f"{OP_PREFIX}roi_min"] or 0.0,
+            value=st.session_state[f"{OP_PREFIX}roi_min"],
             step=0.5, format="%.2f", key=f"{OP_PREFIX}roi_min_input"
         )
-    with col_r2:
-        roi_max_val = st.session_state[f"{OP_PREFIX}roi_max"]
-        roi_max_default = roi_max_val if roi_max_val is not None else 1000.0
+        # atualiza o estado (sem defaults)
+        st.session_state[f"{OP_PREFIX}roi_min"] = float(roi_min)
+
+        roi_max_curr = st.session_state[f"{OP_PREFIX}roi_max"]
         roi_max = st.number_input(
             "ROI máximo (%) (opcional)",
-            value=roi_max_default,
+            value=roi_max_curr if roi_max_curr is not None else 1000.0,
             step=0.5, format="%.2f", key=f"{OP_PREFIX}roi_max_input"
         )
-    with col_r3:
-        no_roi_max = st.checkbox("Sem teto de ROI", value=(st.session_state[f"{OP_PREFIX}roi_max"] is None), key=f"{OP_PREFIX}no_roi_max")
-        if no_roi_max:
-            roi_max = None
+        if st.checkbox("Sem teto de ROI", value=(roi_max_curr is None), key=f"{OP_PREFIX}no_roi_max"):
+            st.session_state[f"{OP_PREFIX}roi_max"] = None
+        else:
+            st.session_state[f"{OP_PREFIX}roi_max"] = float(roi_max)
 
-    col_p0, col_p1, col_p2 = st.columns([1,1,1])
-    with col_p0:
-        price_field = st.radio(
+        st.radio(
             "Preço base", options=["low_sell","top_buy"],
             format_func=lambda x: "Low Sell" if x=="low_sell" else "Top Buy",
             horizontal=True,
-            index=0 if st.session_state[f"{OP_PREFIX}price_field"]=="low_sell" else 1,
-            key=f"{OP_PREFIX}price_field_radio"
+            key=f"{OP_PREFIX}price_field"
         )
-    with col_p1:
+
         price_min = st.number_input(
             "Preço mínimo (coins)",
-            value=st.session_state[f"{OP_PREFIX}price_min"] or 0.0,
+            value=st.session_state[f"{OP_PREFIX}price_min"],
             step=0.01, format="%.2f", key=f"{OP_PREFIX}price_min_input"
         )
-    with col_p2:
-        price_max_val = st.session_state[f"{OP_PREFIX}price_max"]
-        price_max_default = price_max_val if price_max_val is not None else 1_000_000.0
+        st.session_state[f"{OP_PREFIX}price_min"] = float(price_min)
+
+        price_max_curr = st.session_state[f"{OP_PREFIX}price_max"]
         price_max = st.number_input(
             "Preço máximo (coins) (opcional)",
-            value=price_max_default,
+            value=price_max_curr if price_max_curr is not None else 1_000_000.0,
             step=0.01, format="%.2f", key=f"{OP_PREFIX}price_max_input"
         )
-    no_price_max = st.checkbox("Sem teto de preço", value=(st.session_state[f"{OP_PREFIX}price_max"] is None), key=f"{OP_PREFIX}no_price_max")
-    if no_price_max:
-        price_max = None
-
-    # ---------------- Persistir estado corrente ----------------
-    st.session_state[f"{OP_PREFIX}flt_cats"] = sel_cats
-    st.session_state[f"{OP_PREFIX}flt_fams"] = sel_fams
-    st.session_state[f"{OP_PREFIX}flt_grps"] = sel_grps
-    st.session_state[f"{OP_PREFIX}flt_include_items"] = include_items
-    st.session_state[f"{OP_PREFIX}flt_exclude_items"] = exclude_items
-    st.session_state[f"{OP_PREFIX}roi_min"] = float(roi_min) if roi_min is not None else None
-    st.session_state[f"{OP_PREFIX}roi_max"] = float(roi_max) if roi_max is not None else None
-    st.session_state[f"{OP_PREFIX}price_min"] = float(price_min) if price_min is not None else None
-    st.session_state[f"{OP_PREFIX}price_max"] = float(price_max) if price_max is not None else None
-    st.session_state[f"{OP_PREFIX}price_field"] = price_field
+        if st.checkbox("Sem teto de preço", value=(price_max_curr is None), key=f"{OP_PREFIX}no_price_max"):
+            st.session_state[f"{OP_PREFIX}price_max"] = None
+        else:
+            st.session_state[f"{OP_PREFIX}price_max"] = float(price_max)
 
     # ---------------- Salvar preset (snapshot completo) ----------------
     st.markdown("### Preset: salvar estado atual")
@@ -362,7 +397,6 @@ def render(snapshot_path: Path | None = None, *_, **__):
                     st.success(f'Preset “{nm}” salvo.')
                     st.rerun()
 
-    # Gerenciar (apagar/renomear)
     with st.expander("Gerenciar presets"):
         sel = st.selectbox("Selecionar", ["(nenhum)"] + preset_names, index=0, key=f"{OP_PREFIX}mgr_sel")
         col_g1, col_g2 = st.columns(2)
@@ -387,8 +421,14 @@ def render(snapshot_path: Path | None = None, *_, **__):
     # ---------------- Resultado filtrado ----------------
     df_out = _apply_filters(
         df,
-        sel_cats, sel_fams, sel_grps,
-        include_items, exclude_items,
+        inc_cats=st.session_state[f"{OP_PREFIX}flt_cats_inc"],
+        inc_fams=st.session_state[f"{OP_PREFIX}flt_fams_inc"],
+        inc_groups=st.session_state[f"{OP_PREFIX}flt_grps_inc"],
+        exc_cats=st.session_state[f"{OP_PREFIX}flt_cats_exc"],
+        exc_fams=st.session_state[f"{OP_PREFIX}flt_fams_exc"],
+        exc_groups=st.session_state[f"{OP_PREFIX}flt_grps_exc"],
+        include_items=st.session_state[f"{OP_PREFIX}flt_include_items"],
+        exclude_items=st.session_state[f"{OP_PREFIX}flt_exclude_items"],
         roi_min=st.session_state[f"{OP_PREFIX}roi_min"],
         roi_max=st.session_state[f"{OP_PREFIX}roi_max"],
         price_min=st.session_state[f"{OP_PREFIX}price_min"],
@@ -401,29 +441,29 @@ def render(snapshot_path: Path | None = None, *_, **__):
         st.warning("Nenhum item após aplicar os filtros.")
         return
 
-    show_cols = [
-        "item_name","item_id","trading_category","trading_family","trading_group",
-        "top_buy","low_sell","roi_pct"
-    ]
-    for c in show_cols:
-        if c not in df_out.columns:
-            df_out[c] = np.nan
+    # ordenar por ROI desc por padrão
+    df_out = df_out.sort_values("roi_pct", ascending=False, na_position="last")
 
-    df_view = df_out.loc[:, show_cols].copy()
+    # view amigável (sem Item ID)
+    df_view = df_out.loc[:, [
+        "item_name","trading_category","trading_family","trading_group",
+        "top_buy","low_sell","roi_pct"
+    ]].copy()
+
     df_view["top_buy_fmt"] = df_view["top_buy"].map(_fmt_money)
     df_view["low_sell_fmt"] = df_view["low_sell"].map(_fmt_money)
-    df_view["roi"] = df_view["roi_pct"].map(_roi_badge)
+    df_view["roi_badge"] = df_view["roi_pct"].map(_roi_badge)
 
     df_view = df_view.rename(columns={
         "item_name": "Item",
-        "item_id": "Item ID",
         "trading_category": "Category",
         "trading_family": "Family",
         "trading_group": "Group",
         "top_buy_fmt": "Top Buy",
         "low_sell_fmt": "Low Sell",
-        "roi": "ROI"
-    })[["Item","Item ID","Category","Family","Group","Top Buy","Low Sell","ROI"]]
+        "roi_badge": "ROI",        # visual
+        "roi_pct": "ROI %",        # numérico (para ordenar)
+    })[["Item","Category","Family","Group","Top Buy","Low Sell","ROI","ROI %"]]
 
     st.dataframe(
         df_view,
@@ -433,6 +473,10 @@ def render(snapshot_path: Path | None = None, *_, **__):
             "Top Buy": st.column_config.TextColumn(width="small"),
             "Low Sell": st.column_config.TextColumn(width="small"),
             "ROI": st.column_config.TextColumn(width="small"),
-            "Item ID": st.column_config.TextColumn(width="medium"),
+            "ROI %": st.column_config.NumberColumn(format="%.2f", width="small"),
+            "Category": st.column_config.TextColumn(width="medium"),
+            "Family": st.column_config.TextColumn(width="medium"),
+            "Group": st.column_config.TextColumn(width="medium"),
+            "Item": st.column_config.TextColumn(width="large"),
         }
     )
