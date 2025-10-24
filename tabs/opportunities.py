@@ -213,9 +213,6 @@ def render(snapshot_path: Path | None = None, *_, **__):
     presets = _load_presets()
     preset_names = [p["name"] for p in presets]
 
-    # Acesso rápido
-    st.markdown("[Ir direto para resultados](#results_anchor)")
-
     # ---------------- Chips de presets ----------------
     st.caption("Presets salvos")
     if not presets:
@@ -264,7 +261,7 @@ def render(snapshot_path: Path | None = None, *_, **__):
     )
 
     if st.session_state[f"{OP_PREFIX}search_cfg_collapsed"]:
-        st.info("Configurações minimizadas. Desmarque a opção acima para ajustar os filtros.")
+        pass
     else:
         col_left, col_right = st.columns([1.6, 1], vertical_alignment="top")
 
