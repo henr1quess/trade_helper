@@ -213,6 +213,9 @@ def render(snapshot_path: Path | None = None, *_, **__):
     presets = _load_presets()
     preset_names = [p["name"] for p in presets]
 
+    # Acesso rápido
+    st.markdown("[Ir direto para resultados](#results_anchor)")
+
     # ---------------- Chips de presets ----------------
     st.caption("Presets salvos")
     if not presets:
@@ -248,6 +251,8 @@ def render(snapshot_path: Path | None = None, *_, **__):
     _init("price_min", 0.0)
     _init("price_max", None)
     _init("price_field", "low_sell")
+    # Busca textual por item (nome/ID)
+    _init("search_item", "")
 
     # ---------------- Layout em 2 colunas ----------------
     col_left, col_right = st.columns([1.6, 1], vertical_alignment="top")
@@ -418,7 +423,14 @@ def render(snapshot_path: Path | None = None, *_, **__):
                     st.success("Renomeado.")
                     st.rerun()
 
-    # ---------------- Resultado filtrado ----------------
+    # ---------------- Busca + Resultado filtrado ----------------
+    # Barra de busca por item (aplica sobre o resultado)
+    st.text_input(
+        "Buscar item",
+        key=f"{OP_PREFIX}search_item",
+        placeholder="Digite parte do nome ou ID",
+    )
+
     df_out = _apply_filters(
         df,
         inc_cats=st.session_state[f"{OP_PREFIX}flt_cats_inc"],
@@ -436,6 +448,15 @@ def render(snapshot_path: Path | None = None, *_, **__):
         price_field=st.session_state[f"{OP_PREFIX}price_field"],
     )
 
+    # Aplica filtro de busca textual (case-insensitive) em nome/ID
+    q = str(st.session_state.get(f"{OP_PREFIX}search_item", "") or "").strip().lower()
+    if q:
+        df_out = df_out[
+            df_out["item_name"].str.lower().str.contains(q, na=False)
+            | df_out["item_id"].str.lower().str.contains(q, na=False)
+        ]
+
+    st.markdown("<div id='results_anchor'></div>", unsafe_allow_html=True)
     st.markdown("### Resultados")
     if df_out.empty:
         st.warning("Nenhum item após aplicar os filtros.")
@@ -471,7 +492,8 @@ def render(snapshot_path: Path | None = None, *_, **__):
 
     st.dataframe(
         df_styled,
-        width="stretch",
+        use_container_width=True,
+        height=680,
         hide_index=True,
         column_config={
             # Numéricas: agora o sort do Streamlit funciona corretamente
