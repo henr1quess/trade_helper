@@ -3435,68 +3435,68 @@
           {
             "item_id": "applet1",
             "item_name": "Apple",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 100
           },
           {
             "item_id": "bananat1",
             "item_name": "Banana",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 100
           },
           {
             "item_id": "applebittert1",
             "item_name": "Bitter Apple",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 100
           },
           {
             "item_id": "coconutt1",
             "item_name": "Coconut",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 100
           },
           {
             "item_id": "cranberryt1",
             "item_name": "Cranberry",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 100
           },
           {
             "item_id": "mycodendraflesht1",
             "item_name": "Fungal Flesh",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 100
           },
           {
             "item_id": "applegoldt5",
             "item_name": "Golden Apple",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 100
           },
           {
             "item_id": "lemont1",
             "item_name": "Lemon",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 100
           },
           {
             "item_id": "melont1",
             "item_name": "Melon",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 100
           },
           {
             "item_id": "oranget1",
             "item_name": "Orange",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 100
           },
           {
             "item_id": "strawberryt1",
             "item_name": "Strawberry",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 100
           }
         ]
       },
@@ -3508,26 +3508,26 @@
           {
             "item_id": "barleyt1",
             "item_name": "Barley",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 100
           },
           {
             "item_id": "cornt1",
             "item_name": "Corn",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 100
           },
           {
             "item_id": "ricet1",
             "item_name": "Rice",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 100
           },
           {
             "item_id": "wheatt1",
             "item_name": "Wheat",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 100
           }
         ]
       },
@@ -3539,14 +3539,14 @@
           {
             "item_id": "honeycursedt5",
             "item_name": "Golden Azoth Sap",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 100
           },
           {
             "item_id": "honeyt1",
             "item_name": "Honey",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 100
           }
         ]
       },
@@ -3558,182 +3558,182 @@
           {
             "item_id": "cookingoilt1",
             "item_name": "Cooking Oil",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 100
           },
           {
             "item_id": "fisht4",
             "item_name": "Delicate Fish Filet",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 100
           },
           {
             "item_id": "enrichedmeatportiont5",
             "item_name": "Enriched Meat Roundel",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 100
           },
           {
             "item_id": "enrichedredmeatt5",
             "item_name": "Enriched Red Meat",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 100
           },
           {
             "item_id": "fisht2",
             "item_name": "Firm Fish Filet",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 100
           },
           {
             "item_id": "fisht1",
             "item_name": "Fish Filet",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 100
           },
           {
             "item_id": "fishoilt1",
             "item_name": "Fish Oil",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 100
           },
           {
             "item_id": "fishroet1",
             "item_name": "Fish Roe",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 100
           },
           {
             "item_id": "fishsaucet1",
             "item_name": "Fish Sauce",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 100
           },
           {
             "item_id": "meatgamet1",
             "item_name": "Game Meat",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 100
           },
           {
             "item_id": "hamhockt1",
             "item_name": "Juicy Ham Hock",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 100
           },
           {
             "item_id": "massiveturkeylegt5",
             "item_name": "Massive Turkey Leg",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 100
           },
           {
             "item_id": "porkt1",
             "item_name": "Pork",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 100
           },
           {
             "item_id": "porkbellyt1",
             "item_name": "Pork Belly",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 100
           },
           {
             "item_id": "poultryt1",
             "item_name": "Poultry",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 100
           },
           {
             "item_id": "turkeybreastt1",
             "item_name": "Poultry Breast",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 100
           },
           {
             "item_id": "turkeythight1",
             "item_name": "Poultry Thigh",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 100
           },
           {
             "item_id": "armadillomeatt5",
             "item_name": "Prime Armadillo Meat",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 100
           },
           {
             "item_id": "primeredmeatt1",
             "item_name": "Prime Red Meat",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 100
           },
           {
             "item_id": "scorpionmeatt5",
             "item_name": "Prime Scorpion Meat",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 100
           },
           {
             "item_id": "redmeatt1",
             "item_name": "Red Meat",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 100
           },
           {
             "item_id": "bearflankt1",
             "item_name": "Rich Bear Flank",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 100
           },
           {
             "item_id": "sausaget1",
             "item_name": "Sausage",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 100
           },
           {
             "item_id": "squidinkt1",
             "item_name": "Squid Ink",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 100
           },
           {
             "item_id": "meatsquidt1",
             "item_name": "Squid Meat",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 100
           },
           {
             "item_id": "rabbitt1",
             "item_name": "Sumptuous Rabbit",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 100
           },
           {
             "item_id": "fisht3",
             "item_name": "Tender Fish Filet",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 100
           },
           {
             "item_id": "wolfloint1",
             "item_name": "Tender Wolf Loin",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 100
           },
           {
             "item_id": "venisont1",
             "item_name": "Venison",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 100
           },
           {
             "item_id": "venisontenderloint1",
             "item_name": "Venison Tenderloin",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 100
           }
         ]
       },
@@ -3745,20 +3745,20 @@
           {
             "item_id": "nutt1",
             "item_name": "Nut",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 100
           },
           {
             "item_id": "pumpkinseeds",
             "item_name": "Pumpkin Seeds",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 100
           },
           {
             "item_id": "sunflowerseeds",
             "item_name": "Sunflower Seeds",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 100
           }
         ]
       }
@@ -3776,122 +3776,122 @@
           {
             "item_id": "basilt1",
             "item_name": "Basil",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 100
           },
           {
             "item_id": "cinnamont1",
             "item_name": "Cinnamon",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 100
           },
           {
             "item_id": "dillt1",
             "item_name": "Dill",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 100
           },
           {
             "item_id": "garlict1",
             "item_name": "Garlic",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 100
           },
           {
             "item_id": "gingert1",
             "item_name": "Ginger",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 100
           },
           {
             "item_id": "mintt1",
             "item_name": "Mint",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 100
           },
           {
             "item_id": "nutmegt1",
             "item_name": "Nutmeg",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 100
           },
           {
             "item_id": "oreganot1",
             "item_name": "Oregano",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 100
           },
           {
             "item_id": "paprikat1",
             "item_name": "Paprika",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 100
           },
           {
             "item_id": "parsleyt1",
             "item_name": "Parsley",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 100
           },
           {
             "item_id": "peppercornt1",
             "item_name": "Peppercorn",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 100
           },
           {
             "item_id": "rosemaryt1",
             "item_name": "Rosemary",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 100
           },
           {
             "item_id": "saffront1",
             "item_name": "Saffron",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 100
           },
           {
             "item_id": "saget1",
             "item_name": "Sage",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 100
           },
           {
             "item_id": "saltt1",
             "item_name": "Salt",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 100
           },
           {
             "item_id": "seasoningblendt1",
             "item_name": "Seasoning Blend",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 100
           },
           {
             "item_id": "sugart1",
             "item_name": "Sugar",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 100
           },
           {
             "item_id": "tarragont1",
             "item_name": "Tarragon",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 100
           },
           {
             "item_id": "thymet1",
             "item_name": "Thyme",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 100
           },
           {
             "item_id": "wormwoodt1",
             "item_name": "Wormwood",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 100
           }
         ]
       },
@@ -3903,74 +3903,74 @@
           {
             "item_id": "broccolit1",
             "item_name": "Broccoli",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 100
           },
           {
             "item_id": "cabbaget1",
             "item_name": "Cabbage",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 100
           },
           {
             "item_id": "cactusflesht1",
             "item_name": "Cactus Flesh",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 100
           },
           {
             "item_id": "carrott1",
             "item_name": "Carrot",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 100
           },
           {
             "item_id": "cauliflowert1",
             "item_name": "Cauliflower",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 100
           },
           {
             "item_id": "mushroomt1",
             "item_name": "Mushroom",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 100
           },
           {
             "item_id": "oniont1",
             "item_name": "Onion",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 100
           },
           {
             "item_id": "potatot1",
             "item_name": "Potato",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 100
           },
           {
             "item_id": "pumpkint5",
             "item_name": "Pumpkin",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 100
           },
           {
             "item_id": "squasht1",
             "item_name": "Squash",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 100
           },
           {
             "item_id": "stringbeant1",
             "item_name": "String Bean",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 100
           },
           {
             "item_id": "tomatot1",
             "item_name": "Tomato",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 100
           }
         ]
       },
@@ -3982,8 +3982,8 @@
           {
             "item_id": "watert1",
             "item_name": "Water",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.300,
+            "stack_max": 100
           }
         ]
       },
@@ -3995,74 +3995,74 @@
           {
             "item_id": "pigmentblack",
             "item_name": "Black Pigment",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 100
           },
           {
             "item_id": "pigmentblue",
             "item_name": "Blue Pigment",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 100
           },
           {
             "item_id": "pigmentbrown",
             "item_name": "Brown Pigment",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 100
           },
           {
             "item_id": "pigmentcyan",
             "item_name": "Cyan Pigment",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 100
           },
           {
             "item_id": "pigmentgreen",
             "item_name": "Green Pigment",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 100
           },
           {
             "item_id": "pigmentmagenta",
             "item_name": "Magenta Pigment",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 100
           },
           {
             "item_id": "pigmentorange",
             "item_name": "Orange Pigment",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 100
           },
           {
             "item_id": "pigmentpurple",
             "item_name": "Purple Pigment",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 100
           },
           {
             "item_id": "pigmentred",
             "item_name": "Red Pigment",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 100
           },
           {
             "item_id": "pigmentturquoise",
             "item_name": "Turquoise Pigment",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 100
           },
           {
             "item_id": "pigmentwhite",
             "item_name": "White Pigment",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 100
           },
           {
             "item_id": "pigmentyellow",
             "item_name": "Yellow Pigment",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 100
           }
         ]
       }
@@ -4080,68 +4080,68 @@
           {
             "item_id": "perkcharmmaterial_1",
             "item_name": "Angry Heart",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 10
           },
           {
             "item_id": "perkcharmmaterial_5",
             "item_name": "Blade Splinters",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 10
           },
           {
             "item_id": "perkcharmmaterial_4",
             "item_name": "Dark Crystal",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 10
           },
           {
             "item_id": "perkcharmmaterial_9",
             "item_name": "Feather Shard",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 10
           },
           {
             "item_id": "perkcharmmaterial_3",
             "item_name": "Frost Essence",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 10
           },
           {
             "item_id": "perkcharmmaterial_10",
             "item_name": "Hardened Alluvium",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 10
           },
           {
             "item_id": "perkcharmmaterial_7",
             "item_name": "Leaded Chunk",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 10
           },
           {
             "item_id": "perkcharmmaterial_2",
             "item_name": "Molten Slag",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 10
           },
           {
             "item_id": "perkcharmmaterial_8",
             "item_name": "Reinforcing Alloy",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 10
           },
           {
             "item_id": "perkcharmmaterial_6",
             "item_name": "Severed Tusks",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 10
           },
           {
             "item_id": "perkcharmmaterial_11",
             "item_name": "Whisp Shroom",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 10
           }
         ]
       }
@@ -4159,824 +4159,824 @@
           {
             "item_id": "perkcharm_shield_defendersresolve",
             "item_name": "Accelerated Resolve II Charm",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 10
           },
           {
             "item_id": "perkcharm_flail_charge",
             "item_name": "Accelerating Barrage II Charm",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 10
           },
           {
             "item_id": "perkcharm_firestaff_flamethrower",
             "item_name": "Accelerating Flamethrower II Charm",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 10
           },
           {
             "item_id": "perkcharm_lifestaff_lightsembrace",
             "item_name": "Accelerating Light's Embrace II Charm",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 10
           },
           {
             "item_id": "perkcharm_musket_traps",
             "item_name": "Accelerating Traps II Charm",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 10
           },
           {
             "item_id": "perkcharm_durhaste",
             "item_name": "Alacrity II Charm",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 10
           },
           {
             "item_id": "perkcharm_potionheal",
             "item_name": "Alchemist Reprieve II Charm",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 10
           },
           {
             "item_id": "perkcharm_lifestealhealing",
             "item_name": "Anointed Lifesteal II Charm",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 10
           },
           {
             "item_id": "perkcharm_dmgarcane",
             "item_name": "Arcane Harnessing II Charm",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 10
           },
           {
             "item_id": "perkcharm_spear_sweep",
             "item_name": "Bleeding Sweep II Charm",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 10
           },
           {
             "item_id": "perkcharm_durbleed",
             "item_name": "Blood Letting II Charm",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 10
           },
           {
             "item_id": "perkcharm_flail_slam",
             "item_name": "Burdening Smite II Charm",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 10
           },
           {
             "item_id": "perkcharm_durburning",
             "item_name": "Burning II Charm",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 10
           },
           {
             "item_id": "perkcharm_spear_perforate",
             "item_name": "Compounding Perforate II Charm",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 10
           },
           {
             "item_id": "perkcharm_sword_whirlingblade",
             "item_name": "Compounding Whirling Blade II Charm",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 10
           },
           {
             "item_id": "perkcharm_sword_upheaval",
             "item_name": "Contagious Upheaval II Charm",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 10
           },
           {
             "item_id": "perkcharm_blunderbuss_vortexshot",
             "item_name": "Crippling Blast Shot II Charm",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 10
           },
           {
             "item_id": "perkcharm_hatchet_feralrush",
             "item_name": "Crippling Feral Rush II Charm",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 10
           },
           {
             "item_id": "perkcharm_durslow",
             "item_name": "Crippling II Charm",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 10
           },
           {
             "item_id": "perkcharm_hammer_mightygavel",
             "item_name": "Crippling Mighty Gavel II Charm",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 10
           },
           {
             "item_id": "perkcharm_firestaff_pillaroffire",
             "item_name": "Crippling Pillar of Fire II Charm",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 10
           },
           {
             "item_id": "perkcharm_musket_powderburn",
             "item_name": "Crippling Powder Burn II Charm",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 10
           },
           {
             "item_id": "perkcharm_greataxe_reap",
             "item_name": "Crippling Reap II Charm",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 10
           },
           {
             "item_id": "perkcharm_greatsword_burst",
             "item_name": "Crippling Rupture II Charm",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 10
           },
           {
             "item_id": "perkcharm_voidgauntlet_drainingtether_slow",
             "item_name": "Crippling Tether II Charm",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 10
           },
           {
             "item_id": "perkcharm_flail_defensivestrike",
             "item_name": "Crowded Bludgeon II Charm",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 10
           },
           {
             "item_id": "perkcharm_rapier_flourishandfinish",
             "item_name": "Deadly Flourish II Charm",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 10
           },
           {
             "item_id": "perkcharm_icegauntlet_deadlyfrost",
             "item_name": "Deadly Shower II Charm",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 10
           },
           {
             "item_id": "perkcharm_voidgauntlet_decayingorb_reducebuffs",
             "item_name": "Diminishing Orb II Charm",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 10
           },
           {
             "item_id": "perkcharm_shield_shieldbash",
             "item_name": "Diminishing Shield Bash II Charm",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 10
           },
           {
             "item_id": "perkcharm_healing",
             "item_name": "Divine II Charm",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 10
           },
           {
             "item_id": "perkcharm_rangedefense_elemental",
             "item_name": "Elemental Aversion II Charm",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 10
           },
           {
             "item_id": "perkcharm_durempower",
             "item_name": "Empowered II Charm",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 10
           },
           {
             "item_id": "perkcharm_icegauntlet_icedrefresh",
             "item_name": "Empowered Spike II Charm",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 10
           },
           {
             "item_id": "perkcharm_hammer_armorbreaker",
             "item_name": "Empowering Armor Breaker II Charm",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 10
           },
           {
             "item_id": "perkcharm_firestaff_burnout",
             "item_name": "Empowering Burnout II Charm",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 10
           },
           {
             "item_id": "perkcharm_bow_splintershot",
             "item_name": "Empowering Explosive Arrow II Charm",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 10
           },
           {
             "item_id": "perkcharm_firestaff_fireball",
             "item_name": "Empowering Fireball II Charm",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 10
           },
           {
             "item_id": "perkcharm_sword_leapingstrike",
             "item_name": "Empowering Leaping Strike II Charm",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 10
           },
           {
             "item_id": "perkcharm_firestaff_meteorshower",
             "item_name": "Empowering Meteor Shower II Charm",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 10
           },
           {
             "item_id": "perkcharm_hatchet_rending_throw",
             "item_name": "Empowering Rending Throw II Charm",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 10
           },
           {
             "item_id": "perkcharm_musket_shootersstance",
             "item_name": "Empowering Shooter's Stance II Charm",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 10
           },
           {
             "item_id": "perkcharm_hatchet_ragingtorrent",
             "item_name": "Empowering Torrent II Charm",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 10
           },
           {
             "item_id": "perkcharm_dmgbasic",
             "item_name": "Enchanted II Charm",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 10
           },
           {
             "item_id": "perkcharm_defbasic",
             "item_name": "Enchanted Ward II Charm",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 10
           },
           {
             "item_id": "perkcharm_greatsword_counter",
             "item_name": "Energizing Counter II Charm",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 10
           },
           {
             "item_id": "perkcharm_bow_evadeshot",
             "item_name": "Energizing Evade Shot II Charm",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 10
           },
           {
             "item_id": "perkcharm_durweaken",
             "item_name": "Enfeebling II Charm",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 10
           },
           {
             "item_id": "perkcharm_greataxe_maelstrom",
             "item_name": "Enfeebling Maelstrom II Charm",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 10
           },
           {
             "item_id": "perkcharm_bow_poisonshot",
             "item_name": "Enfeebling Poison Shot II Charm",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 10
           },
           {
             "item_id": "perkcharm_spear_skewer",
             "item_name": "Enfeebling Skewer II Charm",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 10
           },
           {
             "item_id": "perkcharm_hatchet_infectedthrow",
             "item_name": "Exhausting Infected Throw II Charm",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 10
           },
           {
             "item_id": "perkcharm_blunderbuss_netshot",
             "item_name": "Exhaustive Net Shot II Charm",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 10
           },
           {
             "item_id": "perkcharm_dmgfire",
             "item_name": "Flame Harnessing II Charm",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 10
           },
           {
             "item_id": "perkcharm_durfortify",
             "item_name": "Fortified II Charm",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 10
           },
           {
             "item_id": "perkcharm_firestaff_incinerate",
             "item_name": "Fortifying Incinerate II Charm",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 10
           },
           {
             "item_id": "perkcharm_lifestaff_sacredground",
             "item_name": "Fortifying Sacred Ground II Charm",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 10
           },
           {
             "item_id": "perkcharm_shield_shieldrush",
             "item_name": "Fortifying Shield Rush II Charm",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 10
           },
           {
             "item_id": "perkcharm_greataxe_whirlwind",
             "item_name": "Fortifying Whirlwind II Charm",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 10
           },
           {
             "item_id": "perkcharm_durcc",
             "item_name": "Freedom II Charm",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 10
           },
           {
             "item_id": "perkcharm_defgrit",
             "item_name": "Grit Ward II Charm",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 10
           },
           {
             "item_id": "perkcharm_dotpotencyred_haste",
             "item_name": "Hasted Vigor II Charm",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 10
           },
           {
             "item_id": "perkcharm_icegauntlet_healingtomb",
             "item_name": "Healing Tomb II Charm",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 10
           },
           {
             "item_id": "perkcharm_dmgice",
             "item_name": "Ice Harnessing II Charm",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 10
           },
           {
             "item_id": "perkcharm_durdisease",
             "item_name": "Infected II Charm",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 10
           },
           {
             "item_id": "perkcharm_greataxe_gravitywell",
             "item_name": "Insatiable Gravity Well II Charm",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 10
           },
           {
             "item_id": "perkcharm_greataxe_charge",
             "item_name": "Intangible Charge II Charm",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 10
           },
           {
             "item_id": "perkcharm_durdebuff",
             "item_name": "Invigorated II Charm",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 10
           },
           {
             "item_id": "perkcharm_lifestaff_beacon",
             "item_name": "Keen Beacon II Charm",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 10
           },
           {
             "item_id": "perkcharm_hatchet_berserk",
             "item_name": "Keen Berserk II Charm",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 10
           },
           {
             "item_id": "perkcharm_critchance",
             "item_name": "Keen II Charm",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 10
           },
           {
             "item_id": "perkcharm_rapier_tondo",
             "item_name": "Keen Tondo II Charm",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 10
           },
           {
             "item_id": "perkcharm_spear_vaultkick",
             "item_name": "Keen Vault Kick II Charm",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 10
           },
           {
             "item_id": "perkcharm_empoweroncrit",
             "item_name": "Keenly Empowered II Charm",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 10
           },
           {
             "item_id": "perkcharm_fortifyoncrit",
             "item_name": "Keenly Fortified II Charm",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 10
           },
           {
             "item_id": "perkcharm_bleedoncrit",
             "item_name": "Keenly Jagged II Charm",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 10
           },
           {
             "item_id": "perkcharm_bow_rainofarrows",
             "item_name": "Lasting Rain of Arrows II Charm",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 10
           },
           {
             "item_id": "perkcharm_hammer_clearout",
             "item_name": "Leeching Clear Out II Charm",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 10
           },
           {
             "item_id": "perkcharm_greatsword_combo",
             "item_name": "Leeching Crosscut II Charm",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 10
           },
           {
             "item_id": "perkcharm_spear_cyclone",
             "item_name": "Leeching Cyclone II Charm",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 10
           },
           {
             "item_id": "perkcharm_rapier_flurry",
             "item_name": "Leeching Flurry II Charm",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 10
           },
           {
             "item_id": "perkcharm_healperdmg",
             "item_name": "Leeching II Charm",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 10
           },
           {
             "item_id": "perkcharm_blunderbuss_azothshrapnelblast",
             "item_name": "Leeching Shrapnel Blast II Charm",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 10
           },
           {
             "item_id": "perkcharm_dmglightning",
             "item_name": "Lightning Harnessing II Charm",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 10
           },
           {
             "item_id": "perkcharm_greataxe_execute",
             "item_name": "Mending Execute II Charm",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 10
           },
           {
             "item_id": "perkcharm_lifestaff_orbofprotection",
             "item_name": "Mending Protection II Charm",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 10
           },
           {
             "item_id": "perkcharm_musket_stickybomb",
             "item_name": "Mending Sticky Bombs II Charm",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 10
           },
           {
             "item_id": "perkcharm_flail_blast",
             "item_name": "Mending Vortex II Charm",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 10
           },
           {
             "item_id": "perkcharm_dmgnature",
             "item_name": "Nature Harnessing II Charm",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 10
           },
           {
             "item_id": "perkcharm_voidgauntlet_nullchamber_nullify",
             "item_name": "Nullifying Oblivion II Charm",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 10
           },
           {
             "item_id": "perkcharm_rapier_evade",
             "item_name": "Omnidirectional Evade II Charm",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 10
           },
           {
             "item_id": "perkcharm_pvp_armorpenetration_onbackstab",
             "item_name": "Penetrating Backstab II Charm",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 10
           },
           {
             "item_id": "perkcharm_pvp_armorpenetration_onheadshot",
             "item_name": "Penetrating Headshot II Charm",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 10
           },
           {
             "item_id": "perkcharm_bow_rapidshot",
             "item_name": "Penetrating Rapid Shot II Charm",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 10
           },
           {
             "item_id": "perkcharm_hammer_wreckingball",
             "item_name": "Penetrating Wrecking Ball II Charm",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 10
           },
           {
             "item_id": "perkcharm_rangedefense_physical",
             "item_name": "Physical Aversion II Charm",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 10
           },
           {
             "item_id": "perkcharm_musket_powershot",
             "item_name": "Plagued Power Shot II Charm",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 10
           },
           {
             "item_id": "perkcharm_blunderbuss_scattergrenade",
             "item_name": "Plagued Splitting Grenade II Charm",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 10
           },
           {
             "item_id": "perkcharm_durpoison",
             "item_name": "Poisoning II Charm",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 10
           },
           {
             "item_id": "perkcharm_exhaustpotencyred",
             "item_name": "Potent Energy II Charm",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 10
           },
           {
             "item_id": "perkcharm_energizedpotencyinc",
             "item_name": "Potent Vivacity II Charm",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 10
           },
           {
             "item_id": "perkcharm_flail_burst",
             "item_name": "Powerful Eruption II Charm",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 10
           },
           {
             "item_id": "perkcharm_hatchet_distancingthrow",
             "item_name": "Prolonged Distancing Throw II Charm",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 10
           },
           {
             "item_id": "perkcharm_removeonpotion",
             "item_name": "Purifying Toast II Charm",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 10
           },
           {
             "item_id": "perkcharm_lifestaff_splashoflight",
             "item_name": "Purity Of Light II Charm",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 10
           },
           {
             "item_id": "perkcharm_voidgauntlet_scream_disease",
             "item_name": "Putrefying Scream II Charm",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 10
           },
           {
             "item_id": "perkcharm_icegauntlet_pylonburst",
             "item_name": "Pylon Burst II Charm",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 10
           },
           {
             "item_id": "perkcharm_greatsword_dashattack",
             "item_name": "Relentless Freedom II Charm",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 10
           },
           {
             "item_id": "perkcharm_blunderbuss_mortarcharge",
             "item_name": "Resupplying Mortar Charge II Charm",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 10
           },
           {
             "item_id": "perkcharm_rapier_fleche",
             "item_name": "Rogue Fleche II Charm",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 10
           },
           {
             "item_id": "perkcharm_dmgback",
             "item_name": "Rogue II Charm",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 10
           },
           {
             "item_id": "perkcharm_healoutgoing",
             "item_name": "Sacred II Charm",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 10
           },
           {
             "item_id": "perkcharm_bow_penetratingshot",
             "item_name": "Shattering Penetrating Shot II Charm",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 10
           },
           {
             "item_id": "perkcharm_pvp_dodgesuccess_heal",
             "item_name": "Shirking Heals II Charm",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 10
           },
           {
             "item_id": "perkcharm_dmgability",
             "item_name": "Skilled Enchantment II Charm",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 10
           },
           {
             "item_id": "perkcharm_greatsword_defensebreak",
             "item_name": "Skyward Nullification II Charm",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 10
           },
           {
             "item_id": "perkcharm_dmgslash",
             "item_name": "Slash Harnessing II Charm",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 10
           },
           {
             "item_id": "perkcharm_greatsword_drainattack",
             "item_name": "Steadfast Purification II Charm",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 10
           },
           {
             "item_id": "perkcharm_musket_stoppingpower",
             "item_name": "Stopping Powered II Charm",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 10
           },
           {
             "item_id": "perkcharm_dmgstrike",
             "item_name": "Strike Harnessing II Charm",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 10
           },
           {
             "item_id": "perkcharm_hammer_pathofdestiny",
             "item_name": "Sundering Destiny II Charm",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 10
           },
           {
             "item_id": "perkcharm_voidgauntlet_essencerupture_empower",
             "item_name": "Sundering Essence II Charm",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 10
           },
           {
             "item_id": "perkcharm_spear_javelin",
             "item_name": "Sundering Javelin II Charm",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 10
           },
           {
             "item_id": "perkcharm_rapier_riposte",
             "item_name": "Sundering Riposte II Charm",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 10
           },
           {
             "item_id": "perkcharm_hammer_shockwave",
             "item_name": "Sundering Shockwave II Charm",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 10
           },
           {
             "item_id": "perkcharm_dmgthrust",
             "item_name": "Thrust Harnessing II Charm",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 10
           },
           {
             "item_id": "perkcharm_flail_trip",
             "item_name": "Thwarting Trip II Charm",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 10
           },
           {
             "item_id": "perkcharm_icegauntlet_unbrokenwinds",
             "item_name": "Unbroken Winds II Charm",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 10
           },
           {
             "item_id": "perkcharm_icegauntlet_unendingthaw",
             "item_name": "Unending Storm II Charm",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 10
           },
           {
             "item_id": "perkcharm_lifestaff_divineembrace",
             "item_name": "Unstoppable Divine Embrace II Charm",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 10
           },
           {
             "item_id": "perkcharm_blunderbuss_clawshot",
             "item_name": "Venturing Claw Shot II Charm",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 10
           },
           {
             "item_id": "perkcharm_dmgcrit",
             "item_name": "Vicious II Charm",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 10
           },
           {
             "item_id": "perkcharm_durdot",
             "item_name": "Vigor II Charm",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 10
           },
           {
             "item_id": "perkcharm_dmgvoid",
             "item_name": "Void Harnessing II Charm",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 10
           },
           {
             "item_id": "perkcharm_voidgauntlet_voidblade_lifesteal",
             "item_name": "Voracious Blade II Charm",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 10
           },
           {
             "item_id": "perkcharm_dmgheadshot",
             "item_name": "Vorpal II Charm",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 10
           },
           {
             "item_id": "perkcharm_health",
             "item_name": "Wellness II Charm",
-            "weight": null,
-            "stack_max": null
+            "weight": 0.100,
+            "stack_max": 10
           }
         ]
       }
