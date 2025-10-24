@@ -450,10 +450,7 @@ def render(snapshot_path: Path | None = None, *_, **__):
         "top_buy", "low_sell", "roi_pct"
     ]].copy()
 
-    # Coluna visual (badge) para ROI
-    df_view["ROI"] = df_view["roi_pct"].map(_roi_badge)
-
-    # Renomeia colunas finais — importantes: Top Buy / Low Sell / ROI % ficam NUMÉRICAS
+    # Renomeia colunas finais — importantes: Top Buy / Low Sell / ROI ficam NUMÉRICAS
     df_view = df_view.rename(columns={
         "item_name": "Item",
         "trading_category": "Category",
@@ -461,27 +458,30 @@ def render(snapshot_path: Path | None = None, *_, **__):
         "trading_group": "Group",
         "top_buy": "Top Buy",      # numérico
         "low_sell": "Low Sell",    # numérico
-        "roi_pct": "ROI %",        # numérico
-    })[["Item", "Category", "Family", "Group", "Top Buy", "Low Sell", "ROI", "ROI %"]]
+        "roi_pct": "ROI",          # numérico
+    })[["Item", "Category", "Family", "Group", "Top Buy", "Low Sell", "ROI"]]
 
     # Garante dtype numérico (se vieram NaNs/objetos de snapshots antigos)
-    for col in ["Top Buy", "Low Sell", "ROI %"]:
+    for col in ["Top Buy", "Low Sell", "ROI"]:
         df_view[col] = pd.to_numeric(df_view[col], errors="coerce")
 
+    df_styled = df_view.style.format({
+        "ROI": _roi_badge,
+    })
+
     st.dataframe(
-        df_view,
+        df_styled,
         width="stretch",
         hide_index=True,
         column_config={
             # Numéricas: agora o sort do Streamlit funciona corretamente
             "Top Buy": st.column_config.NumberColumn(format="%.2f", width="small"),
             "Low Sell": st.column_config.NumberColumn(format="%.2f", width="small"),
-            "ROI %": st.column_config.NumberColumn(format="%.2f", width="small"),
             # Texto/visuais:
-            "ROI": st.column_config.TextColumn(width="small"),
             "Category": st.column_config.TextColumn(width="medium"),
             "Family": st.column_config.TextColumn(width="medium"),
             "Group": st.column_config.TextColumn(width="medium"),
             "Item": st.column_config.TextColumn(width="large"),
+            "ROI": st.column_config.Column(width="small"),
         }
     )
