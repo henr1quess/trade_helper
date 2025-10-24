@@ -441,42 +441,47 @@ def render(snapshot_path: Path | None = None, *_, **__):
         st.warning("Nenhum item após aplicar os filtros.")
         return
 
-    # ordenar por ROI desc por padrão
+    # Ordena por ROI numérico desc por padrão
     df_out = df_out.sort_values("roi_pct", ascending=False, na_position="last")
 
-    # view amigável (sem Item ID)
+    # VIEW: mantenha colunas numéricas como números (sem formatar para string)
     df_view = df_out.loc[:, [
-        "item_name","trading_category","trading_family","trading_group",
-        "top_buy","low_sell","roi_pct"
+        "item_name", "trading_category", "trading_family", "trading_group",
+        "top_buy", "low_sell", "roi_pct"
     ]].copy()
 
-    df_view["top_buy_fmt"] = df_view["top_buy"].map(_fmt_money)
-    df_view["low_sell_fmt"] = df_view["low_sell"].map(_fmt_money)
-    df_view["roi_badge"] = df_view["roi_pct"].map(_roi_badge)
+    # Coluna visual (badge) para ROI, mantendo valor numérico separado para ordenação
+    df_view["ROI Badge"] = df_view["roi_pct"].map(_roi_badge)
 
+    # Renomeia colunas finais — importantes: Top Buy / Low Sell / ROI ficam NUMÉRICAS
     df_view = df_view.rename(columns={
         "item_name": "Item",
         "trading_category": "Category",
         "trading_family": "Family",
         "trading_group": "Group",
-        "top_buy_fmt": "Top Buy",
-        "low_sell_fmt": "Low Sell",
-        "roi_badge": "ROI",        # visual
-        "roi_pct": "ROI %",        # numérico (para ordenar)
-    })[["Item","Category","Family","Group","Top Buy","Low Sell","ROI","ROI %"]]
+        "top_buy": "Top Buy",      # numérico
+        "low_sell": "Low Sell",    # numérico
+        "roi_pct": "ROI",          # numérico
+    })[["Item", "Category", "Family", "Group", "Top Buy", "Low Sell", "ROI", "ROI Badge"]]
+
+    # Garante dtype numérico (se vieram NaNs/objetos de snapshots antigos)
+    for col in ["Top Buy", "Low Sell", "ROI"]:
+        df_view[col] = pd.to_numeric(df_view[col], errors="coerce")
 
     st.dataframe(
         df_view,
         width="stretch",
         hide_index=True,
         column_config={
-            "Top Buy": st.column_config.TextColumn(width="small"),
-            "Low Sell": st.column_config.TextColumn(width="small"),
-            "ROI": st.column_config.TextColumn(width="small"),
-            "ROI %": st.column_config.NumberColumn(format="%.2f", width="small"),
+            # Numéricas: agora o sort do Streamlit funciona corretamente
+            "Top Buy": st.column_config.NumberColumn(format="%.2f", width="small"),
+            "Low Sell": st.column_config.NumberColumn(format="%.2f", width="small"),
+            "ROI": st.column_config.NumberColumn(format="%.2f", width="small", label="ROI %"),
+            # Texto/visuais:
             "Category": st.column_config.TextColumn(width="medium"),
             "Family": st.column_config.TextColumn(width="medium"),
             "Group": st.column_config.TextColumn(width="medium"),
             "Item": st.column_config.TextColumn(width="large"),
+            "ROI Badge": st.column_config.TextColumn(width="small", label="ROI"),
         }
     )
